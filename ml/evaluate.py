@@ -9,6 +9,7 @@ import joblib
 import pandas as pd
 
 from ml.data import feature_frame
+from ml.freeze import verify_freeze
 from ml.train import metrics
 
 
@@ -62,6 +63,10 @@ def main():
     output = args.run_dir / "evaluation.json"
     if output.exists():
         parser.error("Holdout already evaluated; preserve evidence rather than overwrite")
+    try:
+        frozen = verify_freeze(args.run_dir)
+    except (OSError, ValueError, TypeError) as exc:
+        parser.error(f"Freeze verification failed: {exc}")
     # Local trusted artifacts only: never expose this loader through an upload endpoint.
     bundle = joblib.load(args.run_dir / "candidates.joblib")
     for name in ("holdout", "splits"):
@@ -84,6 +89,9 @@ def main():
     report["splits_sha256"] = hashlib.sha256((args.run_dir / "splits.csv").read_bytes()).hexdigest()
     for name in ("source_sha256", "dataset_sha256", "package_versions"):
         report[name] = bundle[name]
+    report["freeze_sha256"] = frozen["sha256"]
+    report["freeze_reviewer"] = frozen["reviewer"]
+    report["frozen_at"] = frozen["frozen_at"]
     output.write_text(json.dumps(report, indent=2, allow_nan=False), encoding="utf-8")
     print("Test report written; this does not approve a model for public serving.")
 
