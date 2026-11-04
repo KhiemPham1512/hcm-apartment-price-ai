@@ -9,7 +9,7 @@
 
 ### Issue tracker
 
-GitHub Issues khi repo khả dụng; trước đó dùng backlog trong TEAM. Spec ở SPEC, không có bản sao trong `.scratch/`.
+Checklist nghiệm thu theo thành viên nằm trực tiếp trong `docs/TEAM.md` để AI đọc từ checkout. GitHub Issues giữ từng ticket triển khai, thảo luận và liên kết PR; không sao chép checklist vai trò sang issue. Spec ở SPEC, không có bản sao trong `.scratch/`.
 
 ### Domain docs
 
@@ -24,7 +24,7 @@ GitHub Issues khi repo khả dụng; trước đó dùng backlog trong TEAM. Spe
 - Owner: TV1 dữ liệu; TV2 shared features/linear/poly; TV3 tree/analysis; TV4 HTTP; TV5 frontend; TV6 root config/README/CI. Đổi interface phải có producer và consumer review.
 - Conflict: đọc cả hai thay đổi, tích hợp đúng ý nghĩa, chạy lại kiểm tra phần giao; không checkout ours/theirs hàng loạt hoặc reset/clean phá dữ liệu.
 - PR cần CI xanh và ít nhất một reviewer khác tác giả; squash merge sau review. Nếu protection chưa bật, không nói quy tắc đã được GitHub cưỡng chế. Không bịa username/assignee của thành viên chưa cung cấp.
-- GitHub Issue giữ status/trao đổi/PR; TEAM giữ phân công/mốc. Không tạo tracker bản sao có trạng thái khác.
+- TEAM giữ phân công/mốc và checklist theo thành viên. Khi xong cập nhật đúng ô, evidence và bước tiếp/blocker trong cùng PR; GitHub Issue giữ status/trao đổi của từng ticket. Không tạo thêm bản checklist có trạng thái khác.
 
 ## AI và kiểm chứng
 

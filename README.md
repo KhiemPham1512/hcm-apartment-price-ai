@@ -148,7 +148,7 @@ Với ticket tính năng đã có tên và tiêu chí: viết test hành vi th�
 
 Tài liệu đủ để hiểu mục tiêu và quy tắc; **issue được giao mới xác định việc cần làm**. Clone repo không mang theo nội dung GitHub Issues/PR. Trước mỗi việc, AI cần đọc README → AGENTS → SPEC → dòng vai trò trong TEAM → issue và thảo luận → code/test liên quan. Không cần đọc mọi module để sửa một phần nhỏ.
 
-Tiến độ thực tế lấy từ [Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues), [PR](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pulls) và [CI](https://github.com/KhiemPham1512/hcm-apartment-price-ai/actions): code đã merge vào `main` là bản tích hợp; PR mở vẫn đang đề xuất. TEAM giữ owner/mốc, không giữ một bảng trạng thái thứ hai. Nếu AI không truy cập được GitHub, thành viên cung cấp nội dung issue và PR liên quan; AI phải ghi rõ phần chưa kiểm tra.
+AI đọc trực tiếp [checklist TV1–TV6 trong TEAM](docs/TEAM.md#checklist) để biết mục đã xong, bước tiếp và blocker; các ô được cập nhật bằng Markdown và commit cùng PR. [Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues) giữ thảo luận từng ticket, [PR](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pulls) và [CI](https://github.com/KhiemPham1512/hcm-apartment-price-ai/actions) là bằng chứng đối chiếu: code đã merge vào `main` là bản tích hợp; PR mở vẫn đang đề xuất. Không tạo bản checklist vai trò thứ hai trên GitHub Issues. Nếu chưa kiểm tra được evidence online, AI ghi rõ giới hạn đó và không tự suy ô chưa tick thành việc chưa có code.
 
 Có thể giao AI bằng mẫu sau, thay vai trò và issue trước khi gửi:
 

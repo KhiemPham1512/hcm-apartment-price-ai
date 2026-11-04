@@ -9,22 +9,181 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist"></a>
 ## Checklist tiến độ của từng thành viên
 
-Mở issue của vai trò mình để xem và tick công việc theo từng tuần. GitHub hiển thị số mục đã hoàn thành trên danh sách Issues; số ô hoàn thành phản ánh các bước nghiệm thu, không phải phần trăm thời gian hoặc chất lượng dự án. Đây là nơi duy nhất cập nhật trạng thái; bảng dưới chỉ liên kết tới checklist.
+**Nguồn tiến độ để người và AI đọc trực tiếp là các ô trong file này.** Không cần truy cập GitHub để biết mục nào đã đánh dấu xong. Cập nhật nền ngày 04/11/2026 theo code và PR đã kiểm chứng; các mục chưa tick cần owner rà soát, không hàm ý mọi code nền đều chưa có. Tiến độ chỉ đúng với commit/nhánh đang đọc: AI cần kiểm tra `git status` và đồng bộ theo quy trình trước khi tiếp tục.
 
-| Thành viên | Checklist trên GitHub | Nhóm việc |
-| --- | --- | --- |
-| TV1 | [Mở checklist #9](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/9) | P01/P02: nguồn, chuẩn hóa, grouping, snapshot/card và refresh |
-| TV2 | [Mở checklist #10](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/10) | P03/P04: shared features, baseline, Linear/Polynomial và freeze |
-| TV3 | [Mở checklist #11](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/11) | P05: cây, tuning, importance/ablation và phân tích lỗi |
-| TV4 | [Mở checklist #12](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/12) | P06/P11: API, serving, bảo mật và release smoke |
-| TV5 | [Mở checklist #13](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/13) | P07/P08: form, kết quả, report, UI tests và demo |
-| TV6 | [Mở checklist #14](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/14) | P09/P10 và điều phối P11/P12: CI, kiểm định, release và báo cáo |
+**Cách cập nhật:** làm xong thì đổi `- [ ]` thành `- [x]` trong đúng mục của mình, thêm bằng chứng ngắn (PR đã merge, lệnh/run hoặc review), cập nhật “Bước tiếp / Chặn”, rồi commit cùng thay đổi liên quan qua PR. Giữ mã nhiệm vụ ổn định để AI đối chiếu. Với PR chưa merge, giữ ô phần tích hợp trống và ghi link PR đang chờ; không tick việc thị trường chỉ vì test fixture pass.
 
-**Cách tick:** người có quyền sửa issue bấm ô trong mô tả, hoặc chọn **Edit** và đổi `- [ ]` thành `- [x]`. Thành viên chưa có quyền sửa gửi evidence trong bình luận để owner/TV6 cập nhật. Chưa có username của sáu người nên các checklist chưa gán tài khoản; điền tên tại bảng phân công và gán assignee khi nhóm xác nhận.
+**AI tiếp nhận:** đọc mục vai trò → tìm ô chưa tick đầu tiên đáp ứng phụ thuộc → đọc evidence/issue/code tương ứng → triển khai một lát cắt. Nếu code đã có nhưng chưa nghiệm thu thì kiểm tra lại thay vì viết lại. GitHub Issues giữ thảo luận và status từng ticket; không duy trì thêm checklist vai trò trên issue. Các tracker #9–#14 được thay bằng checklist Markdown này.
 
-**Khi nào được tick:** đã đạt điều kiện ghi trong mục và có bằng chứng PR đã merge, run/lệnh kiểm tra hoặc review phù hợp. PR đang mở thì ghi link, chưa tick phần tích hợp. Nếu bị chặn, giữ ô trống và ghi blocker/phụ thuộc trên issue. Không tick việc thị trường chỉ vì fixture hoặc test phần mềm chạy được. Các ô ban đầu để trống để owner rà soát nghiệm thu; không hàm ý mọi code nền đều chưa có.
+Đi tới: [TV1](#checklist-tv1) · [TV2](#checklist-tv2) · [TV3](#checklist-tv3) · [TV4](#checklist-tv4) · [TV5](#checklist-tv5) · [TV6](#checklist-tv6)
 
-Checklist vai trò là đầu mối theo dõi, không phải một ticket giao toàn bộ backlog cho AI. Mỗi lần triển khai vẫn tạo/nhận issue nhỏ có owner, file và nhánh riêng rồi liên kết từ checklist; chỉ đóng checklist khi hoàn tất các mục bắt buộc. Không sao chép trạng thái vào TEAM hoặc tạo thêm file tracker.
+<a id="checklist-tv1"></a>
+### TV1 — Dữ liệu và nguồn
+
+**Bước tiếp / Chặn:** Xác minh nguồn/quyền dùng và quyết định GO/NO-GO cùng TV6. Chưa có dataset/mapping thị trường được duyệt trong repo.
+
+#### Tuần 1
+
+- [ ] **TV1-01** Xác minh nguồn/quyền dùng và ghi evidence, revision, thời điểm giá/active, phạm vi TP.HCM hiện hành (P01).
+- [ ] **TV1-02** Chốt mapping khu vực có nguồn, ngày hiệu lực, version/hash; đối chiếu schema cùng TV2/TV4.
+- [ ] **TV1-03** Chuẩn hóa CSV/card, audit bán/thuê/đơn vị/timestamps và thống kê mẫu; bàn giao GO/NO-GO ngày 3 cho TV6.
+
+#### Tuần 2
+
+- [ ] **TV1-04** Hoàn thiện grouping từ dữ liệu thô, audit nhóm nghi trùng và chọn đại diện (P02).
+- [ ] **TV1-05** Bàn giao split đề xuất, seed/hash và kiểm tra nhóm rời cho TV6; không đưa nhãn test lên GitHub.
+- [ ] **TV1-06** Bàn giao snapshot/card bất biến cho TV2/TV3; báo missingness, khu vực thiếu nhóm và tập trung dự án.
+
+#### Tuần 3
+
+- [ ] **TV1-07** Bàn giao snapshot refresh và thống kê shift/độ phủ; ghi rõ ngày quan sát giá và active evidence.
+- [ ] **TV1-08** Cùng TV6 rà soát lịch sử nhóm đã dùng fit/tune/test để chuẩn bị test phát hành mới.
+
+#### Tuần 4
+
+- [ ] **TV1-09** Xác minh lại quyền dùng, mapping, độ mới và còn rao gần ngày demo.
+- [ ] **TV1-10** Chốt dataset card/audit cuối, viết phần nguồn và dữ liệu trong báo cáo; reviewer xác nhận bàn giao.
+
+<a id="checklist-tv2"></a>
+### TV2 — Shared features, Linear và Polynomial
+
+**Bước tiếp / Chặn:** Rà soát code nền và nhận snapshot/card/split đã duyệt; fixture chỉ dùng kiểm thử kỹ thuật.
+
+#### Tuần 1
+
+- [ ] **TV2-01** Rà soát và bàn giao shared feature pipeline; loại nhãn/ID/giá suy từ nhãn khỏi X, optional null đúng contract (P03).
+- [ ] **TV2-02** Kiểm tra preprocessing chỉ fit train; baseline median và Linear fit/predict qua cùng interface.
+- [ ] **TV2-03** Chạy CSV sạch → candidate bằng lệnh tái lập, ghi config/seed/hash và kết quả validation; fixture không gọi là dữ liệu thị trường.
+
+#### Tuần 2
+
+- [ ] **TV2-04** Hoàn thiện Polynomial bậc 2 và ngân sách cấu hình theo protocol (P04).
+- [ ] **TV2-05** So baseline/Linear/Polynomial/Tree trên cùng split; chỉ chọn cấu hình/winner bằng validation.
+- [ ] **TV2-06** Khóa feature set/config/candidate cùng TV6 trước khi mở test; bàn giao phiên bản môi trường và artifact hashes.
+
+#### Tuần 3
+
+- [ ] **TV2-07** Bàn giao đúng pipeline đã khóa cho TV6 đánh giá; không refit rồi dùng metric cũ.
+- [ ] **TV2-08** Cùng TV4 kiểm tra inference qua package chung và parity offline/HTTP, không sao chép preprocessing.
+
+#### Tuần 4
+
+- [ ] **TV2-09** Chạy lại quy trình refresh đúng cấu hình được duyệt, giữ lịch sử từng run.
+- [ ] **TV2-10** Viết phần Linear/Polynomial, công thức, kết quả và giới hạn; bàn giao lệnh chạy lại được reviewer xác nhận.
+
+<a id="checklist-tv3"></a>
+### TV3 — Decision Tree và giải thích
+
+**Bước tiếp / Chặn:** Chốt interface và kế hoạch importance với TV2; số liệu thị trường chờ dữ liệu được duyệt.
+
+#### Tuần 1
+
+- [ ] **TV3-01** Cùng TV1 kiểm tra EDA, độ phủ và tập trung dự án; biểu đồ có n/kỳ/đơn vị.
+- [ ] **TV3-02** Thống nhất interface cây với TV2, chạy Decision Tree ban đầu trên fixture đúng contract.
+- [ ] **TV3-03** Chốt kế hoạch tuning, importance và ablation trước khi xem test.
+
+#### Tuần 2
+
+- [ ] **TV3-04** Tuning cây trong ngân sách đã chốt, giữ cùng split và feature set với các mô hình khác.
+- [ ] **TV3-05** Chạy permutation importance trên cột gốc và ablation diện tích/vị trí trên validation.
+- [ ] **TV3-06** Bàn giao config cây đã khóa, log validation, script/figures tái lập và giới hạn tương quan.
+
+#### Tuần 3
+
+- [ ] **TV3-07** Sau freeze, phân tích residual/lỗi theo nhóm bằng kết quả TV6 cho phép; không chọn lại mô hình theo test.
+- [ ] **TV3-08** Đối chiếu độ phức tạp/overfit và robustness giữa ba mô hình; nêu cả kết quả yếu.
+
+#### Tuần 4
+
+- [ ] **TV3-09** Chốt biểu đồ so sánh/importance/case sai lớn gắn run/hash và đơn vị.
+- [ ] **TV3-10** Viết phần cây/giải thích, chuẩn bị trả lời giới hạn và bàn giao được TV2 + TV6 review.
+
+<a id="checklist-tv4"></a>
+### TV4 — Backend và serving
+
+**Bước tiếp / Chặn:** Rà soát contract với TV5; test kỹ thuật đã có, serving thị trường chờ artifact approved.
+
+#### Tuần 1
+
+- [ ] **TV4-01** Rà soát API/OpenAPI, metadata-driven schema và envelope lỗi; bàn giao request/response mẫu cho TV5 (P06).
+- [ ] **TV4-02** Kiểm tra strict input/null/bounds/field lạ và khu vực không hỗ trợ.
+- [ ] **TV4-03** Bàn giao live/ready/metadata/predictions/report với trường hợp thiếu model, không có fallback giá giả.
+
+#### Tuần 2
+
+- [ ] **TV4-04** Kiểm tra trusted loader, checksum/manifest, candidate/synthetic bị chặn khi phục vụ thị trường.
+- [ ] **TV4-05** Cùng TV2/TV6 kiểm tra parity offline/HTTP và output âm/NaN/Inf.
+- [ ] **TV4-06** Kiểm tra stale/biên freshness bằng clock inject, metadata vẫn xem được khi stale.
+
+#### Tuần 3
+
+- [ ] **TV4-07** Hoàn thiện và đo giới hạn public: body/rate/concurrency/timeout, CORS/proxy và lỗi 429; không tuyên bố đã có trước khi kiểm chứng.
+- [ ] **TV4-08** Review bảo mật: không upload/retrain/raw/model-download, không log PII/secrets; cùng TV6 kiểm tra release gates (P11).
+
+#### Tuần 4
+
+- [ ] **TV4-09** Smoke artifact cuối, ngày dữ liệu và rollback chỉ tới model còn hợp lệ.
+- [ ] **TV4-10** Bàn giao local startup/runbook và phần API trong báo cáo; nếu deploy, ghi URL/commit và bằng chứng smoke thực.
+
+<a id="checklist-tv5"></a>
+### TV5 — Frontend và demo
+
+**Bước tiếp / Chặn:** Nhận contract/metadata từ TV4, bắt đầu form và các trạng thái bằng mock có nhãn rõ; hiện chưa có frontend.
+
+#### Tuần 1
+
+- [ ] **TV5-01** Nhận metadata/OpenAPI và mẫu lỗi từ TV4; chốt form/kết quả/report tối thiểu.
+- [ ] **TV5-02** Dựng form theo metadata, optional null đúng nghĩa, khu vực lấy từ API (P07).
+- [ ] **TV5-03** Làm loading/empty/error/unavailable với mock ghi nhãn rõ và một request API thật.
+
+#### Tuần 2
+
+- [ ] **TV5-04** Nối predictions thật; hiển thị tổng giá VND, đơn giá/m², ngày dữ liệu, area basis và warnings.
+- [ ] **TV5-05** Xử lý 422/503/stale/mạng lỗi; không hiện giá từ mock/cache khi server từ chối.
+- [ ] **TV5-06** Nối report tổng hợp gồm baseline + ba mô hình, metric đúng đơn vị/n; không tính metric từ raw (P08).
+
+#### Tuần 3
+
+- [ ] **TV5-07** Kiểm tra màn hình nhỏ, khả năng dùng form và thông báo lỗi.
+- [ ] **TV5-08** Viết/chạy Playwright smoke valid/invalid/unavailable/stale cùng TV4/TV6, lưu evidence gắn phiên bản.
+
+#### Tuần 4
+
+- [ ] **TV5-09** Chốt demo theo artifact/report cuối; công bố rõ giới hạn và phần chưa đủ điều kiện.
+- [ ] **TV5-10** Bàn giao hướng dẫn UI, ảnh/video có ngày/model và phần frontend trong báo cáo; diễn tập cùng TV6.
+
+<a id="checklist-tv6"></a>
+### TV6 — Tích hợp, kiểm định và phát hành
+
+**Bước tiếp / Chặn:** Hoàn tất chuyển checklist Markdown qua review; sau đó phối hợp TV1 kiểm tra cổng dữ liệu. P09 đã merge, đánh giá thị trường vẫn chờ dữ liệu/candidate.
+
+#### Tuần 1
+
+- [ ] **TV6-01** Xác nhận rubric, tên/quỹ giờ của 6 người, lịch và issue triển khai; không bịa GitHub username.
+- [ ] **TV6-02** Đưa checklist nhiệm vụ vào Markdown của TEAM để AI đọc trực tiếp và cập nhật qua PR — [issue #16](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/16), đang chờ tích hợp.
+- [x] **TV6-03** P09 đã review/merge: cài môi trường sạch, smoke package ngoài repo, parity schema, pytest/Ruff/pip check và CI — [PR #8](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/8), 58 test pass; chỉ là kiểm chứng kỹ thuật.
+- [ ] **TV6-04** Cùng TV1 review nguồn/card/mapping/audit và ghi quyết định GO/NO-GO.
+
+#### Tuần 2
+
+- [ ] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol.
+- [ ] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu.
+
+#### Tuần 3
+
+- [ ] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10).
+- [ ] **TV6-08** Cùng TV4 kiểm tra parity offline/HTTP, model thiếu/chưa duyệt/quá hạn và security/release gates (P11).
+- [ ] **TV6-09** Hoàn thiện release/registry và reviewer độc lập; chỉ duyệt khi đủ gate, không tự duyệt PR của mình.
+
+#### Tuần 4
+
+- [ ] **TV6-10** Kiểm tra snapshot/test mới chưa lộ khi refresh và freshness gần demo; quyết định có phát hành.
+- [ ] **TV6-11** Tổng hợp báo cáo/slide/evidence; cùng nhóm diễn tập hai lượt có tình huống lỗi và người dự phòng (P12).
+- [ ] **TV6-12** Chốt gói nộp code/lock/config/báo cáo/video gắn phiên bản, ghi chính xác các giới hạn và blocker.
+
+#### Nền kỹ thuật đã kiểm chứng
+
+- [x] **TV6-13** Guard P10 từ chối candidate thiếu mô hình, winner/split/holdout sai; đã merge [PR #4](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/4). Phần đánh giá thị trường độc lập ở TV6-07 vẫn chưa hoàn tất.
 
 ## Người, công nghệ và phạm vi sở hữu
 
@@ -161,7 +320,7 @@ Mỗi ngày làm việc cập nhật task: done / next / blocker kèm link PR/ru
 | P11 Security/integration release | TV4 + TV6 | P06/P07/P10 | Release gates và reviewer pass |
 | P12 Refresh/demo/report | Cả nhóm, TV6 điều phối | P01–P11 | Độ mới kiểm tra lại, báo cáo/diễn tập, giới hạn công bố |
 
-Đây là danh mục phân công; khi nhận việc tạo GitHub Issue theo [quy ước](../AGENTS.md), link mã Pxx ở đây, không sao chép hợp đồng. Tiến độ, blocker, phạm vi file đang giữ và PR liên quan nằm trên issue. Trước khi AI nhận việc, thành viên xác định TV nào và issue nào; không giao cả backlog như một ticket.
+Đây là danh mục phân công; khi nhận việc tạo GitHub Issue theo [quy ước](../AGENTS.md), link mã Pxx ở đây, không sao chép hợp đồng. Checklist nghiệm thu và bước tiếp/blocker theo vai trò nằm ở [đầu file](#checklist); issue giữ chi tiết ticket, phạm vi file đang giữ và PR liên quan. Trước khi AI nhận việc, thành viên xác định TV nào và issue nào; không giao cả backlog như một ticket.
 
 
 <a id="github-workflow"></a>
@@ -218,7 +377,7 @@ Nếu conflict, đọc cả hai thay đổi và phối hợp owner, sửa đúng
 
 **7. Review và merge PR.** Khi hoàn tất, chuyển draft sang **Ready for review**. Cần CI xanh và ít nhất một reviewer khác tác giả; đổi interface cần producer và consumer review. Người có quyền merge chọn **Squash and merge** trên GitHub sau review; không thay bước này bằng push local lên `main`. Khi PR đã merge, issue liên kết được đóng; PR còn mở thì chưa phải bản tích hợp.
 
-**8. Nhận việc kế tiếp.** Kiểm tra working tree sạch, `git fetch origin`, rồi tạo nhánh mới từ `origin/main` như bước 2. Không tiếp tục làm việc mới trên nhánh PR cũ đã merge. Tiến độ và blocker cập nhật trên issue/PR; TEAM chỉ giữ phân công/mốc.
+**8. Nhận việc kế tiếp.** Kiểm tra working tree sạch, `git fetch origin`, rồi tạo nhánh mới từ `origin/main` như bước 2. Không tiếp tục làm việc mới trên nhánh PR cũ đã merge. Đọc và cập nhật checklist Markdown của vai trò trong TEAM; chi tiết từng ticket tiếp tục ở issue/PR.
 
 ### Quyền sửa file chung
 
@@ -235,4 +394,4 @@ Trước bắt đầu fetch và tạo nhánh từ origin/main; trước PR fetch
 
 PR cần một reviewer khác tác giả; đổi interface cần cả producer và consumer. CI xanh mới squash merge. Nếu protection chưa bật được, ghi rõ là quy ước vận hành chưa được GitHub cưỡng chế. Chưa biết username của 6 người thì TV1–TV6 là mã vai trò, không bịa assignee/reviewer.
 
-TEAM giữ phân công/mốc; GitHub Issue giữ tiến độ/trao đổi/PR. Không tạo tracker hoặc file ghi chú có trạng thái khác. Đóng issue khi kết quả đã được kiểm tra và tích hợp qua PR; tài liệu thiết kế không đồng nghĩa tính năng đã xong.
+TEAM giữ phân công/mốc và checklist nghiệm thu theo thành viên; GitHub Issue giữ status/trao đổi/PR của từng ticket triển khai. Không tạo bản checklist vai trò hoặc file ghi chú có trạng thái khác. Đóng issue triển khai khi kết quả đã được kiểm tra và tích hợp qua PR; tài liệu thiết kế không đồng nghĩa tính năng đã xong.
