@@ -17,7 +17,7 @@ GitHub Issues khi repo khả dụng; trước đó dùng backlog trong TEAM. Spe
 
 ## GitHub: giảm xung đột cho nhóm 6 người
 
-- Một nhánh tích hợp `main`; không thêm `develop` trong 4 tuần. Bootstrap repo rỗng có thể có một commit nền; sau đó làm qua PR.
+- Một nhánh tích hợp `main`; không thêm `develop` trong 4 tuần. Không push trực tiếp lên `main`: mọi thay đổi phải từ nhánh riêng và qua PR. Không dùng force-push để vượt quy trình.
 - Một issue/một owner triển khai/một nhánh ngắn hạn: `feat/<issue>-<slug>`, `fix/<issue>-<slug>`, `docs/<issue>-<slug>`, `chore/<issue>-<slug>`.
 - Trước bắt đầu: fetch, tạo nhánh từ `origin/main`. Trước PR: fetch rồi merge `origin/main` vào nhánh cá nhân. Không rewrite lịch sử đã chia sẻ hoặc force-push nhánh chung.
 - Mở draft PR sớm, ghi phạm vi/file đang giữ. Không cùng ghi một file chung mà chưa phối hợp owner; người khác đề xuất qua review. Không format toàn repo trong PR tính năng.

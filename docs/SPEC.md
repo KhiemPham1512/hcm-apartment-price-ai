@@ -6,7 +6,7 @@ Status: ready-for-agent. [Repository public](https://github.com/KhiemPham1512/hc
 
 Nhóm 6 người cần hoàn thành đồ án AI trong 4 tuần: ước tính giá căn hộ **hiện tại** ở TPHCM, so sánh ba mô hình hồi quy và giải thích các đặc trưng. Nhãn tiếp cận được là giá rao bán, không phải giá giao dịch đã chốt. Đề gốc yêu cầu Linear Regression, Polynomial Regression, DecisionTreeRegressor, RMSE/R² trên test độc lập và phân tích đặc trưng.
 
-Người dùng đồng ý thu hẹp căn hộ trong địa giới TPHCM trước sắp xếp 2025; TV6 vẫn cần đối chiếu rubric giảng viên về phạm vi nhà/đất của đề gốc.
+Phạm vi hiện tại là căn hộ tại TP.HCM theo địa giới hiện hành ở thời điểm snapshot, với giá rao được quan sát gần thời điểm chạy. Không dùng mốc trước năm 2025 làm giới hạn thời gian hoặc địa lý. TV1 xác minh danh mục khu vực và độ phủ thực tế; TV6 vẫn cần đối chiếu rubric giảng viên về phạm vi nhà/đất của đề gốc. Phiên bản mapping và giới hạn độ mới lấy từ hợp đồng trong README.
 
 ## Solution
 
