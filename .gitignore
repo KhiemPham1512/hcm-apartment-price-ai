@@ -1,24 +1,57 @@
-node_modules/
+# Python environments and generated packaging files
 .env
 .env.*
 !.env.example
-*.log
 .venv/
+venv/
+env/
+.python-version
 __pycache__/
 *.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Test, lint, type-check and coverage caches
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
 .ipynb_checkpoints/
+
+# Temporary files and local editor settings
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+~$*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+tests/temp/
+.local-artifacts/
+
+# Private data, holdout labels and model binaries
 data/raw/
 data/processed/
 artifacts/
 *.joblib
 *.pkl
 *.pickle
-frontend/dist/
+holdout.csv
+splits.csv
 reports/**/predictions*.csv
-.local-artifacts/
 docs/detai.docx
-*.egg-info/
-build/
-~$*
+
+# Reserved for a future frontend; no Node tooling at the root
+node_modules/
+frontend/dist/
