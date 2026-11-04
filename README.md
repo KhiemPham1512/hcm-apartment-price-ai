@@ -77,6 +77,8 @@ py -3.12 -m venv .venv
 
 Không cần activate venv khi gọi trực tiếp Python như trên. Linux/macOS: dùng `python3.12 -m venv .venv`, rồi thay `.venv/Scripts/python.exe` bằng `.venv/bin/python`.
 
+Lần đầu cần mạng để tải dependency. Các lần sau dùng lại môi trường đã cài; không tạo lại venv hoặc ghi đè cấu hình cá nhân. Lock cố định phiên bản dùng cho kiểm chứng; đổi dependency phải cập nhật lock và chạy lại CI trong cùng PR.
+
 **Chạy kiểm tra:**
 
 ```powershell
@@ -99,6 +101,16 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/metadata
 ```
 
 Kỳ vọng khi chưa có model: live trả `status=live`, metadata trả `serving_status=unavailable` và danh sách khu vực rỗng. Readiness/dự đoán trả 503; kiểm tra manifest, đường dẫn và ngày dữ liệu khi đã có model mà vẫn nhận 503.
+
+| Gặp vấn đề | Kiểm tra / xử lý |
+| --- | --- |
+| Không import được `ml` hoặc `backend` | Dùng đúng Python trong venv và chạy bước cài package ở trên |
+| Không mở được API | Xem terminal Uvicorn; kiểm tra host/port, đổi port nếu đang bị chiếm |
+| Live 200 nhưng ready 503 | Process đã chạy; model có thể thiếu, không hợp lệ hoặc quá hạn. Xem metadata và log, không sửa ngày để vượt gate |
+| UI gọi lỗi nhưng Swagger gọi được | Đối chiếu URL API và origin; hiện chỉ cho `localhost:5173` và `127.0.0.1:5173` |
+| Cài lock thất bại | Kiểm tra Python 3.12, kết nối package index và phiên bản được báo lỗi; không tự bỏ pin để chạy tiếp |
+
+`MODEL_DIR` là cấu hình tùy chọn duy nhất hiện được app đọc, chỉ trỏ tới gói đã duyệt trên máy server. Không đặt đường dẫn artifact hoặc secrets trong frontend. Khi đổi biến này cần khởi động lại Uvicorn. Chưa có cấu hình hosting được xác minh.
 
 **Huấn luyện và đánh giá khi TV1 đã bàn giao CSV/card hợp lệ:**
 
@@ -123,6 +135,8 @@ Chỉ dùng lệnh này sau khi thư mục approved đã tồn tại và qua rev
 ## Bắt đầu đọc và nhận việc
 
 Đọc `ml/schema.py` → `ml/data.py` → `ml/models.py` → `ml/train.py` → `ml/evaluate.py` → `backend/service.py` → `backend/app.py`. Test ở `tests/` cho thấy hành vi mong đợi.
+
+AI học như sau: **train** dùng các đặc trưng X và nhãn giá y để fit pipeline; **validation** so sánh baseline và ba mô hình để chọn cấu hình; **test** chỉ đo sau khi khóa lựa chọn. Sau review, API dùng pipeline đã lưu để suy ra giá cho đầu vào mới. RMSE tính bằng VND, càng thấp càng tốt; R² có thể âm và không phải phần trăm dự đoán đúng. Test phần mềm pass chỉ xác nhận hành vi kỹ thuật, không chứng minh mô hình ước tính sát thị trường.
 
 **Vai trò đề xuất để nắm toàn dự án: TV6 — giữ luồng tích hợp và kiểm định xuyên suốt.** Người phụ trách chạy lại sản phẩm của từng thành viên, kiểm tra điểm bàn giao và điều phối tiếp quản khi có người trễ. Lộ trình ngày 1–28, bằng chứng cần nhận và cách giữ holdout độc lập nằm trong [TEAM](docs/TEAM.md).
 
@@ -328,6 +342,10 @@ Base path `/api/v1`. JSON UTF-8, chỉ số hữu hạn, không ép chuỗi thà
 
 Không có endpoint upload CSV, retrain, đổi artifact, liệt kê filesystem, lấy raw hoặc tải joblib. Một model winner phục vụ; ba mô hình xuất hiện trong báo cáo, không bắt người dùng chọn model để tìm số giá mong muốn.
 
+**Trạng thái bàn giao:** các route trên đã có code và test local/CI; chưa xác minh bản triển khai public. Request schema thực thi nằm ở `ml/schema.py`, xem tại `/openapi.json` hoặc `/docs`; metadata công bố cùng feature schema cho UI. Hợp đồng mục tiêu dưới đây còn có phần report/release chưa hoàn thiện: không suy từ ví dụ thành tính năng đã chạy. Mỗi PR đổi contract cần TV4 và consumer TV5 review, cập nhật README/code/tests cùng PR.
+
+**Thứ tự UI gọi:** metadata → kiểm tra `serving_status` → lấy mã khu vực được hỗ trợ → gửi một căn hộ tới predictions → render kết quả và ngày dữ liệu; report là lời gọi riêng. Khi chưa có model, UI hiện chưa sẵn sàng và không gửi dự đoán. MVP không yêu cầu token đăng nhập.
+
 ## Request dự đoán
 
 Required: `area_m2`, `district_code`. Optional mặc định null: `bedrooms`, `bathrooms`, `floor_level`. Kiểu và giới hạn chỉ định nghĩa trong [bảng trường](#du-lieu), không định nghĩa bản khác ở frontend. Frontend lấy danh mục district từ metadata.
@@ -384,6 +402,8 @@ Report trả `run_id`, `dataset_version`, `evaluation_window_start/end`, n từn
 | 500 | `internal_error` | Lỗi không dự kiến, không lộ chi tiết nội bộ |
 
 TV4 viết exception handler để lỗi validation dùng cùng envelope thay vì mặc định FastAPI. Không trả lại nguyên request trong `details`. Các giới hạn request và quyền chỉ định nghĩa tại [security](#bao-mat).
+
+UI xử lý 422 bằng thông báo kiểm tra đầu vào/khu vực; 413/415 bằng sửa định dạng request; 503 bằng trạng thái chưa sẵn sàng hoặc quá hạn, không hiện giá từ mock/cache. Với lỗi mạng/500, cho phép người dùng thử lại và giữ `error.request_id` để tra log, không lặp request vô hạn. 429 và inference timeout là mục tiêu public, chưa có cơ chế thực thi đầy đủ trong code hiện tại.
 
 ## Kiểm tra tích hợp bắt buộc
 
@@ -483,6 +503,10 @@ Mỗi run giữ dataset/split/artifact hash, code revision, config, seed, packag
 Khi refresh, dùng dataset/run/artifact mới và giữ lịch sử bất biến. Sổ `evaluation_registry` nội bộ phải ghi nhóm từng dùng fit, tune, phân tích nhãn hoặc đánh giá. Test phát hành mới chỉ lấy nhóm chưa tiếp xúc; không chuyển nhóm bị loại sang train trong cùng run để cứu cỡ mẫu. Chưa đủ test mới thì chưa phát hành, không sửa timestamp model cũ. Registry đầy đủ còn là công việc cần hoàn thiện.
 
 Demo: metadata/ngày dữ liệu → nhập căn hộ hỗ trợ → giá + cảnh báo → bảng ba mô hình → thử lỗi đầu vào và stale trong test. Rollback chỉ tới artifact còn hợp lệ; không dùng cache hay video cũ như kết quả live. Luôn có cách chạy local.
+
+**Kịch bản trình bày 8 phút:** 1 phút nêu bài toán giá rao/phạm vi; 2 phút giải thích nguồn, X/y và split nhóm; 2 phút so baseline/ba mô hình bằng metric có đơn vị và n; 2 phút chạy metadata → dự đoán → lỗi đầu vào/quá hạn; 1 phút nêu giới hạn và cách chạy lại. Chỉ trình bày metric khi có run thật đã kiểm định. Nếu thiếu dữ liệu/model được duyệt, demo live/metadata/503 và test kỹ thuật, ghi rõ phần thị trường chưa đủ điều kiện. Video dự phòng phải ghi phiên bản/ngày và được giới thiệu là bản ghi.
+
+**P09 — kiểm tra môi trường trước bàn giao:** CI cài lock và package thường (không editable), kiểm tra dependency, import/CLI/API thiếu model từ thư mục ngoài repo bằng Python isolated, rồi chạy pytest/Ruff. Cách này phát hiện package thiếu module dù chạy trong checkout vẫn pass. Test contract đối chiếu schema ML, metadata và OpenAPI. Kết quả kiểm chứng giữ tại [Actions](https://github.com/KhiemPham1512/hcm-apartment-price-ai/actions) và PR; cài mới local chỉ được coi là đạt khi các bước thực sự chạy xong.
 
 <a id="dataset-card"></a>
 **Dataset card phát hành:** chủ nguồn, URL/revision, license/permission và ghi công; thời gian/địa giới/area basis; raw/clean hashes; số dòng trước/sau lọc, reason codes, missingness, audit đơn vị/bán/thuê; grouping và split hashes; người chuẩn bị/review, GO/NO-GO. Card đầu vào CLI hiện chỉ gồm các trường trong `DatasetCard`, chưa thay toàn bộ bằng chứng này.

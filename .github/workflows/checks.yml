@@ -16,6 +16,28 @@ jobs:
           cache: pip
           cache-dependency-path: .github/requirements-dev.lock
       - run: python -m pip install -r .github/requirements-dev.lock
-      - run: python -m pip install --no-deps --no-build-isolation -e .
+      - run: python -m pip install --no-deps --no-build-isolation .
+      - run: python -m pip check
+      - name: Check installed package outside checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -I - <<'PY'
+          import sys
+          from pathlib import Path
+
+          import backend
+          import ml
+          from backend.app import create_app
+          from fastapi.testclient import TestClient
+
+          for module in (ml, backend):
+              assert Path(sys.prefix).resolve() in Path(module.__file__).resolve().parents
+          client = TestClient(create_app())
+          assert client.get('/health/live').status_code == 200
+          assert client.get('/api/v1/metadata').json()['serving_status'] == 'unavailable'
+          assert client.get('/health/ready').status_code == 503
+          PY
+          python -I -m ml.train --help
+          python -I -m ml.evaluate --help
       - run: python -m ruff check .
       - run: python -m pytest -q

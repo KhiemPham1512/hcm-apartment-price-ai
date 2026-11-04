@@ -37,6 +37,17 @@ Khi một thành viên trễ: ghi blocker ở GitHub Issue, thống nhất chuy�
 
 ## Tuần 1 — khóa dữ liệu và một lát cắt chạy xuyên suốt
 
+### 48 giờ đầu: làm gì trước, ai kiểm tra?
+
+| Thứ tự | Người làm | Hoàn tất khi |
+| --- | --- | --- |
+| Ngày 1: chốt phạm vi và nhận việc | Cả nhóm, TV6 điều phối | Đối chiếu rubric, điền tên/quỹ giờ thực vào TEAM; mỗi người có issue và phạm vi file |
+| Ngày 1: dựng môi trường | Mỗi người, TV6 hỗ trợ P09 | Cài theo README, pytest/Ruff/pip check; API live và metadata xem được |
+| Ngày 1–2: thử điểm rủi ro | TV1 nguồn; TV2/TV3 pipeline; TV4/TV5 contract | TV1 đưa evidence hoặc blocker; các owner còn lại chạy fixture có nhãn rõ, không chờ dữ liệu để kiểm tra interface |
+| Cuối ngày 2: tích hợp ngắn | TV6 cùng các owner | Một máy khác chạy lại lệnh bàn giao; ghi lỗi/owner trên issue, chuẩn bị gate dữ liệu ngày 3 |
+
+Mốc này là hướng dẫn thực hiện, không phải báo cáo các việc đã xong. Vướng một lỗi quá một giờ làm việc thì ghi lệnh tái hiện, kết quả mong đợi/thực tế và nhờ reviewer dự phòng trên issue; không gửi dữ liệu riêng hoặc secrets.
+
 | Người | Việc cụ thể | Đầu ra cuối tuần / cách nghiệm thu |
 | --- | --- | --- |
 | TV1 | Ngày 1 thẩm định nguồn/quyền/ngày tin và thời điểm giá; ngày 2 parser + audit; ngày 3 gate dữ liệu. Sau GO, chuẩn hóa, grouping và đề xuất split theo protocol | Dataset card, raw/clean hashes, thống kê loại dòng, danh mục khu vực có nguồn, grouping audit; TV6 duyệt theo spec |
@@ -97,6 +108,18 @@ Khi một thành viên trễ: ghi blocker ở GitHub Issue, thống nhất chuy�
 
 ## Luồng phụ thuộc và chống nghẽn
 
+### Bàn giao tối thiểu giữa các owner
+
+| Bên giao → bên nhận | Gói cần nhận | Bên nhận kiểm tra |
+| --- | --- | --- |
+| TV1 → TV2/TV3/TV6 | CSV/card, quyền dùng, mapping version/hash và audit trong kho nội bộ | Schema/đơn vị/freshness, nhóm trùng và GO/NO-GO |
+| TV2/TV3 → TV6 | Candidate, split/config/hash, validation và lệnh tái lập | Đủ baseline + ba mô hình; freeze trước test, không refit rồi giữ metric cũ |
+| TV6 → TV4 | Báo cáo test và gói approved sau review theo README | Đúng hash/schema/model, parity offline/HTTP và stale/unavailable |
+| TV4 → TV5 | OpenAPI/metadata, request/response/error mẫu đúng phiên bản | Cùng field/đơn vị; UI không hardcode khu vực và không fallback giá giả |
+| TV5 + các owner → TV6 | Demo, hướng dẫn chạy và evidence PR/CI | Máy khác chạy lại được, thiếu mạng/model có thông báo đúng; diễn tập trước nộp |
+
+Mỗi bàn giao ghi commit/run, lệnh chạy, kết quả và blocker trên issue/PR. “Code đã viết”, “test local đạt”, “CI đạt” và “đã deploy được xác minh” là các mức bằng chứng khác nhau. Gói dữ liệu/model riêng không đính vào issue public.
+
 `TV1 source gate → TV1+TV6 frozen split → TV2/TV3 experiments → TV6 evaluation → TV4 serving → TV5 demo`. TV4/TV5 làm song song trên contract từ ngày 1; TV6 chuẩn bị tests/integration từ đầu. Không để TV5 đợi model mới viết form hoặc TV4 tự đoán schema.
 
 Mỗi ngày làm việc cập nhật task: done / next / blocker kèm link PR/run. Họp tích hợp 20 phút hai lần/tuần; review trong một ngày làm việc. Không merge hai người sửa `features.py`/API schema cùng lúc mà chưa thống nhất owner. Nếu owner vắng, reviewer dự phòng tiếp nhận bằng task và thông báo nhóm.
@@ -113,7 +136,7 @@ Mỗi ngày làm việc cập nhật task: done / next / blocker kèm link PR/ru
 | P06 API contract và serving | TV4 | Fixture trước; candidate để parity | Strict validation, errors, freshness/output guards |
 | P07 Form và kết quả | TV5 | API contract | Mock có nhãn + API thật + states |
 | P08 Báo cáo web | TV5 | Report contract; P10 cho số thật | Không tính metric bằng mock hoặc raw |
-| P09 Contract/CI/environment checks | TV6 | Không | Lock môi trường, schema parity, checks chạy được |
+| P09 Contract/CI/environment checks — [issue #7](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/7) | TV6 | Không | Cài package từ môi trường sạch, smoke ngoài repo, schema parity, pytest/Ruff/pip check và CI |
 | P10 Independent evaluation — [issue #3: bảo vệ holdout](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/3) | TV6 | Fixture trước; P03/P04/P05 freeze để đo thật | B0/M1/M2/M3 test, artifact evidence |
 | P11 Security/integration release | TV4 + TV6 | P06/P07/P10 | Release gates và reviewer pass |
 | P12 Refresh/demo/report | Cả nhóm, TV6 điều phối | P01–P11 | Độ mới kiểm tra lại, báo cáo/diễn tập, giới hạn công bố |
