@@ -74,6 +74,6 @@ class DatasetCard(BaseModel):
     data_kind: Literal["real", "synthetic"]
     license_reference: str = Field(min_length=1)
     source_verified: bool = False
-    geography_version: Literal["hcm_pre2025_v1"] = "hcm_pre2025_v1"
+    geography_version: Literal["hcm_current_v1"]
     grouping_version: str = Field(min_length=1)
     district_labels: dict[str, str]

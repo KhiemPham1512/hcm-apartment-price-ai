@@ -4,6 +4,8 @@ Owner điều phối: TV6. Kế hoạch giả định **12 giờ/người/tuần
 
 Lịch tính từ 04/11/2026: tuần 1 ngày 04–10/11, tuần 2 ngày 11–17/11, tuần 3 ngày 18–24/11, tuần 4 ngày 25/11–01/12. Nếu bắt đầu khác ngày, dời lịch tại **file này**; ngày 1/3/7/14/21/28 trong spec là mốc tương đối.
 
+Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá rao gần thời điểm snapshot, theo [SPEC](SPEC.md). TV1 bàn giao danh mục khu vực có nguồn/version; mọi thành viên dùng cùng danh mục và hợp đồng trong README, không tự lọc về phạm vi địa lý cũ.
+
 ## Người, công nghệ và phạm vi sở hữu
 
 | Thành viên | Trách nhiệm chính | Công nghệ phải dùng/học | Thư mục/file sở hữu khi triển khai | Người dự phòng / reviewer |
@@ -119,9 +121,63 @@ Mỗi ngày làm việc cập nhật task: done / next / blocker kèm link PR/ru
 Đây là danh mục phân công; khi nhận việc tạo GitHub Issue theo [quy ước](../AGENTS.md), link mã Pxx ở đây, không sao chép hợp đồng. Tiến độ, blocker, phạm vi file đang giữ và PR liên quan nằm trên issue. Trước khi AI nhận việc, thành viên xác định TV nào và issue nào; không giao cả backlog như một ticket.
 
 
-## Phong cách GitHub và quyền sửa file
+<a id="github-workflow"></a>
+## Làm việc trên GitHub: nhánh riêng → Pull Request → review → merge
 
-Nguồn chuẩn quy tắc là [AGENTS.md](../AGENTS.md). Áp dụng trunk-based: `main` là nhánh tích hợp duy nhất, không thêm `develop` trong 4 tuần. Một issue/một owner/một nhánh ngắn hạn; mở draft PR sớm để cả nhóm biết file nào đang được sửa. Sau bootstrap không làm trực tiếp trên main.
+Nguồn chuẩn quy tắc là [AGENTS.md](../AGENTS.md). **Không commit công việc trực tiếp trên `main`, không chạy `git push origin main` và không force-push.** `main` chỉ nhận thay đổi qua PR được review. Đây là quy tắc làm việc của nhóm; chưa xác minh GitHub branch protection đã cưỡng chế nó.
+
+**1. Nhận issue và chốt phạm vi.** Một issue, một owner triển khai, một nhánh. Ghi vai trò TV, yêu cầu, file sẽ sửa và phụ thuộc trên issue; kiểm tra PR đang mở để tránh hai người cùng sửa file chung. Chưa có issue thì tạo issue trước, không bắt đầu bằng việc sửa tất cả backlog.
+
+**2. Tạo nhánh từ bản `main` mới nhất.** Chạy tại root repo. Ví dụ dùng issue #123 và nhánh `feat/123-ten-viec`; thay số và tên theo công việc thật. Dùng `fix/`, `docs/` hoặc `chore/` nếu phù hợp.
+
+```powershell
+git status
+git fetch origin
+git switch -c feat/123-ten-viec origin/main
+```
+
+`git status` phải sạch trước khi chuyển sang việc khác. Nếu còn thay đổi, hoàn tất trên nhánh đang làm hoặc phối hợp owner; không dùng reset/clean để bỏ qua. Không cần tự merge local `main` trước khi tạo nhánh từ `origin/main`.
+
+**3. Làm việc và kiểm tra.** AI đọc tài liệu + issue + code/test liên quan theo [README](../README.md). Với tính năng, làm RED → GREEN; giữ test nghiệp vụ trong `tests/`, dọn test tạm/cache, không tạo thư mục root mới. Kiểm tra trước commit:
+
+```powershell
+.venv/Scripts/python.exe -m pytest -q
+.venv/Scripts/python.exe -m ruff check .
+git diff --check
+git status
+```
+
+**4. Commit và push nhánh riêng.** Stage đúng file của issue, đọc diff đã stage, không đưa dữ liệu, nhãn holdout, model binary hay secrets vào Git. Ví dụ dưới stage một file; thay đường dẫn và thông điệp theo thay đổi thật.
+
+```powershell
+git add ml/evaluate.py
+git diff --cached
+git commit -m "fix: validate frozen evaluation inputs"
+git push -u origin feat/123-ten-viec
+```
+
+**5. Mở draft Pull Request sớm.** Trên GitHub chọn **base: main**, **compare: nhánh của bạn**, bấm **Create draft pull request**. Hoặc dùng GitHub CLI sau khi đăng nhập `gh auth login`:
+
+```powershell
+gh pr create --base main --head feat/123-ten-viec --draft --fill
+```
+
+Sửa mô tả PR để có vấn đề đã giải quyết, file đang giữ, bằng chứng test và `Closes #123`. Draft cho nhóm biết phạm vi đang làm; chưa coi đó là công việc đã hoàn tất. Commit/push tiếp trên cùng nhánh sẽ cập nhật cùng PR, không tạo PR mới cho mỗi commit.
+
+**6. Đồng bộ trước review cuối.** Đứng trên nhánh cá nhân, cập nhật `main` bằng merge, không rewrite lịch sử:
+
+```powershell
+git fetch origin
+git merge origin/main
+```
+
+Nếu conflict, đọc cả hai thay đổi và phối hợp owner, sửa đúng ý nghĩa rồi `git add` các file đã giải quyết và `git commit` để kết thúc merge. Không nhận hàng loạt ours/theirs. Chạy lại test phần giao, rồi `git push` nhánh hiện tại.
+
+**7. Review và merge PR.** Khi hoàn tất, chuyển draft sang **Ready for review**. Cần CI xanh và ít nhất một reviewer khác tác giả; đổi interface cần producer và consumer review. Người có quyền merge chọn **Squash and merge** trên GitHub sau review; không thay bước này bằng push local lên `main`. Khi PR đã merge, issue liên kết được đóng; PR còn mở thì chưa phải bản tích hợp.
+
+**8. Nhận việc kế tiếp.** Kiểm tra working tree sạch, `git fetch origin`, rồi tạo nhánh mới từ `origin/main` như bước 2. Không tiếp tục làm việc mới trên nhánh PR cũ đã merge. Tiến độ và blocker cập nhật trên issue/PR; TEAM chỉ giữ phân công/mốc.
+
+### Quyền sửa file chung
 
 | Người | Prefix nhánh | File chung phải phối hợp |
 | --- | --- | --- |
@@ -136,4 +192,4 @@ Trước bắt đầu fetch và tạo nhánh từ origin/main; trước PR fetch
 
 PR cần một reviewer khác tác giả; đổi interface cần cả producer và consumer. CI xanh mới squash merge. Nếu protection chưa bật được, ghi rõ là quy ước vận hành chưa được GitHub cưỡng chế. Chưa biết username của 6 người thì TV1–TV6 là mã vai trò, không bịa assignee/reviewer.
 
-TEAM giữ phân công/mốc; GitHub Issue giữ status/trao đổi/PR. Trong lúc repo chưa khả dụng, đánh dấu tiến độ ngay ở backlog phía trên, không tạo thêm tracker/file ghi chú. Đóng issue chỉ khi có code, kiểm tra và evidence; tài liệu thiết kế không đồng nghĩa tính năng đã xong.
+TEAM giữ phân công/mốc; GitHub Issue giữ tiến độ/trao đổi/PR. Không tạo tracker hoặc file ghi chú có trạng thái khác. Đóng issue khi kết quả đã được kiểm tra và tích hợp qua PR; tài liệu thiết kế không đồng nghĩa tính năng đã xong.

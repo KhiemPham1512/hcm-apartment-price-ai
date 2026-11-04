@@ -2,7 +2,7 @@
 
 **Ước tính tổng giá rao bán căn hộ tại TP.HCM bằng Machine Learning.** Đồ án nhóm 6 người trong 4 tuần: so sánh Linear Regression, Polynomial Regression và Decision Tree, giải thích kết quả rồi cung cấp API để demo.
 
-Người dùng nhập diện tích, khu vực và một số thuộc tính căn hộ. Hệ thống dự kiến trả tổng giá VND, đơn giá/m², ngày dữ liệu và cảnh báo. Giá ước tính phản ánh **giá rao bán**, không phải giá giao dịch đã chốt hay dự báo giá tương lai. Phạm vi địa lý cố định theo TP.HCM trước sắp xếp năm 2025.
+Người dùng nhập diện tích, khu vực và một số thuộc tính căn hộ. Hệ thống dự kiến trả tổng giá VND, đơn giá/m², ngày dữ liệu và cảnh báo. Giá ước tính phản ánh **giá rao bán**, không phải giá giao dịch đã chốt hay dự báo giá tương lai. Dự án dùng **TP.HCM theo địa giới hiện hành và giá quan sát gần thời điểm chạy**, không giới hạn theo mốc trước năm 2025.
 
 [Hướng dẫn chạy](#chay) · [Luồng xử lý](#luong) · [API](#api) · [Phân công](docs/TEAM.md) · [Yêu cầu nghiệm thu](docs/SPEC.md)
 
@@ -109,7 +109,7 @@ Kỳ vọng khi chưa có model: live trả `status=live`, metadata trả `servi
 .venv/Scripts/python.exe -m ml.evaluate --run-dir artifacts/run-001
 ```
 
-Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`. Dùng thư mục run mới; `evaluate` không ghi đè báo cáo đã có. CLI kiểm tra checksum, đủ baseline + ba mô hình, winner hợp lệ, split không lặp tin/nhóm và holdout khớp đúng danh sách test đã khóa; thất bại thì không tạo báo cáo. Train tạo candidate, evaluate tạo `evaluation.json`; hai lệnh **chưa tự phê duyệt model**.
+Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`, bắt buộc ghi `geography_version="hcm_current_v1"`; card thiếu phiên bản hoặc dùng phạm vi cũ bị từ chối, không tự đổi nhãn để tiếp tục chạy. Dùng thư mục run mới; `evaluate` không ghi đè báo cáo đã có. CLI kiểm tra checksum, đủ baseline + ba mô hình, winner hợp lệ, split không lặp tin/nhóm và holdout khớp đúng danh sách test đã khóa; thất bại thì không tạo báo cáo. Train tạo candidate, evaluate tạo `evaluation.json`; hai lệnh **chưa tự phê duyệt model**.
 
 Khi đã được bàn giao gói phát hành đáng tin cậy gồm `manifest.json`, `pipeline.joblib` và báo cáo nếu có, đặt `MODEL_DIR` trỏ tới thư mục đó trước khi chạy Uvicorn:
 
@@ -126,7 +126,7 @@ Chỉ dùng lệnh này sau khi thư mục approved đã tồn tại và qua rev
 
 **Vai trò đề xuất để nắm toàn dự án: TV6 — giữ luồng tích hợp và kiểm định xuyên suốt.** Người phụ trách chạy lại sản phẩm của từng thành viên, kiểm tra điểm bàn giao và điều phối tiếp quản khi có người trễ. Lộ trình ngày 1–28, bằng chứng cần nhận và cách giữ holdout độc lập nằm trong [TEAM](docs/TEAM.md).
 
-Yêu cầu chỉ ở [SPEC](docs/SPEC.md), phân công chỉ ở [TEAM](docs/TEAM.md), quy tắc Git ở [AGENTS](AGENTS.md). [GitHub Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues) giữ trao đổi/tiến độ, PR giữ thay đổi và review. Làm nhánh từ `origin/main`, không force-push; merge cần CI xanh và reviewer khác tác giả. Branch protection chưa được xác minh.
+Yêu cầu chỉ ở [SPEC](docs/SPEC.md), phân công và [hướng dẫn GitHub từng bước](docs/TEAM.md#github-workflow) ở TEAM, quy tắc Git ở [AGENTS](AGENTS.md). [GitHub Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues) giữ trao đổi/tiến độ, PR giữ thay đổi và review. **Không push trực tiếp lên `main`: tạo nhánh riêng từ `origin/main`, push nhánh đó rồi mở PR.** Merge cần CI xanh và reviewer khác tác giả; không force-push. Branch protection chưa được xác minh.
 
 Với ticket tính năng đã có tên và tiêu chí: viết test hành vi thất bại → sửa tối thiểu → chạy lại test → dọn file tạm/cache → PR. Test nghiệp vụ cần giữ được chuyển thành test chính thức trong `tests/`; không dùng test tạm bị xóa làm bằng chứng duy nhất.
 
@@ -168,7 +168,8 @@ Owner: TV1. Reviewer: TV2 và TV6. Đây là nguồn chuẩn cho đơn vị, tê
 - Nhãn duy nhất: `asking_price_vnd`, tổng giá rao **bán** toàn bộ căn hộ; tiền VND. Thuê, trả góp theo tháng, giá mỗi m² chưa quy đổi, giá “thỏa thuận”, giao dịch không rõ loại đều bị loại hoặc cách ly để xác minh.
 - `property_type = apartment`, `listing_type = sale` là trường kiểm tra phạm vi, không phải đặc trưng cho mô hình trong MVP một loại.
 - MVP ưu tiên một nguồn chính qua gate, không ghép thêm nguồn để tăng số mẫu trước khi kiểm tra quyền, đơn vị và trùng liên nguồn. `source_id` vẫn lưu để truy vết và hỗ trợ adapter mở rộng về sau.
-- Phạm vi địa lý theo ADR-0001. Dùng `district_code` của bộ ánh xạ lịch sử `hcm_pre2025_v1`; mã là slug nội bộ, không giả làm mã hành chính hiện hành. TV1 tạo danh mục có nguồn trong `data/reference/districts.csv` ngày 2. Không dùng phép tìm chữ “HCM” để nhận toàn bộ dữ liệu sau sáp nhập.
+- Phạm vi là TP.HCM theo địa giới hiện hành tại thời điểm snapshot. `geography_version="hcm_current_v1"` là phiên bản danh mục khu vực được chốt cho đợt dữ liệu này; TV1 bàn giao mapping có nguồn, ngày hiệu lực và checksum. Nếu địa giới hoặc đơn vị thay đổi, tạo phiên bản mapping/contract mới qua PR, không sửa ngầm danh mục đã khóa. Chưa có mapping thực tế kèm repo.
+- Giữ các tên trường kỹ thuật `district_code`, `district_labels`, `supported_districts` để không đổi tên hàng loạt interface; chúng biểu diễn mã/nhãn **khu vực được hỗ trợ**, không bắt buộc là quận/huyện cũ. Danh mục chuẩn dùng đơn vị hiện hành; tên địa chỉ cũ chỉ là đầu vào cần ánh xạ có bằng chứng. API chỉ phục vụ khu vực có trong metadata và đủ dữ liệu, không tự tuyên bố bao phủ toàn thành phố.
 - Phải phân biệt diện tích sử dụng/thông thủy và diện tích xây dựng. Chỉ dùng một cách đo được xác minh hoặc một nhóm nhất quán; `area_basis` phải được ghi trong dataset card và artifact. Nếu nguồn không rõ, ghi `source_reported_unknown`, audit và nêu giới hạn; không tuyên bố hai cách đo tương đương.
 
 ## Các trường chuẩn
@@ -334,14 +335,14 @@ Required: `area_m2`, `district_code`. Optional mặc định null: `bedrooms`, `
 ```json
 {
   "area_m2": 70,
-  "district_code": "quan_7",
+  "district_code": "khu_vuc_duoc_ho_tro",
   "bedrooms": 2,
   "bathrooms": 2,
   "floor_level": null
 }
 ```
 
-`quan_7` chỉ là ví dụ cú pháp; chỉ chấp nhận nếu xuất hiện trong metadata của artifact thật. Người dùng không gửi giá/m² hoặc giá tổng làm feature. Không nhận mô tả tự do, URL, địa chỉ số căn hoặc số điện thoại.
+`khu_vuc_duoc_ho_tro` là chỗ điền mã thật từ metadata, không phải mã hành chính được cung cấp sẵn. Người dùng không gửi giá/m² hoặc giá tổng làm feature. Không nhận mô tả tự do, URL, địa chỉ số căn hoặc số điện thoại.
 
 ## Response 200
 
@@ -457,7 +458,7 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 | Train / validation / test | Fit tham số / chọn cấu hình / đánh giá độc lập sau freeze |
 
 <a id="qd1"></a>
-**Quyết định 1 — phạm vi:** căn hộ rao bán trong TP.HCM trước sắp xếp 2025, dùng giá hiện hành có bằng chứng. Thu hẹp để ba mô hình so sánh cùng một bài toán; TV6 vẫn cần đối chiếu rubric nhà/đất với giảng viên. Không mở rộng địa giới theo tên tỉnh/thành mới và không lấy dữ liệu cũ làm giá hiện tại.
+**Quyết định 1 — phạm vi:** căn hộ rao bán trong TP.HCM theo địa giới hiện hành, dùng giá gần thời điểm snapshot có bằng chứng. Giữ bài toán căn hộ để ba mô hình so sánh cùng một loại tài sản; TV6 vẫn cần đối chiếu rubric nhà/đất với giảng viên. Phạm vi được chốt bằng mapping có version và nguồn, không lấy dữ liệu cũ làm giá hiện tại. Độ mới là khoảng tuổi dữ liệu theo hợp đồng, không phải một năm cutoff cố định.
 
 <a id="qd2"></a>
 **Quyết định 2 — kiến trúc:** huấn luyện/phê duyệt offline, API chỉ suy luận và đọc báo cáo. Một package tiền xử lý dùng chung; snapshot và artifact có version/hash, chưa thêm DB, auth, queue hay MLflow server. Nếu thêm tài khoản/quản trị từ xa, cập nhật thiết kế quyền/lưu trữ ở README trước khi triển khai.
@@ -514,7 +515,7 @@ Các nguồn dưới đây là ứng viên từ khảo sát trước, **không p
 
 Ưu tiên CSV hiện hành được chủ dữ liệu có quyền cung cấp. License notebook không áp cho dataset; license trên card chưa chứng minh toàn bộ quyền nguồn. Nguồn lịch sử chỉ dùng baseline lịch sử có nhãn rõ, không đổi thành hiện tại. Không ghép nhiều nguồn để cứu cỡ mẫu trước khi kiểm tra quyền, trùng và đơn vị.
 
-Không đưa crawler vào đường găng: [quy chế Chợ Tốt](https://trogiup.chotot.com/nguoi-ban/hoat-dong/) và [điều khoản Batdongsan](https://trogiup.batdongsan.com.vn/docs/dieu-khoan-thoa-thuan) phải được kiểm tra cùng quyền thu thập; robots.txt không phải giấy phép tái sử dụng. Không vượt chặn truy cập. Không lấy riêng ngưỡng giá để tách thuê/bán; không suy `floor_count` thành tầng căn hộ. Tên tỉnh/thành mới không xác định ranh cũ: cần mapping có nguồn, xem [thông tin sắp xếp hành chính](https://xaydungchinhsach.chinhphu.vn/chi-tiet-34-don-vi-hanh-chinh-cap-tinh-tu-12-6-2025-119250612141845533.htm).
+Không đưa crawler vào đường găng: [quy chế Chợ Tốt](https://trogiup.chotot.com/nguoi-ban/hoat-dong/) và [điều khoản Batdongsan](https://trogiup.batdongsan.com.vn/docs/dieu-khoan-thoa-thuan) phải được kiểm tra cùng quyền thu thập; robots.txt không phải giấy phép tái sử dụng. Không vượt chặn truy cập. Không lấy riêng ngưỡng giá để tách thuê/bán; không suy `floor_count` thành tầng căn hộ. TV1 đối chiếu địa chỉ với danh mục hiện hành có nguồn; tham khảo [Nghị quyết 1685 về đơn vị hành chính TP.HCM](https://vanban.chinhphu.vn/?docid=214007&pageid=27160) và [thông tin cập nhật tháng 9/2026](https://tphcm.baochinhphu.vn/thanh-pho-chua-co-chu-truong-sap-xep-168-xa-phuong-dac-khu-10126091114293727.htm), rồi kiểm tra hiệu lực tại thời điểm tiếp nhận dữ liệu.
 
 Thiếu dữ liệu đạt chuẩn thì NO-GO tính năng giá hiện tại. Có thể tiếp tục pipeline bằng fixture **giả lập, chỉ minh họa kỹ thuật** hoặc dữ liệu lịch sử được phép; phải ghi rõ yêu cầu thị trường còn thiếu. Chưa có bằng chứng về độ chính xác, latency/RAM thực, cloud, chi phí, rubric giảng viên hoặc cam kết giờ của thành viên; không điền giả các kết quả đó.
 

@@ -112,6 +112,7 @@ def test_cli_handoff_preserves_frozen_holdout(tmp_path, listings):
     card = {
         "dataset_version": "synthetic-integration-test",
         "data_kind": "synthetic",
+        "geography_version": "hcm_current_v1",
         "license_reference": "synthetic test fixture",
         "source_verified": False,
         "grouping_version": "fixture-v1",
