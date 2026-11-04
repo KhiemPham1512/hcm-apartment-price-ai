@@ -112,11 +112,11 @@ Mỗi ngày làm việc cập nhật task: done / next / blocker kèm link PR/ru
 | P07 Form và kết quả | TV5 | API contract | Mock có nhãn + API thật + states |
 | P08 Báo cáo web | TV5 | Report contract; P10 cho số thật | Không tính metric bằng mock hoặc raw |
 | P09 Contract/CI/environment checks | TV6 | Không | Lock môi trường, schema parity, checks chạy được |
-| P10 Independent evaluation | TV6 | P03/P04/P05 freeze | B0/M1/M2/M3 test, artifact evidence |
+| P10 Independent evaluation — [issue #3: bảo vệ holdout](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/3) | TV6 | Fixture trước; P03/P04/P05 freeze để đo thật | B0/M1/M2/M3 test, artifact evidence |
 | P11 Security/integration release | TV4 + TV6 | P06/P07/P10 | Release gates và reviewer pass |
 | P12 Refresh/demo/report | Cả nhóm, TV6 điều phối | P01–P11 | Độ mới kiểm tra lại, báo cáo/diễn tập, giới hạn công bố |
 
-Đây là backlog kế hoạch; khi nhận việc tạo GitHub Issue theo [quy ước](../AGENTS.md), link mã Pxx ở đây, không sao chép hợp đồng. Trong lúc repo chưa tạo được, dùng chính bảng này theo dõi, không sinh thêm file task.
+Đây là danh mục phân công; khi nhận việc tạo GitHub Issue theo [quy ước](../AGENTS.md), link mã Pxx ở đây, không sao chép hợp đồng. Tiến độ, blocker, phạm vi file đang giữ và PR liên quan nằm trên issue. Trước khi AI nhận việc, thành viên xác định TV nào và issue nào; không giao cả backlog như một ticket.
 
 
 ## Phong cách GitHub và quyền sửa file

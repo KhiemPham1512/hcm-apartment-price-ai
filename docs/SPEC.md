@@ -70,5 +70,5 @@ Môi giới/thanh toán, tài khoản/admin web, crawler liên tục, dự báo 
 
 - Đã có nền: schema chung, CSV đã chuẩn hóa, đại diện nhóm/split, baseline + ba pipeline, chọn validation, CLI final evaluation riêng, HTTP schema/readiness/freshness/output guards; kiểm tra kỹ thuật bằng dữ liệu giả.
 - Chưa có: dataset thị trường được duyệt, grouping từ raw/crawler, importance/ablation, release command/registry độc lập đầy đủ, UI, rate/concurrency/timeout public hoặc cloud deploy.
-- CI đã viết, cần xác minh run GitHub sau upload. Quy tắc review/branch protection chưa được GitHub cưỡng chế. Không coi 34 test kỹ thuật là kết quả định giá thị trường.
-- Spec giữ tại đây trong lúc tracker chưa khả dụng; sau khi có GitHub Issue chỉ dẫn link về spec, không duy trì bản spec thứ hai có nội dung khác.
+- CI Python đã chạy thành công trên PR #2; trạng thái mới nhất xem GitHub Actions, không suy từ lần chạy cũ. Quy tắc review cần được tuân thủ; branch protection chưa được xác minh. Test kỹ thuật không phải kết quả định giá thị trường.
+- Spec chỉ giữ tại đây; GitHub Issue dẫn về yêu cầu tương ứng và giữ tiến độ/trao đổi, không duy trì bản spec thứ hai.

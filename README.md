@@ -130,6 +130,27 @@ Yêu cầu chỉ ở [SPEC](docs/SPEC.md), phân công chỉ ở [TEAM](docs/TEA
 
 Với ticket tính năng đã có tên và tiêu chí: viết test hành vi thất bại → sửa tối thiểu → chạy lại test → dọn file tạm/cache → PR. Test nghiệp vụ cần giữ được chuyển thành test chính thức trong `tests/`; không dùng test tạm bị xóa làm bằng chứng duy nhất.
 
+### Khi thành viên dùng AI riêng
+
+Tài liệu đủ để hiểu mục tiêu và quy tắc; **issue được giao mới xác định việc cần làm**. Clone repo không mang theo nội dung GitHub Issues/PR. Trước mỗi việc, AI cần đọc README → AGENTS → SPEC → dòng vai trò trong TEAM → issue và thảo luận → code/test liên quan. Không cần đọc mọi module để sửa một phần nhỏ.
+
+Tiến độ thực tế lấy từ [Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues), [PR](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pulls) và [CI](https://github.com/KhiemPham1512/hcm-apartment-price-ai/actions): code đã merge vào `main` là bản tích hợp; PR mở vẫn đang đề xuất. TEAM giữ owner/mốc, không giữ một bảng trạng thái thứ hai. Nếu AI không truy cập được GitHub, thành viên cung cấp nội dung issue và PR liên quan; AI phải ghi rõ phần chưa kiểm tra.
+
+Có thể giao AI bằng mẫu sau, thay vai trò và issue trước khi gửi:
+
+```text
+Tôi phụ trách TV<1–6>, triển khai issue #<số> của repo này.
+Đọc README.md trước, rồi AGENTS.md, docs/SPEC.md, docs/TEAM.md.
+Đọc issue/thảo luận và kiểm tra PR đang mở để biết owner, phạm vi và phụ thuộc.
+Fetch origin, tạo nhánh từ origin/main; chỉ sửa file trong phạm vi issue.
+Đọc code và test liên quan; kiểm tra hành vi hiện có trước khi sửa.
+Làm từng vòng RED → GREEN, giữ test nghiệp vụ trong tests/.
+Không tạo thư mục root mới, không sửa file chung của owner khác khi chưa phối hợp.
+Cập nhật hợp đồng nếu thay interface; chạy kiểm tra, dọn file tạm/cache.
+Commit, push, mở draft PR ghi phạm vi và bằng chứng; không tự merge.
+Báo rõ phần đã chạy, phụ thuộc còn thiếu và bước tiếp theo trên issue/PR.
+```
+
 ## Tra cứu kỹ thuật khi triển khai
 
 Các phần dưới giữ hợp đồng chi tiết; người mới chỉ cần phần phía trên để hiểu và chạy dự án.
