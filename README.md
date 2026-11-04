@@ -109,7 +109,7 @@ Kỳ vọng khi chưa có model: live trả `status=live`, metadata trả `servi
 .venv/Scripts/python.exe -m ml.evaluate --run-dir artifacts/run-001
 ```
 
-Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`. Dùng thư mục run mới; `evaluate` không ghi đè báo cáo đã có. Train tạo candidate, evaluate tạo `evaluation.json`; hai lệnh **chưa tự phê duyệt model**.
+Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`. Dùng thư mục run mới; `evaluate` không ghi đè báo cáo đã có. CLI kiểm tra checksum, đủ baseline + ba mô hình, winner hợp lệ, split không lặp tin/nhóm và holdout khớp đúng danh sách test đã khóa; thất bại thì không tạo báo cáo. Train tạo candidate, evaluate tạo `evaluation.json`; hai lệnh **chưa tự phê duyệt model**.
 
 Khi đã được bàn giao gói phát hành đáng tin cậy gồm `manifest.json`, `pipeline.joblib` và báo cáo nếu có, đặt `MODEL_DIR` trỏ tới thư mục đó trước khi chạy Uvicorn:
 
@@ -474,6 +474,8 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 TV1 bàn giao nguồn/quyền dùng, CSV sạch, dataset card, audit và nhóm nghi trùng. TV2/TV3 bàn giao pipeline, config, môi trường và validation. TV6 khóa split/cấu hình rồi đánh giá test; TV4 kiểm tra parity offline/HTTP, freshness và lỗi; TV5 kiểm tra demo/đơn vị/ngày dữ liệu. TV4 và TV6 review trước khi duyệt phát hành.
 
 Mỗi run giữ dataset/split/artifact hash, code revision, config, seed, package versions, n từng tập và metric thật. Không refit sau đo rồi gắn metric cũ. Raw data, nhãn holdout và dự đoán từng dòng giữ trong kho riêng có quyền; Git chỉ chứa code và tài liệu không nhạy cảm.
+
+`ml.evaluate` kiểm tra tính nhất quán của gói đầu vào: `splits.csv` phải có đủ train/validation/test, ID không rỗng, mỗi tin và nhóm chỉ có một đại diện; holdout phải khớp bộ `(source_id, listing_id, property_group_id)` thuộc test. Thứ tự dòng có thể khác, ID chuỗi giữ nguyên số 0 đầu. Kiểm tra này không chứng minh mô hình chưa từng được fit bằng holdout hoặc checksum là do người có quyền tạo: TV6 vẫn cần review producer, freeze và lịch sử tiếp xúc dữ liệu.
 
 `ml.prepare` và `ml.release` chưa được triển khai. Quy trình mục tiêu phải kiểm tra cổng nguồn, schema, chất lượng và freshness trước khi đóng gói approved; không tự chọn lại winner hay refit. Hash không thay thế kiểm soát người có quyền ghi artifact.
 

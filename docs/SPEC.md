@@ -68,7 +68,7 @@ Môi giới/thanh toán, tài khoản/admin web, crawler liên tục, dự báo 
 
 ## Further Notes — trạng thái thật
 
-- Đã có nền: schema chung, CSV đã chuẩn hóa, đại diện nhóm/split, baseline + ba pipeline, chọn validation, CLI final evaluation riêng, HTTP schema/readiness/freshness/output guards; kiểm tra kỹ thuật bằng dữ liệu giả.
+- Đã có nền: schema chung, CSV đã chuẩn hóa, đại diện nhóm/split, baseline + ba pipeline, chọn validation, CLI final evaluation riêng (kiểm tra đủ mô hình, winner và split/holdout nhất quán), HTTP schema/readiness/freshness/output guards; kiểm tra kỹ thuật bằng dữ liệu giả.
 - Chưa có: dataset thị trường được duyệt, grouping từ raw/crawler, importance/ablation, release command/registry độc lập đầy đủ, UI, rate/concurrency/timeout public hoặc cloud deploy.
 - CI Python đã chạy thành công trên PR #2; trạng thái mới nhất xem GitHub Actions, không suy từ lần chạy cũ. Quy tắc review cần được tuân thủ; branch protection chưa được xác minh. Test kỹ thuật không phải kết quả định giá thị trường.
 - Spec chỉ giữ tại đây; GitHub Issue dẫn về yêu cầu tương ứng và giữ tiến độ/trao đổi, không duy trì bản spec thứ hai.
