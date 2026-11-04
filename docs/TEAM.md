@@ -17,6 +17,22 @@ Lịch tính từ 04/11/2026: tuần 1 ngày 04–10/11, tuần 2 ngày 11–17/
 
 TV6 không được trở thành người sửa toàn bộ code thay nhóm. Mỗi owner viết kiểm tra mảng mình, bàn giao chạy được và đóng góp báo cáo. Khoảng 180/288 giờ dự kiến dành cho dữ liệu/ML/đánh giá/đóng gói AI; đây là phân bổ ưu tiên, không phải giờ đã làm.
 
+## Nhiệm vụ đề xuất cho bạn: TV6 — tích hợp và kiểm định xuyên suốt
+
+**Một nhiệm vụ chính:** giữ luồng dữ liệu → huấn luyện → đánh giá độc lập → API → demo chạy lại được. Vai trò này đi qua sản phẩm của cả năm người còn lại, giúp bạn hiểu điểm bàn giao và tiếp quản khi có người trễ. Đây là đề xuất, chưa gán bạn vào username hay thay owner hiện có.
+
+| Mốc | Bạn trực tiếp làm | Bằng chứng cần nhận từ thành viên |
+| --- | --- | --- |
+| Ngày 1–3 | Cài môi trường, chạy pytest/Ruff, đọc schema; cùng TV1 kiểm tra nguồn, đơn vị, timestamps và nhóm trùng | CSV/card hợp lệ, quyền dùng, audit và quyết định GO/NO-GO |
+| Ngày 7 | Chạy lại một luồng từ CSV sạch đến candidate; đối chiếu đầu vào API | TV1 bàn giao dữ liệu; TV2 bàn giao pipeline, selection và hash split |
+| Ngày 14 | Kiểm tra cả Linear/Polynomial/Tree cùng split; khóa cấu hình trước khi mở holdout | TV2/TV3 bàn giao config và validation; không đổi winner theo test |
+| Ngày 21 | Chạy `ml.evaluate` sau freeze; cùng TV4 so kết quả offline/HTTP, thiếu model và stale | Bảng baseline + ba mô hình, artifact đúng hash; test HTTP pass |
+| Ngày 28 | Cùng TV5 chạy demo, xác minh ngày dữ liệu và báo cáo; diễn tập trên máy bạn | Demo thật hoặc trạng thái chưa sẵn sàng rõ ràng; hướng dẫn chạy lại |
+
+Đọc code theo thứ tự: `ml/schema.py` → `ml/data.py` → `ml/models.py` → `ml/train.py` → `ml/evaluate.py` → `backend/service.py` → `backend/app.py` → `tests/`. Chạy từng bước theo [README](../README.md), không cần viết lại toàn bộ phần của thành viên khác.
+
+Khi một thành viên trễ: ghi blocker ở GitHub Issue, thống nhất chuyển owner và phạm vi file trước khi tiếp quản; lấy đầu vào/đầu ra đã chốt làm điểm bắt đầu. Ưu tiên nguồn dữ liệu hợp lệ và baseline xuyên suốt; cắt trang trí hoặc thí nghiệm phụ trước. TV1 là phụ thuộc đầu tiên: chưa có nguồn đạt chuẩn thì báo NO-GO phần giá hiện tại, không dùng dữ liệu giả để cứu demo. Giữ holdout độc lập: nếu bạn phải tune thay TV2/TV3, nhờ reviewer khác đánh giá và ghi rõ mọi lần đã xem nhãn; không gọi holdout đã dùng để tune là test độc lập.
+
 ## Tuần 1 — khóa dữ liệu và một lát cắt chạy xuyên suốt
 
 | Người | Việc cụ thể | Đầu ra cuối tuần / cách nghiệm thu |
