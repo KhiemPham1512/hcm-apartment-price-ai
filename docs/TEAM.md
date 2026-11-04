@@ -6,6 +6,26 @@ Lịch tính từ 04/11/2026: tuần 1 ngày 04–10/11, tuần 2 ngày 11–17/
 
 Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá rao gần thời điểm snapshot, theo [SPEC](SPEC.md). TV1 bàn giao danh mục khu vực có nguồn/version; mọi thành viên dùng cùng danh mục và hợp đồng trong README, không tự lọc về phạm vi địa lý cũ.
 
+<a id="checklist"></a>
+## Checklist tiến độ của từng thành viên
+
+Mở issue của vai trò mình để xem và tick công việc theo từng tuần. GitHub hiển thị số mục đã hoàn thành trên danh sách Issues; số ô hoàn thành phản ánh các bước nghiệm thu, không phải phần trăm thời gian hoặc chất lượng dự án. Đây là nơi duy nhất cập nhật trạng thái; bảng dưới chỉ liên kết tới checklist.
+
+| Thành viên | Checklist trên GitHub | Nhóm việc |
+| --- | --- | --- |
+| TV1 | [Mở checklist #9](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/9) | P01/P02: nguồn, chuẩn hóa, grouping, snapshot/card và refresh |
+| TV2 | [Mở checklist #10](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/10) | P03/P04: shared features, baseline, Linear/Polynomial và freeze |
+| TV3 | [Mở checklist #11](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/11) | P05: cây, tuning, importance/ablation và phân tích lỗi |
+| TV4 | [Mở checklist #12](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/12) | P06/P11: API, serving, bảo mật và release smoke |
+| TV5 | [Mở checklist #13](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/13) | P07/P08: form, kết quả, report, UI tests và demo |
+| TV6 | [Mở checklist #14](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/14) | P09/P10 và điều phối P11/P12: CI, kiểm định, release và báo cáo |
+
+**Cách tick:** người có quyền sửa issue bấm ô trong mô tả, hoặc chọn **Edit** và đổi `- [ ]` thành `- [x]`. Thành viên chưa có quyền sửa gửi evidence trong bình luận để owner/TV6 cập nhật. Chưa có username của sáu người nên các checklist chưa gán tài khoản; điền tên tại bảng phân công và gán assignee khi nhóm xác nhận.
+
+**Khi nào được tick:** đã đạt điều kiện ghi trong mục và có bằng chứng PR đã merge, run/lệnh kiểm tra hoặc review phù hợp. PR đang mở thì ghi link, chưa tick phần tích hợp. Nếu bị chặn, giữ ô trống và ghi blocker/phụ thuộc trên issue. Không tick việc thị trường chỉ vì fixture hoặc test phần mềm chạy được. Các ô ban đầu để trống để owner rà soát nghiệm thu; không hàm ý mọi code nền đều chưa có.
+
+Checklist vai trò là đầu mối theo dõi, không phải một ticket giao toàn bộ backlog cho AI. Mỗi lần triển khai vẫn tạo/nhận issue nhỏ có owner, file và nhánh riêng rồi liên kết từ checklist; chỉ đóng checklist khi hoàn tất các mục bắt buộc. Không sao chép trạng thái vào TEAM hoặc tạo thêm file tracker.
+
 ## Người, công nghệ và phạm vi sở hữu
 
 | Thành viên | Trách nhiệm chính | Công nghệ phải dùng/học | Thư mục/file sở hữu khi triển khai | Người dự phòng / reviewer |
