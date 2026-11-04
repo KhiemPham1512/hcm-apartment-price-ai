@@ -116,12 +116,14 @@ Kỳ vọng khi chưa có model: live trả `status=live`, metadata trả `servi
 
 ```powershell
 .venv/Scripts/python.exe -m ml.train --help
+.venv/Scripts/python.exe -m ml.freeze --help
 .venv/Scripts/python.exe -m ml.evaluate --help
 .venv/Scripts/python.exe -m ml.train --csv data/processed/current.csv --dataset-card data/processed/card.json --output artifacts/run-001
+.venv/Scripts/python.exe -m ml.freeze --run-dir artifacts/run-001 --reviewer TV6
 .venv/Scripts/python.exe -m ml.evaluate --run-dir artifacts/run-001
 ```
 
-Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`, bắt buộc ghi `geography_version="hcm_current_v1"`; card thiếu phiên bản hoặc dùng phạm vi cũ bị từ chối, không tự đổi nhãn để tiếp tục chạy. Dùng thư mục run mới; `evaluate` không ghi đè báo cáo đã có. CLI kiểm tra checksum, đủ baseline + ba mô hình, winner hợp lệ, split không lặp tin/nhóm và holdout khớp đúng danh sách test đã khóa; thất bại thì không tạo báo cáo. Train tạo candidate, evaluate tạo `evaluation.json`; hai lệnh **chưa tự phê duyệt model**.
+Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`, bắt buộc ghi `geography_version="hcm_current_v1"`; card thiếu phiên bản hoặc dùng phạm vi cũ bị từ chối, không tự đổi nhãn để tiếp tục chạy. Dùng thư mục run mới; sau review candidate/config/winner, TV6 chạy `freeze` rồi `evaluate`. `freeze` ghi hash vào `freeze.json`, không nạp model hay phân tích nhãn; `--reviewer TV6` chỉ là ví dụ tên vai trò, không xác thực danh tính. `evaluate` từ chối thiếu/sai bản khóa trước khi nạp candidate hoặc phân tích holdout, rồi kiểm tra đủ mô hình, winner, split và membership. Các lệnh không ghi đè bản khóa/báo cáo đã có và **không tự phê duyệt model**.
 
 Khi đã được bàn giao gói phát hành đáng tin cậy gồm `manifest.json`, `pipeline.joblib` và báo cáo nếu có, đặt `MODEL_DIR` trỏ tới thư mục đó trước khi chạy Uvicorn:
 
@@ -318,7 +320,7 @@ Mỗi lần chạy có `run_id`, `evaluation_kind`, dataset/split hashes, schema
 
 Gói phát hành mục tiêu gồm `pipeline.joblib`, `manifest.json`, `metrics.json`, `model-card.md`, `figures/`. Hiện CLI train tạo `candidates.joblib`, `selection.json`, `holdout.csv`, `splits.csv`; evaluate tạo `evaluation.json`. Chưa có bước chuyển candidate thành gói approved tự động. Manifest ghi hash artifact, data window/age, supported districts, train ranges, feature list, environment và `release_status` ∈ {`candidate`, `approved`, `rejected`}. API chỉ nạp `approved`. Joblib chỉ từ pipeline nội bộ đáng tin; hash đơn thuần không chứng minh người phát hành hợp lệ. Xem [bảo mật](#bao-mat).
 
-Đã có `python -m ml.train` và `python -m ml.evaluate`. `ml.prepare` và `ml.release` còn trong kế hoạch; chi tiết trách nhiệm ở [TEAM](docs/TEAM.md).
+Đã có `python -m ml.train`, `python -m ml.freeze` và `python -m ml.evaluate`. `ml.prepare` và `ml.release` còn trong kế hoạch; chi tiết trách nhiệm ở [TEAM](docs/TEAM.md).
 
 </details>
 
@@ -475,6 +477,7 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 | Cửa sổ dữ liệu / cửa sổ tin | Khoảng quan sát giá / khoảng ngày đăng; không thay thế lẫn nhau |
 | Khu vực được hỗ trợ | Khu vực thuộc ranh giới nghiên cứu và đủ nhóm train theo hợp đồng |
 | Candidate / approved | Ứng viên chưa được phục vụ / artifact qua kiểm định và review nội bộ |
+| Bản khóa candidate (freeze record) | Bằng chứng phiên bản candidate và dữ liệu được người kiểm định ghi nhận trước đánh giá; không đồng nghĩa đã đánh giá hoặc được duyệt phát hành |
 | Train / validation / test | Fit tham số / chọn cấu hình / đánh giá độc lập sau freeze |
 
 <a id="qd1"></a>
@@ -486,6 +489,8 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 <a id="qd3"></a>
 **Quyết định 3 — đánh giá:** mặc định grouped holdout trên snapshot hiện hành. Chia theo ngày đăng không chứng minh dự báo tương lai vì tin có thể sửa giá. Temporal evaluation chỉ khi có archive quan sát giá thật, chronology và purge nhóm; không chọn thiết kế chỉ vì điểm đẹp hơn.
 
+**Quyết định 4 — khóa trước đánh giá:** dùng module `ml.freeze` với hai thao tác `freeze(run_dir, reviewer)` và `verify_freeze(run_dir)` dùng chung cho CLI và evaluator. Module giữ chi tiết hash/định dạng bản ghi; tests đi qua CLI như người vận hành. Không đổi code train của TV2 hoặc ghép logic duyệt release vào đánh giá. `selection.json` là bản tóm tắt; cấu hình và winner có thẩm quyền trong candidate được khóa bằng hash toàn file.
+
 </details>
 
 <a id="van-hanh"></a>
@@ -495,6 +500,10 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 TV1 bàn giao nguồn/quyền dùng, CSV sạch, dataset card, audit và nhóm nghi trùng. TV2/TV3 bàn giao pipeline, config, môi trường và validation. TV6 khóa split/cấu hình rồi đánh giá test; TV4 kiểm tra parity offline/HTTP, freshness và lỗi; TV5 kiểm tra demo/đơn vị/ngày dữ liệu. TV4 và TV6 review trước khi duyệt phát hành.
 
 Mỗi run giữ dataset/split/artifact hash, code revision, config, seed, package versions, n từng tập và metric thật. Không refit sau đo rồi gắn metric cũ. Raw data, nhãn holdout và dự đoán từng dòng giữ trong kho riêng có quyền; Git chỉ chứa code và tài liệu không nhạy cảm.
+
+**Bản khóa v1:** `freeze.json` ghi `version`, `reviewer`, `frozen_at` UTC và SHA-256 của đúng ba file `candidates.joblib`, `splits.csv`, `holdout.csv`. Chỉ đọc byte để hash, không deserialize joblib hoặc parse nhãn. Lệnh từ chối reviewer rỗng, thiếu file, bản khóa đã có hoặc run đã có `evaluation.json`. `evaluate` kiểm tra cấu trúc/hash trước khi load; báo cáo lưu `freeze_sha256`, `freeze_reviewer`, `frozen_at` để truy vết. Gói cũ chưa khóa phải được review trước khi tạo bản khóa; không khóa hồi tố run đã đánh giá, không xóa báo cáo để lách quy trình.
+
+Bản ghi không có chữ ký hay xác thực reviewer. Người có quyền sửa cả gói lẫn bản khóa vẫn có thể thay chúng; việc không ghi đè là hành vi của CLI, không phải khóa filesystem. Vận hành trên thư mục nội bộ đáng tin, một người ghi tại một thời điểm và phân quyền bảo vệ bản đã review. Cơ chế này không chứng minh model chưa từng fit holdout hoặc thay thế registry lịch sử tiếp xúc dữ liệu.
 
 `ml.evaluate` kiểm tra tính nhất quán của gói đầu vào: `splits.csv` phải có đủ train/validation/test, ID không rỗng, mỗi tin và nhóm chỉ có một đại diện; holdout phải khớp bộ `(source_id, listing_id, property_group_id)` thuộc test. Thứ tự dòng có thể khác, ID chuỗi giữ nguyên số 0 đầu. Kiểm tra này không chứng minh mô hình chưa từng được fit bằng holdout hoặc checksum là do người có quyền tạo: TV6 vẫn cần review producer, freeze và lịch sử tiếp xúc dữ liệu.
 

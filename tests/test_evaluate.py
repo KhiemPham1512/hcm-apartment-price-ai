@@ -37,6 +37,12 @@ def candidate_run(tmp_path, listings):
 
 
 def evaluate_cli(run):
+    frozen = subprocess.run(
+        [sys.executable, "-B", "-m", "ml.freeze", "--run-dir", str(run),
+         "--reviewer", "technical-test-reviewer"],
+        capture_output=True, text=True,
+    )
+    assert frozen.returncode == 0, frozen.stderr
     return subprocess.run(
         [sys.executable, "-B", "-m", "ml.evaluate", "--run-dir", str(run)],
         capture_output=True,
@@ -173,3 +179,7 @@ def test_evaluation_accepts_reordered_holdout_and_preserves_string_ids(candidate
     assert report["release_status"] == "candidate"
     assert report["data_kind"] == "synthetic"
     assert bundle_path.read_bytes() == frozen_bytes
+    assert report["freeze_reviewer"] == "technical-test-reviewer"
+    assert report["freeze_sha256"] == hashlib.sha256(
+        (candidate_run / "freeze.json").read_bytes()
+    ).hexdigest()

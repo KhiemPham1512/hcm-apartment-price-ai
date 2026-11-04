@@ -155,19 +155,19 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn:** Hoàn tất chuyển checklist Markdown qua review; sau đó phối hợp TV1 kiểm tra cổng dữ liệu. P09 đã merge, đánh giá thị trường vẫn chờ dữ liệu/candidate.
+**Bước tiếp / Chặn:** Checklist đã merge qua PR #17. Đang triển khai bản khóa candidate trước đánh giá theo [issue #18](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/18), TDD qua CLI freeze/evaluate đã được chủ repo xác nhận. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07.
 
 #### Tuần 1
 
 - [ ] **TV6-01** Xác nhận rubric, tên/quỹ giờ của 6 người, lịch và issue triển khai; không bịa GitHub username.
-- [ ] **TV6-02** Đưa checklist nhiệm vụ vào Markdown của TEAM để AI đọc trực tiếp và cập nhật qua PR — [issue #16](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/16), đang chờ tích hợp.
+- [x] **TV6-02** Checklist Markdown cho AI đã tích hợp qua [PR #17](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/17), CI xanh.
 - [x] **TV6-03** P09 đã review/merge: cài môi trường sạch, smoke package ngoài repo, parity schema, pytest/Ruff/pip check và CI — [PR #8](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/8), 58 test pass; chỉ là kiểm chứng kỹ thuật.
 - [ ] **TV6-04** Cùng TV1 review nguồn/card/mapping/audit và ghi quyết định GO/NO-GO.
 
 #### Tuần 2
 
 - [ ] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol.
-- [ ] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu.
+- [ ] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu. Cơ chế bản khóa kỹ thuật đang triển khai ở [issue #18](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/18); chưa phải review candidate thị trường hay registry đầy đủ.
 
 #### Tuần 3
 
