@@ -109,7 +109,7 @@ Kỳ vọng khi chưa có model: live trả `status=live`, metadata trả `servi
 .venv/Scripts/python.exe -m ml.evaluate --run-dir artifacts/run-001
 ```
 
-Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`. Dùng thư mục run mới; `evaluate` không ghi đè báo cáo đã có. Train tạo candidate, evaluate tạo `evaluation.json`; hai lệnh **chưa tự phê duyệt model**.
+Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`. Dùng thư mục run mới; `evaluate` không ghi đè báo cáo đã có. CLI kiểm tra checksum, đủ baseline + ba mô hình, winner hợp lệ, split không lặp tin/nhóm và holdout khớp đúng danh sách test đã khóa; thất bại thì không tạo báo cáo. Train tạo candidate, evaluate tạo `evaluation.json`; hai lệnh **chưa tự phê duyệt model**.
 
 Khi đã được bàn giao gói phát hành đáng tin cậy gồm `manifest.json`, `pipeline.joblib` và báo cáo nếu có, đặt `MODEL_DIR` trỏ tới thư mục đó trước khi chạy Uvicorn:
 
@@ -129,6 +129,27 @@ Chỉ dùng lệnh này sau khi thư mục approved đã tồn tại và qua rev
 Yêu cầu chỉ ở [SPEC](docs/SPEC.md), phân công chỉ ở [TEAM](docs/TEAM.md), quy tắc Git ở [AGENTS](AGENTS.md). [GitHub Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues) giữ trao đổi/tiến độ, PR giữ thay đổi và review. Làm nhánh từ `origin/main`, không force-push; merge cần CI xanh và reviewer khác tác giả. Branch protection chưa được xác minh.
 
 Với ticket tính năng đã có tên và tiêu chí: viết test hành vi thất bại → sửa tối thiểu → chạy lại test → dọn file tạm/cache → PR. Test nghiệp vụ cần giữ được chuyển thành test chính thức trong `tests/`; không dùng test tạm bị xóa làm bằng chứng duy nhất.
+
+### Khi thành viên dùng AI riêng
+
+Tài liệu đủ để hiểu mục tiêu và quy tắc; **issue được giao mới xác định việc cần làm**. Clone repo không mang theo nội dung GitHub Issues/PR. Trước mỗi việc, AI cần đọc README → AGENTS → SPEC → dòng vai trò trong TEAM → issue và thảo luận → code/test liên quan. Không cần đọc mọi module để sửa một phần nhỏ.
+
+Tiến độ thực tế lấy từ [Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues), [PR](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pulls) và [CI](https://github.com/KhiemPham1512/hcm-apartment-price-ai/actions): code đã merge vào `main` là bản tích hợp; PR mở vẫn đang đề xuất. TEAM giữ owner/mốc, không giữ một bảng trạng thái thứ hai. Nếu AI không truy cập được GitHub, thành viên cung cấp nội dung issue và PR liên quan; AI phải ghi rõ phần chưa kiểm tra.
+
+Có thể giao AI bằng mẫu sau, thay vai trò và issue trước khi gửi:
+
+```text
+Tôi phụ trách TV<1–6>, triển khai issue #<số> của repo này.
+Đọc README.md trước, rồi AGENTS.md, docs/SPEC.md, docs/TEAM.md.
+Đọc issue/thảo luận và kiểm tra PR đang mở để biết owner, phạm vi và phụ thuộc.
+Fetch origin, tạo nhánh từ origin/main; chỉ sửa file trong phạm vi issue.
+Đọc code và test liên quan; kiểm tra hành vi hiện có trước khi sửa.
+Làm từng vòng RED → GREEN, giữ test nghiệp vụ trong tests/.
+Không tạo thư mục root mới, không sửa file chung của owner khác khi chưa phối hợp.
+Cập nhật hợp đồng nếu thay interface; chạy kiểm tra, dọn file tạm/cache.
+Commit, push, mở draft PR ghi phạm vi và bằng chứng; không tự merge.
+Báo rõ phần đã chạy, phụ thuộc còn thiếu và bước tiếp theo trên issue/PR.
+```
 
 ## Tra cứu kỹ thuật khi triển khai
 
@@ -453,6 +474,8 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 TV1 bàn giao nguồn/quyền dùng, CSV sạch, dataset card, audit và nhóm nghi trùng. TV2/TV3 bàn giao pipeline, config, môi trường và validation. TV6 khóa split/cấu hình rồi đánh giá test; TV4 kiểm tra parity offline/HTTP, freshness và lỗi; TV5 kiểm tra demo/đơn vị/ngày dữ liệu. TV4 và TV6 review trước khi duyệt phát hành.
 
 Mỗi run giữ dataset/split/artifact hash, code revision, config, seed, package versions, n từng tập và metric thật. Không refit sau đo rồi gắn metric cũ. Raw data, nhãn holdout và dự đoán từng dòng giữ trong kho riêng có quyền; Git chỉ chứa code và tài liệu không nhạy cảm.
+
+`ml.evaluate` kiểm tra tính nhất quán của gói đầu vào: `splits.csv` phải có đủ train/validation/test, ID không rỗng, mỗi tin và nhóm chỉ có một đại diện; holdout phải khớp bộ `(source_id, listing_id, property_group_id)` thuộc test. Thứ tự dòng có thể khác, ID chuỗi giữ nguyên số 0 đầu. Kiểm tra này không chứng minh mô hình chưa từng được fit bằng holdout hoặc checksum là do người có quyền tạo: TV6 vẫn cần review producer, freeze và lịch sử tiếp xúc dữ liệu.
 
 `ml.prepare` và `ml.release` chưa được triển khai. Quy trình mục tiêu phải kiểm tra cổng nguồn, schema, chất lượng và freshness trước khi đóng gói approved; không tự chọn lại winner hay refit. Hash không thay thế kiểm soát người có quyền ghi artifact.
 
