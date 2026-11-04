@@ -4,7 +4,7 @@
 
 Người dùng nhập diện tích, khu vực và một số thuộc tính căn hộ. Hệ thống dự kiến trả tổng giá VND, đơn giá/m², ngày dữ liệu và cảnh báo. Giá ước tính phản ánh **giá rao bán**, không phải giá giao dịch đã chốt hay dự báo giá tương lai. Dự án dùng **TP.HCM theo địa giới hiện hành và giá quan sát gần thời điểm chạy**, không giới hạn theo mốc trước năm 2025.
 
-[Hướng dẫn chạy](#chay) · [Luồng xử lý](#luong) · [API](#api) · [Phân công](docs/TEAM.md) · [Yêu cầu nghiệm thu](docs/SPEC.md)
+[Hướng dẫn chạy](#chay) · [Luồng xử lý](#luong) · [API](#api) · [Phân công](docs/TEAM.md) · [Checklist tiến độ](docs/TEAM.md#checklist) · [Yêu cầu nghiệm thu](docs/SPEC.md)
 
 ## Hiện dự án làm được gì?
 
