@@ -155,25 +155,25 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn:** Bản khóa candidate đã merge qua [PR #19](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/19). Đang kiểm tra contract schema/features trước đọc holdout theo [issue #20](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/20), TDD qua CLI freeze/evaluate đã được chủ repo xác nhận. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07. Registry lịch sử tiếp xúc dữ liệu vẫn chưa có.
+**Bước tiếp / Chặn:** Bản khóa candidate và guard schema/features đã merge qua PR #19/#21. Đang triển khai CLI registry lịch sử nhóm và dành test mới trên nhánh `feat/tv6-exposure-registry`, không tạo issue theo chỉ dẫn chủ repo. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07/09. Registry bước này chưa tự nối train/evaluate/release.
 
 #### Tuần 1
 
-- [ ] **TV6-01** Xác nhận rubric, tên/quỹ giờ của 6 người, lịch và issue triển khai; không bịa GitHub username.
+- [ ] **TV6-01** Xác nhận rubric, tên/quỹ giờ của 6 người, lịch và phạm vi triển khai; không bịa GitHub username.
 - [x] **TV6-02** Checklist Markdown cho AI đã tích hợp qua [PR #17](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/17), CI xanh.
 - [x] **TV6-03** P09 đã review/merge: cài môi trường sạch, smoke package ngoài repo, parity schema, pytest/Ruff/pip check và CI — [PR #8](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/8), 58 test pass; chỉ là kiểm chứng kỹ thuật.
 - [ ] **TV6-04** Cùng TV1 review nguồn/card/mapping/audit và ghi quyết định GO/NO-GO.
 
 #### Tuần 2
 
-- [ ] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol. Guard contract schema/features ở [PR #21](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/21) ([issue #20](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/20)), chưa merge: 8 ca TDD qua CLI, toàn bộ local 76 pass; Ruff/pip check đạt. Chưa có candidate thị trường để nghiệm thu toàn mục.
+- [ ] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol. Guard contract schema/features đã merge qua [PR #21](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/21): 8 ca TDD qua CLI, toàn bộ local 76 pass; Ruff/pip check và CI đạt. Chưa có candidate thị trường để nghiệm thu toàn mục.
 - [ ] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu. Cơ chế bản khóa kỹ thuật đã merge qua [PR #19](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/19); chưa phải review candidate thị trường hay registry đầy đủ.
 
 #### Tuần 3
 
 - [ ] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10).
 - [ ] **TV6-08** Cùng TV4 kiểm tra parity offline/HTTP, model thiếu/chưa duyệt/quá hạn và security/release gates (P11).
-- [ ] **TV6-09** Hoàn thiện release/registry và reviewer độc lập; chỉ duyệt khi đủ gate, không tự duyệt PR của mình.
+- [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry ở [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22), chưa merge: init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check đạt. Còn thiếu tích hợp tự động/lịch sử thực tế. Review PR không bắt buộc theo chỉ dẫn chủ repo, không thay gate model.
 
 #### Tuần 4
 
@@ -212,7 +212,7 @@ TV6 không được trở thành người sửa toàn bộ code thay nhóm. Mỗ
 
 Đọc code theo thứ tự: `ml/schema.py` → `ml/data.py` → `ml/models.py` → `ml/train.py` → `ml/evaluate.py` → `backend/service.py` → `backend/app.py` → `tests/`. Chạy từng bước theo [README](../README.md), không cần viết lại toàn bộ phần của thành viên khác.
 
-Khi một thành viên trễ: ghi blocker ở GitHub Issue, thống nhất chuyển owner và phạm vi file trước khi tiếp quản; lấy đầu vào/đầu ra đã chốt làm điểm bắt đầu. Ưu tiên nguồn dữ liệu hợp lệ và baseline xuyên suốt; cắt trang trí hoặc thí nghiệm phụ trước. TV1 là phụ thuộc đầu tiên: chưa có nguồn đạt chuẩn thì báo NO-GO phần giá hiện tại, không dùng dữ liệu giả để cứu demo. Giữ holdout độc lập: nếu bạn phải tune thay TV2/TV3, nhờ reviewer khác đánh giá và ghi rõ mọi lần đã xem nhãn; không gọi holdout đã dùng để tune là test độc lập.
+Khi một thành viên trễ: ghi blocker ở TEAM/PR hoặc issue cũ nếu có, thống nhất chuyển owner và phạm vi file trước khi tiếp quản; lấy đầu vào/đầu ra đã chốt làm điểm bắt đầu. Ưu tiên nguồn dữ liệu hợp lệ và baseline xuyên suốt; cắt trang trí hoặc thí nghiệm phụ trước. TV1 là phụ thuộc đầu tiên: chưa có nguồn đạt chuẩn thì báo NO-GO phần giá hiện tại, không dùng dữ liệu giả để cứu demo. Giữ holdout độc lập: nếu bạn phải tune thay TV2/TV3, nhờ reviewer khác đánh giá và ghi rõ mọi lần đã xem nhãn; không gọi holdout đã dùng để tune là test độc lập.
 
 ## Tuần 1 — khóa dữ liệu và một lát cắt chạy xuyên suốt
 
@@ -220,7 +220,7 @@ Khi một thành viên trễ: ghi blocker ở GitHub Issue, thống nhất chuy�
 
 | Thứ tự | Người làm | Hoàn tất khi |
 | --- | --- | --- |
-| Ngày 1: chốt phạm vi và nhận việc | Cả nhóm, TV6 điều phối | Đối chiếu rubric, điền tên/quỹ giờ thực vào TEAM; mỗi người có issue và phạm vi file |
+| Ngày 1: chốt phạm vi và nhận việc | Cả nhóm, TV6 điều phối | Đối chiếu rubric, điền tên/quỹ giờ thực vào TEAM; mỗi người có phạm vi công việc/file rõ |
 | Ngày 1: dựng môi trường | Mỗi người, TV6 hỗ trợ P09 | Cài theo README, pytest/Ruff/pip check; API live và metadata xem được |
 | Ngày 1–2: thử điểm rủi ro | TV1 nguồn; TV2/TV3 pipeline; TV4/TV5 contract | TV1 đưa evidence hoặc blocker; các owner còn lại chạy fixture có nhãn rõ, không chờ dữ liệu để kiểm tra interface |
 | Cuối ngày 2: tích hợp ngắn | TV6 cùng các owner | Một máy khác chạy lại lệnh bàn giao; ghi lỗi/owner trên issue, chuẩn bị gate dữ liệu ngày 3 |
@@ -283,7 +283,7 @@ Mốc này là hướng dẫn thực hiện, không phải báo cáo các việc
 
 **TV5:** Dùng metadata và generated client/types khi có; mock chỉ cho phát triển và ghi nhãn rõ. Không tự đặt giới hạn/đơn vị khác server, không lưu request có thông tin nhạy cảm. Trang kết quả nói “ước tính giá rao bán”, có ngày dữ liệu, giới hạn và trạng thái quá hạn. Nếu nhận 503 không hiện số giá từ mock hay cache cũ.
 
-**TV6:** Tạo môi trường chung, bảo vệ test và giữ bản quyết định; review không thay owner triển khai. Chạy lại từ máy/môi trường khác, yêu cầu nguồn cho mọi biểu đồ và đối chiếu đề gốc. Chỉ mình giữ quyền phát hành chưa đủ: cần TV4 review release và một reviewer khác cho PR do TV6 viết.
+**TV6:** Tạo môi trường chung, bảo vệ test và giữ bản quyết định; không thay owner triển khai. Chạy lại từ máy/môi trường khác, yêu cầu nguồn cho mọi biểu đồ và đối chiếu đề gốc. Chỉ mình giữ quyền phát hành chưa đủ: cần TV4 đối chiếu release/model. Review PR GitHub không bắt buộc theo chỉ dẫn chủ repo.
 
 ## Luồng phụ thuộc và chống nghẽn
 
@@ -320,22 +320,22 @@ Mỗi ngày làm việc cập nhật task: done / next / blocker kèm link PR/ru
 | P11 Security/integration release | TV4 + TV6 | P06/P07/P10 | Release gates và reviewer pass |
 | P12 Refresh/demo/report | Cả nhóm, TV6 điều phối | P01–P11 | Độ mới kiểm tra lại, báo cáo/diễn tập, giới hạn công bố |
 
-Đây là danh mục phân công; khi nhận việc tạo GitHub Issue theo [quy ước](../AGENTS.md), link mã Pxx ở đây, không sao chép hợp đồng. Checklist nghiệm thu và bước tiếp/blocker theo vai trò nằm ở [đầu file](#checklist); issue giữ chi tiết ticket, phạm vi file đang giữ và PR liên quan. Trước khi AI nhận việc, thành viên xác định TV nào và issue nào; không giao cả backlog như một ticket.
+Đây là danh mục phân công; khi nhận việc xác định vai trò TV, mã Pxx và phạm vi theo [quy ước](../AGENTS.md), không cần tạo issue. Checklist nghiệm thu và bước tiếp/blocker theo vai trò nằm ở [đầu file](#checklist); PR giữ thay đổi, phạm vi file và kiểm chứng. Không sao chép hợp đồng hoặc giao cả backlog như một việc.
 
 
 <a id="github-workflow"></a>
 ## Làm việc trên GitHub: nhánh riêng → Pull Request → review → merge
 
-Nguồn chuẩn quy tắc là [AGENTS.md](../AGENTS.md). **Không commit công việc trực tiếp trên `main`, không chạy `git push origin main` và không force-push.** `main` chỉ nhận thay đổi qua PR được review. Đây là quy tắc làm việc của nhóm; chưa xác minh GitHub branch protection đã cưỡng chế nó.
+Nguồn chuẩn quy tắc là [AGENTS.md](../AGENTS.md). **Không commit công việc trực tiếp trên `main`, không chạy `git push origin main` và không force-push.** `main` nhận thay đổi qua PR có CI xanh; không cần tạo issue hay có reviewer GitHub. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection.
 
-**1. Nhận issue và chốt phạm vi.** Một issue, một owner triển khai, một nhánh. Ghi vai trò TV, yêu cầu, file sẽ sửa và phụ thuộc trên issue; kiểm tra PR đang mở để tránh hai người cùng sửa file chung. Chưa có issue thì tạo issue trước, không bắt đầu bằng việc sửa tất cả backlog.
+**1. Nhận việc và chốt phạm vi.** Một phạm vi, một owner triển khai, một nhánh. Theo chỉ dẫn chủ repo, làm trực tiếp, không tạo issue mới. Ghi vai trò TV, yêu cầu, file sẽ sửa và phụ thuộc trên PR/handoff; kiểm tra PR đang mở để tránh hai người cùng sửa file chung. Không nhận toàn bộ backlog làm một việc.
 
-**2. Tạo nhánh từ bản `main` mới nhất.** Chạy tại root repo. Ví dụ dùng issue #123 và nhánh `feat/123-ten-viec`; thay số và tên theo công việc thật. Dùng `fix/`, `docs/` hoặc `chore/` nếu phù hợp.
+**2. Tạo nhánh từ bản `main` mới nhất.** Chạy tại root repo. Ví dụ nhánh `feat/ten-viec`; thay tên theo công việc thật, không cần số issue. Dùng `fix/`, `docs/` hoặc `chore/` nếu phù hợp.
 
 ```powershell
 git status
 git fetch origin
-git switch -c feat/123-ten-viec origin/main
+git switch -c feat/ten-viec origin/main
 ```
 
 `git status` phải sạch trước khi chuyển sang việc khác. Nếu còn thay đổi, hoàn tất trên nhánh đang làm hoặc phối hợp owner; không dùng reset/clean để bỏ qua. Không cần tự merge local `main` trước khi tạo nhánh từ `origin/main`.
@@ -355,16 +355,16 @@ git status
 git add ml/evaluate.py
 git diff --cached
 git commit -m "fix: validate frozen evaluation inputs"
-git push -u origin feat/123-ten-viec
+git push -u origin feat/ten-viec
 ```
 
 **5. Mở draft Pull Request sớm.** Trên GitHub chọn **base: main**, **compare: nhánh của bạn**, bấm **Create draft pull request**. Hoặc dùng GitHub CLI sau khi đăng nhập `gh auth login`:
 
 ```powershell
-gh pr create --base main --head feat/123-ten-viec --draft --fill
+gh pr create --base main --head feat/ten-viec --draft --fill
 ```
 
-Sửa mô tả PR để có vấn đề đã giải quyết, file đang giữ, bằng chứng test và `Closes #123`. Draft cho nhóm biết phạm vi đang làm; chưa coi đó là công việc đã hoàn tất. Commit/push tiếp trên cùng nhánh sẽ cập nhật cùng PR, không tạo PR mới cho mỗi commit.
+Sửa mô tả PR để có vấn đề đã giải quyết, file đang giữ và bằng chứng test; không bắt buộc liên kết issue. Draft cho nhóm biết phạm vi đang làm; chưa coi đó là công việc đã hoàn tất. Commit/push tiếp trên cùng nhánh sẽ cập nhật cùng PR, không tạo PR mới cho mỗi commit.
 
 **6. Đồng bộ trước review cuối.** Đứng trên nhánh cá nhân, cập nhật `main` bằng merge, không rewrite lịch sử:
 
@@ -375,7 +375,7 @@ git merge origin/main
 
 Nếu conflict, đọc cả hai thay đổi và phối hợp owner, sửa đúng ý nghĩa rồi `git add` các file đã giải quyết và `git commit` để kết thúc merge. Không nhận hàng loạt ours/theirs. Chạy lại test phần giao, rồi `git push` nhánh hiện tại.
 
-**7. Review và merge PR.** Khi hoàn tất, chuyển draft sang **Ready for review**. Cần CI xanh và ít nhất một reviewer khác tác giả; đổi interface cần producer và consumer review. Người có quyền merge chọn **Squash and merge** trên GitHub sau review; không thay bước này bằng push local lên `main`. Khi PR đã merge, issue liên kết được đóng; PR còn mở thì chưa phải bản tích hợp.
+**7. Kiểm tra và merge PR.** Khi hoàn tất, chuyển draft sang ready. Cần CI xanh và tự kiểm tra thay đổi; theo chỉ dẫn chủ repo không bắt buộc reviewer GitHub. Đổi interface chung vẫn cần phối hợp producer/consumer; không bỏ gate kiểm định model. Người có quyền merge chọn **Squash and merge** vào main khi đã được phép; không push local lên main. Nếu policy chặn, không tắt policy; dùng admin chỉ theo ủy quyền. PR còn mở chưa phải bản tích hợp.
 
 **8. Nhận việc kế tiếp.** Kiểm tra working tree sạch, `git fetch origin`, rồi tạo nhánh mới từ `origin/main` như bước 2. Không tiếp tục làm việc mới trên nhánh PR cũ đã merge. Đọc và cập nhật checklist Markdown của vai trò trong TEAM; chi tiết từng ticket tiếp tục ở issue/PR.
 
@@ -383,15 +383,15 @@ Nếu conflict, đọc cả hai thay đổi và phối hợp owner, sửa đúng
 
 | Người | Prefix nhánh | File chung phải phối hợp |
 | --- | --- | --- |
-| TV1 | `feat/<issue>-data-*` | Schema thay đổi phải có TV2+TV4 review |
-| TV2 | `feat/<issue>-ml-*` | Shared preprocessing do TV2 giữ; TV3 import, không copy |
-| TV3 | `feat/<issue>-tree-*` | Interface model thống nhất với TV2, không tự đổi split |
-| TV4 | `feat/<issue>-api-*` | API thay đổi cần TV5 review consumer |
-| TV5 | `feat/<issue>-web-*` | Không sửa schema/model để khớp UI một chiều |
-| TV6 | `chore/<issue>-infra-*` hoặc `docs/<issue>-*` | Root config/README/CI do TV6 điều phối; không sửa thay tất cả owner |
+| TV1 | `feat/data-*` | Schema thay đổi phải phối hợp TV2+TV4 |
+| TV2 | `feat/ml-*` | Shared preprocessing do TV2 giữ; TV3 import, không copy |
+| TV3 | `feat/tree-*` | Interface model thống nhất với TV2, không tự đổi split |
+| TV4 | `feat/api-*` | API thay đổi cần phối hợp TV5 consumer |
+| TV5 | `feat/web-*` | Không sửa schema/model để khớp UI một chiều |
+| TV6 | `feat/tv6-*`, `chore/infra-*` hoặc `docs/*` | Root config/README/CI do TV6 điều phối; không sửa thay tất cả owner |
 
 Trước bắt đầu fetch và tạo nhánh từ origin/main; trước PR fetch rồi merge origin/main vào nhánh mình, giải conflict theo cả hai thay đổi và chạy kiểm tra. Không force-push nhánh chia sẻ, không nhận nguyên ours/theirs để bỏ xung đột. Không format cả repo trong PR tính năng.
 
-PR cần một reviewer khác tác giả; đổi interface cần cả producer và consumer. CI xanh mới squash merge. Nếu protection chưa bật được, ghi rõ là quy ước vận hành chưa được GitHub cưỡng chế. Chưa biết username của 6 người thì TV1–TV6 là mã vai trò, không bịa assignee/reviewer.
+PR không bắt buộc reviewer GitHub theo chỉ dẫn chủ repo; đổi interface chung vẫn phối hợp producer/consumer. CI xanh mới squash merge. Policy từng chặn merge thường ở PR #21; chưa xác minh toàn bộ protection. Chưa biết username của 6 người thì TV1–TV6 là mã vai trò, không bịa assignee/reviewer.
 
 TEAM giữ phân công/mốc và checklist nghiệm thu theo thành viên; GitHub Issue giữ status/trao đổi/PR của từng ticket triển khai. Không tạo bản checklist vai trò hoặc file ghi chú có trạng thái khác. Đóng issue triển khai khi kết quả đã được kiểm tra và tích hợp qua PR; tài liệu thiết kế không đồng nghĩa tính năng đã xong.

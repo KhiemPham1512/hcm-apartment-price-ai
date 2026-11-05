@@ -142,29 +142,29 @@ AI học như sau: **train** dùng các đặc trưng X và nhãn giá y để f
 
 **Vai trò đề xuất để nắm toàn dự án: TV6 — giữ luồng tích hợp và kiểm định xuyên suốt.** Người phụ trách chạy lại sản phẩm của từng thành viên, kiểm tra điểm bàn giao và điều phối tiếp quản khi có người trễ. Lộ trình ngày 1–28, bằng chứng cần nhận và cách giữ holdout độc lập nằm trong [TEAM](docs/TEAM.md).
 
-Yêu cầu chỉ ở [SPEC](docs/SPEC.md), phân công và [hướng dẫn GitHub từng bước](docs/TEAM.md#github-workflow) ở TEAM, quy tắc Git ở [AGENTS](AGENTS.md). [GitHub Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues) giữ trao đổi/tiến độ, PR giữ thay đổi và review. **Không push trực tiếp lên `main`: tạo nhánh riêng từ `origin/main`, push nhánh đó rồi mở PR.** Merge cần CI xanh và reviewer khác tác giả; không force-push. Branch protection chưa được xác minh.
+Yêu cầu chỉ ở [SPEC](docs/SPEC.md), phân công và [hướng dẫn GitHub từng bước](docs/TEAM.md#github-workflow) ở TEAM, quy tắc Git ở [AGENTS](AGENTS.md). Không tạo issue mới; PR ghi phạm vi và kiểm chứng, TEAM giữ tiến độ. **Không push trực tiếp lên `main`: tạo nhánh riêng từ `origin/main`, push nhánh đó rồi mở PR.** Merge cần CI xanh, không bắt buộc reviewer GitHub theo chỉ dẫn chủ repo; không force-push. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection. Việc bỏ review PR không bỏ gate kiểm định/phê duyệt model.
 
 Với ticket tính năng đã có tên và tiêu chí: viết test hành vi thất bại → sửa tối thiểu → chạy lại test → dọn file tạm/cache → PR. Test nghiệp vụ cần giữ được chuyển thành test chính thức trong `tests/`; không dùng test tạm bị xóa làm bằng chứng duy nhất.
 
 ### Khi thành viên dùng AI riêng
 
-Tài liệu đủ để hiểu mục tiêu và quy tắc; **issue được giao mới xác định việc cần làm**. Clone repo không mang theo nội dung GitHub Issues/PR. Trước mỗi việc, AI cần đọc README → AGENTS → SPEC → dòng vai trò trong TEAM → issue và thảo luận → code/test liên quan. Không cần đọc mọi module để sửa một phần nhỏ.
+Tài liệu đủ để hiểu mục tiêu và quy tắc; **phạm vi người dùng giao và checklist TEAM xác định việc cần làm**. Theo chỉ dẫn chủ repo, làm trực tiếp, không tạo issue mới. Clone repo không mang theo nội dung GitHub Issues/PR. Trước mỗi việc, AI cần đọc README → AGENTS → SPEC → dòng vai trò trong TEAM → thảo luận/PR liên quan nếu có → code/test liên quan. Không cần đọc mọi module để sửa một phần nhỏ.
 
 AI đọc trực tiếp [checklist TV1–TV6 trong TEAM](docs/TEAM.md#checklist) để biết mục đã xong, bước tiếp và blocker; các ô được cập nhật bằng Markdown và commit cùng PR. [Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues) giữ thảo luận từng ticket, [PR](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pulls) và [CI](https://github.com/KhiemPham1512/hcm-apartment-price-ai/actions) là bằng chứng đối chiếu: code đã merge vào `main` là bản tích hợp; PR mở vẫn đang đề xuất. Không tạo bản checklist vai trò thứ hai trên GitHub Issues. Nếu chưa kiểm tra được evidence online, AI ghi rõ giới hạn đó và không tự suy ô chưa tick thành việc chưa có code.
 
-Có thể giao AI bằng mẫu sau, thay vai trò và issue trước khi gửi:
+Có thể giao AI bằng mẫu sau, thay vai trò và phạm vi trước khi gửi:
 
 ```text
-Tôi phụ trách TV<1–6>, triển khai issue #<số> của repo này.
+Tôi phụ trách TV<1–6>, triển khai <phạm vi và tiêu chí nghiệm thu> của repo này.
 Đọc README.md trước, rồi AGENTS.md, docs/SPEC.md, docs/TEAM.md.
-Đọc issue/thảo luận và kiểm tra PR đang mở để biết owner, phạm vi và phụ thuộc.
-Fetch origin, tạo nhánh từ origin/main; chỉ sửa file trong phạm vi issue.
+Đọc thảo luận liên quan và kiểm tra PR đang mở để biết owner, phạm vi và phụ thuộc.
+Fetch origin, tạo nhánh từ origin/main; chỉ sửa file trong phạm vi được giao, không tạo issue.
 Đọc code và test liên quan; kiểm tra hành vi hiện có trước khi sửa.
 Làm từng vòng RED → GREEN, giữ test nghiệp vụ trong tests/.
 Không tạo thư mục root mới, không sửa file chung của owner khác khi chưa phối hợp.
 Cập nhật hợp đồng nếu thay interface; chạy kiểm tra, dọn file tạm/cache.
 Commit, push, mở draft PR ghi phạm vi và bằng chứng; không tự merge.
-Báo rõ phần đã chạy, phụ thuộc còn thiếu và bước tiếp theo trên issue/PR.
+Báo rõ phần đã chạy, phụ thuộc còn thiếu và bước tiếp theo trên PR/handoff.
 ```
 
 ## Tra cứu kỹ thuật khi triển khai
@@ -432,7 +432,7 @@ Owner: TV4, TV6 reviewer. Quyết định không có tài khoản người dùng
 | Đổi model đang phục vụ | Không | Không | Đề xuất ứng viên | Phối hợp deploy | Không | Có sau kiểm tra và review |
 | Sửa hợp đồng | Không | PR theo owner | PR theo owner | PR theo owner | PR đề xuất | Duyệt thay đổi liên mảng |
 
-Đây là quyền vận hành dự kiến, phải thực thi bằng quyền repo, thư mục chia sẻ, CI/deploy credentials và review; không chỉ là cột trong tài liệu. Không dùng một tài khoản cloud/mật khẩu chung. Quyền nguồn dữ liệu có thể chặt hơn bảng này và luôn được ưu tiên. TV6 duyệt phát hành, TV4 đối chiếu manifest; không tự duyệt PR của mình mà không có reviewer khác.
+Đây là quyền vận hành dự kiến, phải thực thi bằng quyền repo, thư mục chia sẻ, CI/deploy credentials và kiểm định; không chỉ là cột trong tài liệu. Không dùng một tài khoản cloud/mật khẩu chung. Quyền nguồn dữ liệu có thể chặt hơn bảng này và luôn được ưu tiên. TV6 duyệt phát hành, TV4 đối chiếu manifest; yêu cầu kiểm định độc lập của model khác với review PR vốn không bắt buộc theo chỉ dẫn chủ repo.
 
 ## Các tình huống bị chất vấn
 
@@ -478,6 +478,7 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 | Khu vực được hỗ trợ | Khu vực thuộc ranh giới nghiên cứu và đủ nhóm train theo hợp đồng |
 | Candidate / approved | Ứng viên chưa được phục vụ / artifact qua kiểm định và review nội bộ |
 | Bản khóa candidate (freeze record) | Bằng chứng phiên bản candidate và dữ liệu được người kiểm định ghi nhận trước đánh giá; không đồng nghĩa đã đánh giá hoặc được duyệt phát hành |
+| Registry lịch sử tiếp xúc / dành test mới | Sổ nhóm đã dùng cho fit, tune, phân tích nhãn hoặc đánh giá qua nhiều run / ghi nhận nhóm mới được dành cho test; việc dành không tự chứng minh test còn độc lập khi thực sự đánh giá |
 | Train / validation / test | Fit tham số / chọn cấu hình / đánh giá độc lập sau freeze |
 
 <a id="qd1"></a>
@@ -490,6 +491,8 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 **Quyết định 3 — đánh giá:** mặc định grouped holdout trên snapshot hiện hành. Chia theo ngày đăng không chứng minh dự báo tương lai vì tin có thể sửa giá. Temporal evaluation chỉ khi có archive quan sát giá thật, chronology và purge nhóm; không chọn thiết kế chỉ vì điểm đẹp hơn.
 
 **Quyết định 4 — khóa trước đánh giá:** dùng module `ml.freeze` với hai thao tác `freeze(run_dir, reviewer)` và `verify_freeze(run_dir)` dùng chung cho CLI và evaluator. Module giữ chi tiết hash/định dạng bản ghi; tests đi qua CLI như người vận hành. Không đổi code train của TV2 hoặc ghép logic duyệt release vào đánh giá. `selection.json` là bản tóm tắt; cấu hình và winner có thẩm quyền trong candidate được khóa bằng hash toàn file.
+
+**Quyết định 5 — lịch sử nhóm xuyên run:** registry v1 dùng thư mục event JSON chỉ thêm mới và khóa tạo file độc quyền, không thêm database/dependency cho MVP. Một CLI giữ việc kiểm tra lịch sử và ghi nhận, tests qua cùng CLI. Đây là sổ nội bộ do người vận hành ghi, chưa tích hợp tự động vào pipeline và không chống sửa/xóa bởi người có quyền thư mục. Không thay freeze bằng registry: hai cơ chế kiểm soát khác nhau.
 
 </details>
 
@@ -511,7 +514,15 @@ Sau xác minh bản khóa và nạp candidate nội bộ đáng tin, evaluator y
 
 `ml.prepare` và `ml.release` chưa được triển khai. Quy trình mục tiêu phải kiểm tra cổng nguồn, schema, chất lượng và freshness trước khi đóng gói approved; không tự chọn lại winner hay refit. Hash không thay thế kiểm soát người có quyền ghi artifact.
 
-Khi refresh, dùng dataset/run/artifact mới và giữ lịch sử bất biến. Sổ `evaluation_registry` nội bộ phải ghi nhóm từng dùng fit, tune, phân tích nhãn hoặc đánh giá. Test phát hành mới chỉ lấy nhóm chưa tiếp xúc; không chuyển nhóm bị loại sang train trong cùng run để cứu cỡ mẫu. Chưa đủ test mới thì chưa phát hành, không sửa timestamp model cũ. Registry đầy đủ còn là công việc cần hoàn thiện.
+Khi refresh, dùng dataset/run/artifact mới và giữ lịch sử bất biến. Sổ `evaluation_registry` nội bộ phải ghi nhóm từng dùng fit, tune, phân tích nhãn hoặc đánh giá. Test phát hành mới chỉ lấy nhóm chưa tiếp xúc; không chuyển nhóm bị loại sang train trong cùng run để cứu cỡ mẫu. Chưa đủ test mới thì chưa phát hành, không sửa timestamp model cũ.
+
+**Registry v1 — thao tác nội bộ:** `ml.registry init --registry-dir` tạo sổ mới; `record --registry-dir --groups-csv --run-id --actor --purpose` ghi nhóm đã dùng với purpose `fit`, `tune`, `label_analysis` hoặc `evaluation`. `reserve-test` nhận cùng tham số nhưng không có purpose, từ chối toàn bộ yêu cầu nếu bất kỳ nhóm nào đã có lịch sử hoặc được dành cho test. CSV bắt buộc có `property_group_id` không rỗng/trùng; ID là chuỗi, giữ số 0 đầu. Cột khác không ghi vào sổ; nên cấp CSV chỉ chứa ID, không cần nhãn.
+
+Registry là thư mục riêng dưới `artifacts/` hoặc kho nội bộ ngoài checkout, gồm `registry.json` version và `events/*.json` chỉ thêm mới. Mỗi event có run, actor, thời điểm ghi UTC, purpose và danh sách nhóm; không lưu giá. `record` ghi sự kiện tiếp xúc đã xảy ra, kể cả nhóm từng được dành test; không dùng nó như quyền cho phép fit/tune nhóm đã dành. Trước khi đánh giá vẫn phải đối chiếu mọi tiếp xúc sau thời điểm dành test. Thời điểm ghi không chứng minh thời điểm thực sự tiếp xúc dữ liệu; actor không được xác thực. Nhóm phải có ID ổn định xuyên snapshot, không đổi ID để lách lịch sử.
+
+Kiểm tra lịch sử và ghi event dùng chung khóa `.write-lock` tạo độc quyền; tiến trình khác bị từ chối để thử lại. Sổ thiếu/hỏng/bận không được coi là lịch sử rỗng. Nếu process chết để lại khóa, dừng mọi writer và kiểm tra trạng thái/evidence trước khi người vận hành xử lý; không tự xóa khóa cũ. File ghi dở khiến các lần ghi tiếp bị chặn. Cần filesystem nội bộ đáng tin hỗ trợ tạo file độc quyền, quyền thư mục và sao lưu; người có quyền sửa/xóa sổ vẫn có thể thay lịch sử. Không tạo sổ mới mỗi lần refresh; không xóa bản ghi để cứu test. `init` chỉ tạo lần đầu cho lịch sử mới đã được người vận hành xác minh.
+
+Ví dụ CLI: `.venv/Scripts/python.exe -m ml.registry record --registry-dir artifacts/private-registry --groups-csv artifacts/run-001/train-groups.csv --run-id run-001 --actor TV2 --purpose fit`. Lệnh `reserve-test` chỉ dành các nhóm mới, không tự chia dữ liệu, không bảo đảm đủ 75 nhóm hoặc phê duyệt model. CLI này chưa tự nối vào train/freeze/evaluate/release: lịch sử thực tế cần TV1–TV3 cung cấp và ghi đầy đủ; cơ chế registry đầy đủ còn cần tích hợp trước khi dùng làm gate phát hành thị trường.
 
 Demo: metadata/ngày dữ liệu → nhập căn hộ hỗ trợ → giá + cảnh báo → bảng ba mô hình → thử lỗi đầu vào và stale trong test. Rollback chỉ tới artifact còn hợp lệ; không dùng cache hay video cũ như kết quả live. Luôn có cách chạy local.
 
@@ -529,7 +540,7 @@ Demo: metadata/ngày dữ liệu → nhập căn hộ hỗ trợ → giá + cả
 **Báo cáo:** TV1 viết nguồn/dữ liệu; TV2 viết linear/poly; TV3 viết cây và giải thích; TV4/TV5 viết API/demo; TV6 tổng hợp thiết kế đánh giá, bằng chứng tái lập và giới hạn. Nộp code, locks, config, báo cáo tổng hợp, hình và video có ngày/model. Không đưa PII hoặc raw predictions ra public.
 
 <a id="quy-uoc-code"></a>
-**Hoàn thành một PR:** đúng issue/spec, thay schema/code/tests cùng PR nếu đổi contract, không rò nhãn, kiểm tra phần giao và CI pass, cập nhật tài liệu, có reviewer khác tác giả. Test chính thức chỉ ở `tests/`. Không format toàn repo trong PR tính năng; không tạo tài liệu/helper bỏ dở hoặc thư mục trống. Bỏ công cụ Node ở root; pytest và Ruff chạy trực tiếp và qua CI.
+**Hoàn thành một PR:** đúng phạm vi/spec, thay schema/code/tests cùng PR nếu đổi contract, không rò nhãn, kiểm tra phần giao và CI pass, cập nhật tài liệu. Không cần tạo issue hoặc có reviewer GitHub; vẫn tự kiểm tra thay đổi và phối hợp owner khi đổi interface chung. Test chính thức chỉ ở `tests/`. Không format toàn repo trong PR tính năng; không tạo tài liệu/helper bỏ dở hoặc thư mục trống. Bỏ công cụ Node ở root; pytest và Ruff chạy trực tiếp và qua CI.
 
 </details>
 

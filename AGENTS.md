@@ -9,7 +9,7 @@
 
 ### Issue tracker
 
-Checklist nghiệm thu theo thành viên nằm trực tiếp trong `docs/TEAM.md` để AI đọc từ checkout. GitHub Issues giữ từng ticket triển khai, thảo luận và liên kết PR; không sao chép checklist vai trò sang issue. Spec ở SPEC, không có bản sao trong `.scratch/`.
+Checklist nghiệm thu theo thành viên nằm trực tiếp trong `docs/TEAM.md` để AI đọc từ checkout. Theo chỉ dẫn chủ repo, làm trực tiếp theo phạm vi được giao, không cần tạo issue mới. Issues cũ chỉ giữ lịch sử/thảo luận; không sao chép checklist vai trò sang issue. Spec ở SPEC, không có bản sao trong `.scratch/`.
 
 ### Domain docs
 
@@ -25,7 +25,7 @@ Checklist nghiệm thu theo thành viên nằm trực tiếp trong `docs/TEAM.md
 
 4. **Review và sửa đến khi đạt.** Review toàn bộ diff so với SHA base theo hai trục: chuẩn repo và yêu cầu/tiêu chí nghiệm thu. Dùng `code-review` khi phù hợp; giải quyết phát hiện quan trọng rồi chạy lại kiểm tra bị ảnh hưởng. Khi gặp bug khó, dùng `diagnosing-bugs` nếu có: tái hiện, thu nhỏ tình huống, kiểm tra từng giả thuyết và sửa nguyên nhân; thêm test hồi quy thất bại trước bản sửa. Refactor khi test đã GREEN, rồi review và kiểm tra lại phần thay đổi. Với lỗi tài liệu, sửa và đối chiếu tính nhất quán.
 
-5. **Hoàn tất thay đổi và bàn giao.** Cập nhật contract trong README và đúng checklist/evidence/bước tiếp trong TEAM khi có thay đổi tương ứng; không tick hoàn thành toàn mục nếu mới xong một phần kỹ thuật. PR ghi vấn đề, hành vi sau sửa, issue, phạm vi, kiểm chứng và giới hạn. Gom cập nhật tài liệu/QA nhỏ vào thay đổi liên quan hoặc một đợt tài liệu có phạm vi rõ; không mở PR riêng cho từng kết quả kiểm tra. Yêu cầu rõ của người dùng về PR được ưu tiên. Stage đường dẫn cụ thể, không force-add hàng loạt. Trước merge, giải thích thay đổi, nhánh đích, CI/review, giới hạn và ảnh hưởng triển khai rồi chờ người dùng duyệt rõ ràng; quyền triển khai hoặc mở PR không phải quyền merge.
+5. **Hoàn tất thay đổi và bàn giao.** Cập nhật contract trong README và đúng checklist/evidence/bước tiếp trong TEAM khi có thay đổi tương ứng; không tick hoàn thành toàn mục nếu mới xong một phần kỹ thuật. PR ghi vấn đề, hành vi sau sửa, phạm vi được giao, kiểm chứng và giới hạn; liên kết thảo luận/issue cũ nếu có. Gom cập nhật tài liệu/QA nhỏ vào thay đổi liên quan hoặc một đợt tài liệu có phạm vi rõ; không mở PR riêng cho từng kết quả kiểm tra. Yêu cầu rõ của người dùng về PR được ưu tiên. Stage đường dẫn cụ thể, không force-add hàng loạt. Trước merge, giải thích thay đổi, nhánh đích, CI, giới hạn và ảnh hưởng triển khai rồi chờ người dùng duyệt rõ ràng; không cần reviewer GitHub. Quyền triển khai hoặc mở PR không phải quyền merge.
 
 6. **Giữ ngữ cảnh, dọn phần tạm và tiếp tục.** Cập nhật handoff hiện có với mục tiêu, nhánh, SHA base/HEAD, PR/trạng thái hoặc ghi chưa mở PR, bằng chứng kiểm tra, quyết định còn hiệu lực, phụ thuộc và việc tiếp. Phân biệt local, đã merge và đã xác minh triển khai; merge không chứng minh deploy thành công. Handoff không trở thành checklist hoặc bản sao spec thứ hai. Sau khi giữ đủ thông tin cần thiết, dọn artifact đúng phạm vi bên dưới. Tiếp tục việc độc lập trong phạm vi đã giao khi còn phụ thuộc; không trộn tính năng mới vào nhánh chưa xong hoặc tự merge để đi tiếp.
 
@@ -43,12 +43,12 @@ Sau mỗi vòng, báo ngắn gọn bằng tiếng Việt: đã thay đổi gì v
 ## GitHub: giảm xung đột cho nhóm 6 người
 
 - Một nhánh tích hợp `main`; không thêm `develop` trong 4 tuần. Không push trực tiếp lên `main`: mọi thay đổi phải từ nhánh riêng và qua PR. Không dùng force-push để vượt quy trình.
-- Một issue/một owner triển khai/một nhánh ngắn hạn: `feat/<issue>-<slug>`, `fix/<issue>-<slug>`, `docs/<issue>-<slug>`, `chore/<issue>-<slug>`.
+- Một phạm vi công việc/một owner triển khai/một nhánh ngắn hạn: `feat/<slug>`, `fix/<slug>`, `docs/<slug>`, `chore/<slug>`; không bắt buộc số issue.
 - Trước bắt đầu: fetch, tạo nhánh từ `origin/main`. Trước PR: fetch rồi merge `origin/main` vào nhánh cá nhân. Không rewrite lịch sử đã chia sẻ hoặc force-push nhánh chung.
 - Mở draft PR sớm, ghi phạm vi/file đang giữ. Không cùng ghi một file chung mà chưa phối hợp owner; người khác đề xuất qua review. Không format toàn repo trong PR tính năng.
 - Owner: TV1 dữ liệu; TV2 shared features/linear/poly; TV3 tree/analysis; TV4 HTTP; TV5 frontend; TV6 root config/README/CI. Đổi interface phải có producer và consumer review.
 - Conflict: đọc cả hai thay đổi, tích hợp đúng ý nghĩa, chạy lại kiểm tra phần giao; không checkout ours/theirs hàng loạt hoặc reset/clean phá dữ liệu.
-- PR cần CI xanh và ít nhất một reviewer khác tác giả; squash merge sau review. Nếu protection chưa bật, không nói quy tắc đã được GitHub cưỡng chế. Không bịa username/assignee của thành viên chưa cung cấp.
+- PR cần CI xanh; theo chỉ dẫn chủ repo, không bắt buộc reviewer GitHub trước merge. Vẫn tự kiểm tra code và phần giao; phê duyệt model/dữ liệu độc lập không bị bỏ. Squash merge vào main khi đã được phép; nếu policy chặn, chỉ dùng quyền admin theo ủy quyền, không tắt policy hay force-push. PR #21 đã gặp policy chặn merge thường; chưa xác minh toàn bộ cấu hình protection. Không bịa username/assignee của thành viên chưa cung cấp.
 - TEAM giữ phân công/mốc và checklist theo thành viên. Khi xong cập nhật đúng ô, evidence và bước tiếp/blocker trong cùng PR; GitHub Issue giữ status/trao đổi của từng ticket. Không tạo thêm bản checklist có trạng thái khác.
 
 ## AI và kiểm chứng
