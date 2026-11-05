@@ -1,6 +1,6 @@
 ## Vấn đề và thay đổi
 
-Closes #<issue>. Owner: TVx. Phạm vi/file chung đã phối hợp:
+Owner: TVx. Phạm vi được giao/file chung đã phối hợp (không cần tạo issue):
 
 ## Kiểm chứng
 
@@ -15,4 +15,4 @@ README/schema/consumer nào đổi? Producer và consumer nào cần review?
 - [ ] Một mục đích, không format toàn repo.
 - [ ] Đã cập nhật main, giải conflict và chạy kiểm tra.
 - [ ] Không secrets/raw/PII/model binary hoặc metric giả.
-- [ ] CI xanh, có reviewer khác tác giả; thay interface có cả hai bên.
+- [ ] CI xanh, đã tự kiểm tra; thay interface chung có phối hợp hai bên. Không bắt buộc reviewer GitHub.
