@@ -173,7 +173,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 - [ ] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10).
 - [ ] **TV6-08** Cùng TV4 kiểm tra parity offline/HTTP, model thiếu/chưa duyệt/quá hạn và security/release gates (P11).
-- [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry đang triển khai: init, record và reserve-test; còn thiếu tích hợp tự động/lịch sử thực tế. Review PR không bắt buộc theo chỉ dẫn chủ repo, không thay gate model.
+- [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry ở [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22), chưa merge: init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check đạt. Còn thiếu tích hợp tự động/lịch sử thực tế. Review PR không bắt buộc theo chỉ dẫn chủ repo, không thay gate model.
 
 #### Tuần 4
 
@@ -212,7 +212,7 @@ TV6 không được trở thành người sửa toàn bộ code thay nhóm. Mỗ
 
 Đọc code theo thứ tự: `ml/schema.py` → `ml/data.py` → `ml/models.py` → `ml/train.py` → `ml/evaluate.py` → `backend/service.py` → `backend/app.py` → `tests/`. Chạy từng bước theo [README](../README.md), không cần viết lại toàn bộ phần của thành viên khác.
 
-Khi một thành viên trễ: ghi blocker ở GitHub Issue, thống nhất chuyển owner và phạm vi file trước khi tiếp quản; lấy đầu vào/đầu ra đã chốt làm điểm bắt đầu. Ưu tiên nguồn dữ liệu hợp lệ và baseline xuyên suốt; cắt trang trí hoặc thí nghiệm phụ trước. TV1 là phụ thuộc đầu tiên: chưa có nguồn đạt chuẩn thì báo NO-GO phần giá hiện tại, không dùng dữ liệu giả để cứu demo. Giữ holdout độc lập: nếu bạn phải tune thay TV2/TV3, nhờ reviewer khác đánh giá và ghi rõ mọi lần đã xem nhãn; không gọi holdout đã dùng để tune là test độc lập.
+Khi một thành viên trễ: ghi blocker ở TEAM/PR hoặc issue cũ nếu có, thống nhất chuyển owner và phạm vi file trước khi tiếp quản; lấy đầu vào/đầu ra đã chốt làm điểm bắt đầu. Ưu tiên nguồn dữ liệu hợp lệ và baseline xuyên suốt; cắt trang trí hoặc thí nghiệm phụ trước. TV1 là phụ thuộc đầu tiên: chưa có nguồn đạt chuẩn thì báo NO-GO phần giá hiện tại, không dùng dữ liệu giả để cứu demo. Giữ holdout độc lập: nếu bạn phải tune thay TV2/TV3, nhờ reviewer khác đánh giá và ghi rõ mọi lần đã xem nhãn; không gọi holdout đã dùng để tune là test độc lập.
 
 ## Tuần 1 — khóa dữ liệu và một lát cắt chạy xuyên suốt
 
