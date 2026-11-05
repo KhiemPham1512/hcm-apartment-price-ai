@@ -50,6 +50,45 @@ def evaluate_cli(run):
     )
 
 
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("schema_version", "unsupported"),
+        ("schema_version", None),
+        ("schema_version", 1),
+        ("features", None),
+        ("features", ["area_m2", "bedrooms", "bathrooms", "floor_level"]),
+        ("features", ["district_code", "area_m2", "bedrooms", "bathrooms", "floor_level"]),
+        ("features", ["area_m2", "bedrooms", "bathrooms", "floor_level", "asking_price_vnd"]),
+        ("features", [
+            "area_m2", "bedrooms", "bathrooms", "floor_level", "district_code", "listing_id",
+        ]),
+    ],
+)
+def test_evaluation_rejects_incompatible_contract_before_opening_holdout(
+    candidate_run, field, value
+):
+    bundle_path = candidate_run / "candidates.joblib"
+    bundle = joblib.load(bundle_path)
+    if value is None:
+        bundle.pop(field)
+    else:
+        bundle[field] = value
+    # Matching hashes/freeze cannot make an incompatible contract safe to evaluate.
+    (candidate_run / "holdout.csv").write_bytes(b"\xffnot CSV labels")
+    bundle["holdout_sha256"] = hashlib.sha256(
+        (candidate_run / "holdout.csv").read_bytes()
+    ).hexdigest()
+    joblib.dump(bundle, bundle_path)
+
+    result = evaluate_cli(candidate_run)
+
+    assert result.returncode != 0
+    assert "Candidate feature contract mismatch" in result.stderr
+    assert "UnicodeDecodeError" not in result.stderr
+    assert not (candidate_run / "evaluation.json").exists()
+
+
 @pytest.mark.parametrize("missing", ["baseline", "linear", "polynomial", "tree"])
 def test_evaluation_requires_baseline_and_all_three_models(candidate_run, missing):
     bundle_path = candidate_run / "candidates.joblib"

@@ -507,6 +507,8 @@ Bản ghi không có chữ ký hay xác thực reviewer. Người có quyền s�
 
 `ml.evaluate` kiểm tra tính nhất quán của gói đầu vào: `splits.csv` phải có đủ train/validation/test, ID không rỗng, mỗi tin và nhóm chỉ có một đại diện; holdout phải khớp bộ `(source_id, listing_id, property_group_id)` thuộc test. Thứ tự dòng có thể khác, ID chuỗi giữ nguyên số 0 đầu. Kiểm tra này không chứng minh mô hình chưa từng được fit bằng holdout hoặc checksum là do người có quyền tạo: TV6 vẫn cần review producer, freeze và lịch sử tiếp xúc dữ liệu.
 
+Sau xác minh bản khóa và nạp candidate nội bộ đáng tin, evaluator yêu cầu `schema_version` và danh sách `features` đúng phiên bản/thứ tự trong `ml.schema` trước khi parse holdout hoặc chạy dự đoán. Thiếu trường, phiên bản không tương thích, thêm/bớt/đổi thứ tự đặc trưng đều bị từ chối và không tạo báo cáo. Đây là kiểm tra khai báo contract của gói, không kiểm tra được toàn bộ logic bên trong pipeline hay chứng minh không rò nhãn khi huấn luyện.
+
 `ml.prepare` và `ml.release` chưa được triển khai. Quy trình mục tiêu phải kiểm tra cổng nguồn, schema, chất lượng và freshness trước khi đóng gói approved; không tự chọn lại winner hay refit. Hash không thay thế kiểm soát người có quyền ghi artifact.
 
 Khi refresh, dùng dataset/run/artifact mới và giữ lịch sử bất biến. Sổ `evaluation_registry` nội bộ phải ghi nhóm từng dùng fit, tune, phân tích nhãn hoặc đánh giá. Test phát hành mới chỉ lấy nhóm chưa tiếp xúc; không chuyển nhóm bị loại sang train trong cùng run để cứu cỡ mẫu. Chưa đủ test mới thì chưa phát hành, không sửa timestamp model cũ. Registry đầy đủ còn là công việc cần hoàn thiện.

@@ -10,6 +10,7 @@ import pandas as pd
 
 from ml.data import feature_frame
 from ml.freeze import verify_freeze
+from ml.schema import FEATURES, SCHEMA_VERSION
 from ml.train import metrics
 
 
@@ -69,6 +70,8 @@ def main():
         parser.error(f"Freeze verification failed: {exc}")
     # Local trusted artifacts only: never expose this loader through an upload endpoint.
     bundle = joblib.load(args.run_dir / "candidates.joblib")
+    if bundle.get("schema_version") != SCHEMA_VERSION or bundle.get("features") != FEATURES:
+        parser.error("Candidate feature contract mismatch")
     for name in ("holdout", "splits"):
         actual = hashlib.sha256((args.run_dir / f"{name}.csv").read_bytes()).hexdigest()
         if actual != bundle[f"{name}_sha256"]:
