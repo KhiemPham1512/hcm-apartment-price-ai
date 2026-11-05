@@ -155,7 +155,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn:** Bản khóa candidate và guard schema/features đã merge qua PR #19/#21. Đang triển khai CLI registry lịch sử nhóm và dành test mới trên nhánh `feat/tv6-exposure-registry`, không tạo issue theo chỉ dẫn chủ repo. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07/09. Registry bước này chưa tự nối train/evaluate/release.
+**Bước tiếp / Chặn:** Freeze/guard schema và CLI registry đã merge qua PR #19/#21/#22. Đang nối registry vào evaluator trên nhánh `feat/tv6-registry-evaluation`: bắt buộc cho real, reservation khớp run/nhóm, ghi tiếp xúc trước mở nhãn và giữ dấu vết khi lỗi. Không tạo issue; chủ repo duyệt mỗi PR trước merge, không cần reviewer khác. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07/09. Training/freeze/release chưa tự ghi history.
 
 #### Tuần 1
 
@@ -173,7 +173,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 - [ ] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10).
 - [ ] **TV6-08** Cùng TV4 kiểm tra parity offline/HTTP, model thiếu/chưa duyệt/quá hạn và security/release gates (P11).
-- [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry ở [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22), chưa merge: init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check đạt. Còn thiếu tích hợp tự động/lịch sử thực tế. Review PR không bắt buộc theo chỉ dẫn chủ repo, không thay gate model.
+- [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry đã merge qua [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22): init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check và CI đạt. Gate evaluator đang triển khai; còn thiếu tự ghi history fit/tune/lịch sử thực tế và release. Review PR không bắt buộc theo chỉ dẫn chủ repo, không thay gate model.
 
 #### Tuần 4
 
