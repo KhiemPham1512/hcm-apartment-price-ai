@@ -166,7 +166,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 #### Tuần 2
 
-- [ ] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol. Guard contract schema/features đang triển khai ở [issue #20](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/20); chưa có candidate thị trường để nghiệm thu toàn mục.
+- [ ] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol. Guard contract schema/features ở [PR #21](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/21) ([issue #20](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/20)), chưa merge: 8 ca TDD qua CLI, toàn bộ local 76 pass; Ruff/pip check đạt. Chưa có candidate thị trường để nghiệm thu toàn mục.
 - [ ] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu. Cơ chế bản khóa kỹ thuật đã merge qua [PR #19](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/19); chưa phải review candidate thị trường hay registry đầy đủ.
 
 #### Tuần 3
