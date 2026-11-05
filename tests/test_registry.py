@@ -231,6 +231,27 @@ def test_ambiguous_group_column_is_rejected_instead_of_losing_an_identity(tmp_pa
     assert not list((registry / "events").iterdir())
 
 
+def test_windows_utf8_bom_manifest_keeps_string_groups(tmp_path):
+    registry = tmp_path / "registry"
+    assert cli("init", "--registry-dir", registry).returncode == 0
+    groups = tmp_path / "groups.csv"
+    groups.write_text("property_group_id\n001\n", encoding="utf-8-sig")
+    result = cli(
+        "reserve-test",
+        "--registry-dir",
+        registry,
+        "--groups-csv",
+        groups,
+        "--run-id",
+        "windows-export",
+        "--actor",
+        "TV6",
+    )
+    assert result.returncode == 0, result.stderr
+    event = json.loads(next((registry / "events").iterdir()).read_text(encoding="utf-8"))
+    assert event["groups"] == ["001"]
+
+
 def test_mixed_reservation_is_atomic_and_exposure_facts_can_be_recorded_after_reserving(tmp_path):
     registry = tmp_path / "registry"
     assert cli("init", "--registry-dir", registry).returncode == 0

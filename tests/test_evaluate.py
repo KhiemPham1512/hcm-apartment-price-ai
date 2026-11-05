@@ -36,18 +36,248 @@ def candidate_run(tmp_path, listings):
     return tmp_path
 
 
-def evaluate_cli(run):
+def evaluate_cli(run, *args):
     frozen = subprocess.run(
-        [sys.executable, "-B", "-m", "ml.freeze", "--run-dir", str(run),
-         "--reviewer", "technical-test-reviewer"],
-        capture_output=True, text=True,
-    )
-    assert frozen.returncode == 0, frozen.stderr
-    return subprocess.run(
-        [sys.executable, "-B", "-m", "ml.evaluate", "--run-dir", str(run)],
+        [
+            sys.executable,
+            "-B",
+            "-m",
+            "ml.freeze",
+            "--run-dir",
+            str(run),
+            "--reviewer",
+            "technical-test-reviewer",
+        ],
         capture_output=True,
         text=True,
     )
+    assert frozen.returncode == 0, frozen.stderr
+    return subprocess.run(
+        [sys.executable, "-B", "-m", "ml.evaluate", "--run-dir", str(run), *map(str, args)],
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_real_candidate_requires_registry_before_evaluation(candidate_run):
+    path = candidate_run / "candidates.joblib"
+    bundle = joblib.load(path)
+    # Synthetic fixture exercising the real-mode gate, not market evidence.
+    bundle["dataset_card"]["data_kind"] = "real"
+    joblib.dump(bundle, path)
+    result = evaluate_cli(candidate_run)
+    assert result.returncode != 0
+    assert "Real evaluation requires registry" in result.stderr
+    assert not (candidate_run / "evaluation.json").exists()
+
+
+@pytest.fixture
+def reserved_run(candidate_run):
+    registry = candidate_run / "registry"
+    groups = candidate_run / "test-groups.csv"
+    splits = pd.read_csv(candidate_run / "splits.csv", dtype=str)
+    splits.loc[splits["split"] == "test", ["property_group_id"]].to_csv(groups, index=False)
+    for args in (
+        ["init", "--registry-dir", registry],
+        [
+            "reserve-test",
+            "--registry-dir",
+            registry,
+            "--groups-csv",
+            groups,
+            "--run-id",
+            "fixture-run",
+            "--actor",
+            "TV6",
+        ],
+    ):
+        result = subprocess.run(
+            [sys.executable, "-B", "-m", "ml.registry", *map(str, args)],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+    return candidate_run, registry
+
+
+@pytest.mark.parametrize("data_kind", ["synthetic", "real"])
+def test_registered_evaluation_preserves_reservation_and_records_exposure(reserved_run, data_kind):
+    run, registry = reserved_run
+    bundle_path = run / "candidates.joblib"
+    bundle = joblib.load(bundle_path)
+    bundle["dataset_card"]["data_kind"] = data_kind  # Gate fixture, not market data.
+    joblib.dump(bundle, bundle_path)
+    original = {p.name: p.read_bytes() for p in (registry / "events").iterdir()}
+    result = evaluate_cli(
+        run, "--registry-dir", registry, "--run-id", "fixture-run", "--actor", "TV6"
+    )
+    assert result.returncode == 0, result.stderr
+    report = json.loads((run / "evaluation.json").read_text(encoding="utf-8"))
+    assert report["registry_status"] == "checked"
+    assert report["registry_run_id"] == "fixture-run"
+    assert "actor" not in report and "groups" not in report
+    event_path = registry / "events" / report["registry_event_id"]
+    assert report["registry_event_sha256"] == hashlib.sha256(event_path.read_bytes()).hexdigest()
+    event = json.loads(event_path.read_text(encoding="utf-8"))
+    assert event["purpose"] == "evaluation"
+    assert event["actor"] == "TV6"
+    assert set(report["test"]) == {"baseline", "linear", "polynomial", "tree"}
+    assert report["release_status"] == "candidate"
+    assert len(list((registry / "events").iterdir())) == 2
+    assert all((registry / "events" / name).read_bytes() == data for name, data in original.items())
+
+
+@pytest.mark.parametrize(
+    "problem", ["missing", "wrong_run", "groups", "exposed", "corrupt", "busy"]
+)
+def test_registry_violation_stops_before_label_parsing(reserved_run, problem):
+    run, registry = reserved_run
+    reservation = next((registry / "events").iterdir())
+    run_id = "wrong-run" if problem == "wrong_run" else "fixture-run"
+    if problem == "missing":
+        reservation.unlink()
+    elif problem == "groups":
+        event = json.loads(reservation.read_text(encoding="utf-8"))
+        event["groups"] = event["groups"][:-1]
+        reservation.write_text(json.dumps(event), encoding="utf-8")
+    elif problem == "exposed":
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-B",
+                "-m",
+                "ml.registry",
+                "record",
+                "--registry-dir",
+                str(registry),
+                "--groups-csv",
+                str(run / "test-groups.csv"),
+                "--run-id",
+                "another-run",
+                "--actor",
+                "TV2",
+                "--purpose",
+                "fit",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+    elif problem == "corrupt":
+        reservation.write_text("{}", encoding="utf-8")
+    elif problem == "busy":
+        (registry / ".write-lock").write_text("another writer", encoding="utf-8")
+    before = {p.name: p.read_bytes() for p in (registry / "events").iterdir()}
+    (run / "holdout.csv").write_bytes(b"\xfflabels must not be parsed")
+    bundle_path = run / "candidates.joblib"
+    bundle = joblib.load(bundle_path)
+    bundle["holdout_sha256"] = hashlib.sha256((run / "holdout.csv").read_bytes()).hexdigest()
+    joblib.dump(bundle, bundle_path)
+    result = evaluate_cli(run, "--registry-dir", registry, "--run-id", run_id, "--actor", "TV6")
+    assert result.returncode != 0
+    assert "codec can't decode" not in result.stderr
+    assert not (run / "evaluation.json").exists()
+    assert {p.name: p.read_bytes() for p in (registry / "events").iterdir()} == before
+    if problem == "busy":
+        assert (registry / ".write-lock").read_text(encoding="utf-8") == "another writer"
+    else:
+        assert not (registry / ".write-lock").exists()
+
+
+def test_failure_after_claim_keeps_exposure_and_refuses_retry(reserved_run):
+    run, registry = reserved_run
+    (run / "holdout.csv").write_bytes(b"\xffbad labels")
+    bundle_path = run / "candidates.joblib"
+    bundle = joblib.load(bundle_path)
+    bundle["holdout_sha256"] = hashlib.sha256((run / "holdout.csv").read_bytes()).hexdigest()
+    joblib.dump(bundle, bundle_path)
+    args = ["--registry-dir", registry, "--run-id", "fixture-run", "--actor", "TV6"]
+    first = evaluate_cli(run, *args)
+    assert first.returncode != 0
+    assert "codec can't decode" in first.stderr
+    events = [json.loads(p.read_text(encoding="utf-8")) for p in (registry / "events").iterdir()]
+    assert sorted(e["purpose"] for e in events) == ["evaluation", "test_reserved"]
+    assert not (run / "evaluation.json").exists()
+    assert not (registry / ".write-lock").exists()
+    second = subprocess.run(
+        [sys.executable, "-B", "-m", "ml.evaluate", "--run-dir", str(run), *map(str, args)],
+        capture_output=True,
+        text=True,
+    )
+    assert second.returncode != 0
+    assert "exact unused test reservation" in second.stderr
+    assert "codec can't decode" not in second.stderr
+    assert len(list((registry / "events").iterdir())) == 2
+
+
+def test_deleting_report_does_not_reset_evaluation_history(reserved_run):
+    run, registry = reserved_run
+    args = ["--registry-dir", registry, "--run-id", "fixture-run", "--actor", "TV6"]
+    assert evaluate_cli(run, *args).returncode == 0
+    (run / "evaluation.json").unlink()  # Technical fixture simulates losing the local report.
+    result = subprocess.run(
+        [sys.executable, "-B", "-m", "ml.evaluate", "--run-dir", str(run), *map(str, args)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "exact unused test reservation" in result.stderr
+    assert not (run / "evaluation.json").exists()
+    assert len(list((registry / "events").iterdir())) == 2
+
+
+def test_concurrent_evaluations_consume_reservation_once(reserved_run):
+    run, registry = reserved_run
+    frozen = subprocess.run(
+        [sys.executable, "-B", "-m", "ml.freeze", "--run-dir", str(run), "--reviewer", "TV6"],
+        capture_output=True,
+        text=True,
+    )
+    assert frozen.returncode == 0, frozen.stderr
+    command = [
+        sys.executable,
+        "-B",
+        "-m",
+        "ml.evaluate",
+        "--run-dir",
+        str(run),
+        "--registry-dir",
+        str(registry),
+        "--run-id",
+        "fixture-run",
+        "--actor",
+        "TV6",
+    ]
+    processes = [
+        subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE) for _ in range(2)
+    ]
+    for process in processes:
+        process.communicate(timeout=60)
+    assert sum(p.returncode == 0 for p in processes) == 1
+    assert (run / "evaluation.json").exists()
+    assert len(list((registry / "events").iterdir())) == 2
+    assert not (registry / ".write-lock").exists()
+
+
+@pytest.mark.parametrize(
+    "options",
+    [
+        ["--run-id", "fixture-run"],
+        [
+            "--registry-dir",
+            "missing",
+            "--run-id",
+            "fixture-run",
+            "--actor",
+            " ",
+        ],
+    ],
+)
+def test_partial_or_blank_registry_options_are_rejected(candidate_run, options):
+    result = evaluate_cli(candidate_run, *options)
+    assert result.returncode != 0
+    assert "Registry requires" in result.stderr
+    assert not (candidate_run / "evaluation.json").exists()
 
 
 @pytest.mark.parametrize(
@@ -60,9 +290,17 @@ def evaluate_cli(run):
         ("features", ["area_m2", "bedrooms", "bathrooms", "floor_level"]),
         ("features", ["district_code", "area_m2", "bedrooms", "bathrooms", "floor_level"]),
         ("features", ["area_m2", "bedrooms", "bathrooms", "floor_level", "asking_price_vnd"]),
-        ("features", [
-            "area_m2", "bedrooms", "bathrooms", "floor_level", "district_code", "listing_id",
-        ]),
+        (
+            "features",
+            [
+                "area_m2",
+                "bedrooms",
+                "bathrooms",
+                "floor_level",
+                "district_code",
+                "listing_id",
+            ],
+        ),
     ],
 )
 def test_evaluation_rejects_incompatible_contract_before_opening_holdout(
@@ -217,8 +455,10 @@ def test_evaluation_accepts_reordered_holdout_and_preserves_string_ids(candidate
     assert all(score["n"] == 90 for score in report["test"].values())
     assert report["release_status"] == "candidate"
     assert report["data_kind"] == "synthetic"
+    assert report["registry_status"] == "not_checked_synthetic"
     assert bundle_path.read_bytes() == frozen_bytes
     assert report["freeze_reviewer"] == "technical-test-reviewer"
-    assert report["freeze_sha256"] == hashlib.sha256(
-        (candidate_run / "freeze.json").read_bytes()
-    ).hexdigest()
+    assert (
+        report["freeze_sha256"]
+        == hashlib.sha256((candidate_run / "freeze.json").read_bytes()).hexdigest()
+    )

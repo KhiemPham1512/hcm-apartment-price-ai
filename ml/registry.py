@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import hashlib
 import json
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -27,8 +28,11 @@ def _valid_groups(groups) -> bool:
     )
 
 
-def _history(directory: Path) -> set[str]:
-    used = set()
+def _history(directory: Path) -> list[dict]:
+    header = json.loads((directory / "registry.json").read_text(encoding="utf-8"))
+    if header != {"version": 1} or type(header["version"]) is not int:
+        raise ValueError("Invalid registry version")
+    events = []
     for path in (directory / "events").iterdir():
         event = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(event, dict) or set(event) != {
@@ -51,8 +55,8 @@ def _history(directory: Path) -> set[str]:
         stamp = datetime.fromisoformat(event["recorded_at"])
         if stamp.tzinfo is None or stamp > datetime.now(timezone.utc):
             raise ValueError("Invalid registry timestamp")
-        used.update(event["groups"])
-    return used
+        events.append(event)
+    return events
 
 
 @contextmanager
@@ -67,18 +71,7 @@ def _locked(directory: Path):
         lock.unlink()
 
 
-def record(directory: Path, groups_csv: Path, run_id: str, actor: str, purpose: str) -> None:
-    if not run_id.strip() or not actor.strip():
-        raise ValueError("Run and actor must not be blank")
-    with groups_csv.open(encoding="utf-8", newline="") as source:
-        reader = csv.DictReader(source)
-        if not reader.fieldnames or "property_group_id" not in reader.fieldnames:
-            raise ValueError("Missing property_group_id column")
-        if len(set(reader.fieldnames)) != len(reader.fieldnames):
-            raise ValueError("Duplicate CSV column")
-        groups = [row["property_group_id"] for row in reader]
-    if not _valid_groups(groups):
-        raise ValueError("Invalid or duplicate group identity")
+def _append(directory: Path, groups: list[str], run_id: str, actor: str, purpose: str) -> dict:
     event = {
         "version": 1,
         "run_id": run_id.strip(),
@@ -87,15 +80,54 @@ def record(directory: Path, groups_csv: Path, run_id: str, actor: str, purpose: 
         "recorded_at": datetime.now(timezone.utc).isoformat(),
         "groups": sorted(groups),
     }
+    path = directory / "events" / f"{uuid4().hex}.json"
+    with path.open("x", encoding="utf-8") as output:
+        json.dump(event, output, indent=2, allow_nan=False)
+    return {
+        "registry_status": "checked",
+        "registry_run_id": run_id.strip(),
+        "registry_event_id": path.name,
+        "registry_event_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
+
+
+def record(directory: Path, groups_csv: Path, run_id: str, actor: str, purpose: str) -> None:
+    if not run_id.strip() or not actor.strip():
+        raise ValueError("Run and actor must not be blank")
+    with groups_csv.open(encoding="utf-8-sig", newline="") as source:
+        reader = csv.DictReader(source)
+        if not reader.fieldnames or "property_group_id" not in reader.fieldnames:
+            raise ValueError("Missing property_group_id column")
+        if len(set(reader.fieldnames)) != len(reader.fieldnames):
+            raise ValueError("Duplicate CSV column")
+        groups = [row["property_group_id"] for row in reader]
+    if not _valid_groups(groups):
+        raise ValueError("Invalid or duplicate group identity")
     with _locked(directory):
-        header = json.loads((directory / "registry.json").read_text(encoding="utf-8"))
-        if header != {"version": 1} or type(header["version"]) is not int:
-            raise ValueError("Invalid registry version")
-        used = _history(directory)
-        if purpose == "test_reserved" and used.intersection(groups):
+        events = _history(directory)
+        if purpose == "test_reserved" and any(
+            set(groups).intersection(e["groups"]) for e in events
+        ):
             raise ValueError("Previously exposed or reserved groups; new test refused")
-        with (directory / "events" / f"{uuid4().hex}.json").open("x", encoding="utf-8") as output:
-            json.dump(event, output, indent=2, allow_nan=False)
+        _append(directory, groups, run_id, actor, purpose)
+
+
+@contextmanager
+def evaluation_claim(directory: Path, groups: list[str], run_id: str, actor: str):
+    """Consume a matching reservation before labels; keep failure evidence and writer lock."""
+    if not run_id.strip() or not actor.strip() or not _valid_groups(groups):
+        raise ValueError("Invalid evaluation identity or groups")
+    with _locked(directory):
+        events = _history(directory)
+        related = [event for event in events if set(groups).intersection(event["groups"])]
+        if len(related) != 1 or (
+            related[0]["purpose"] != "test_reserved"
+            or related[0]["run_id"] != run_id.strip()
+            or set(related[0]["groups"]) != set(groups)
+        ):
+            raise ValueError("Registry requires exact unused test reservation for this run")
+        evidence = _append(directory, groups, run_id, actor, "evaluation")
+        yield evidence
 
 
 def main():
