@@ -21,7 +21,9 @@ def evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, fl
     mae = float(mean_absolute_error(y_true, y_pred))
     r2 = float(r2_score(y_true, y_pred))
     return {"rmse": rmse, "mae": mae, "r2": r2}
-
+def metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
+    """Hàm wrapper tương thích với ml/evaluate.py"""
+    return evaluate_predictions(y_true, y_pred)
 
 def train_and_evaluate(
     df: pd.DataFrame,
