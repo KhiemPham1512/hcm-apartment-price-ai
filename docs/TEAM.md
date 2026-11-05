@@ -155,7 +155,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn:** Checklist đã merge qua PR #17. Đang triển khai bản khóa candidate trước đánh giá theo [issue #18](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/18), TDD qua CLI freeze/evaluate đã được chủ repo xác nhận. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07.
+**Bước tiếp / Chặn:** Bản khóa candidate đã merge qua [PR #19](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/19). Đang kiểm tra contract schema/features trước đọc holdout theo [issue #20](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/20), TDD qua CLI freeze/evaluate đã được chủ repo xác nhận. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07. Registry lịch sử tiếp xúc dữ liệu vẫn chưa có.
 
 #### Tuần 1
 
@@ -166,8 +166,8 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 #### Tuần 2
 
-- [ ] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol.
-- [ ] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu. Cơ chế bản khóa kỹ thuật đang triển khai ở [issue #18](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/18); chưa phải review candidate thị trường hay registry đầy đủ.
+- [ ] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol. Guard contract schema/features đang triển khai ở [issue #20](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues/20); chưa có candidate thị trường để nghiệm thu toàn mục.
+- [ ] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu. Cơ chế bản khóa kỹ thuật đã merge qua [PR #19](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/19); chưa phải review candidate thị trường hay registry đầy đủ.
 
 #### Tuần 3
 
