@@ -173,7 +173,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 - [ ] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10).
 - [ ] **TV6-08** Cùng TV4 kiểm tra parity offline/HTTP, model thiếu/chưa duyệt/quá hạn và security/release gates (P11).
-- [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry đã merge qua [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22): init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check và CI đạt. Gate evaluator đang triển khai; còn thiếu tự ghi history fit/tune/lịch sử thực tế và release. Review PR không bắt buộc theo chỉ dẫn chủ repo, không thay gate model.
+- [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry đã merge qua [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22): init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check và CI đạt. Gate evaluator ở [PR #23](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/23), chưa merge: full local 107 pass, thêm ca BOM 1 pass; Ruff/pip check đạt. Còn thiếu tự ghi history fit/tune/lịch sử thực tế và release. Chủ repo duyệt mỗi PR, không cần reviewer khác; không thay gate model.
 
 #### Tuần 4
 
