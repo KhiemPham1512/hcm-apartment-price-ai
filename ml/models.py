@@ -1,15 +1,16 @@
 """
 ml/models.py
-Tác giả: TV2 — ML Linear/Polynomial
+Tác giả: TV2 – ML Linear/Polynomial
 Mục đích: Định nghĩa Shared Preprocessing và các Factory Model.
 """
 
 from typing import List
+
 from sklearn.compose import ColumnTransformer
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.linear_model import Lasso, LinearRegression, Ridge
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, PolynomialFeatures
+from sklearn.preprocessing import OneHotEncoder, PolynomialFeatures, StandardScaler
 
 
 def create_shared_preprocessor(
@@ -48,7 +49,7 @@ def build_linear_model(
 ) -> Pipeline:
     """Xây dựng Pipeline mô hình Hồi quy tuyến tính."""
     preprocessor = create_shared_preprocessor(num_features, cat_features)
-    
+
     if model_type.lower() == "ridge":
         regressor = Ridge(alpha=alpha)
     elif model_type.lower() == "lasso":
@@ -78,6 +79,8 @@ def build_polynomial_model(
         ('regressor', Ridge(alpha=alpha))
     ])
     return model_pipeline
+
+
 def make_model(
     num_features: List[str], cat_features: List[str], model_type: str = "ridge", **kwargs
 ):
