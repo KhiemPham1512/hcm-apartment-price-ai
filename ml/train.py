@@ -21,6 +21,11 @@ def evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
     return {"rmse": rmse, "mae": mae, "r2": r2}
 
 
+def metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
+    """Hàm wrapper tương thích với ml/evaluate.py"""
+    return evaluate_predictions(y_true, y_pred)
+
+
 def train_and_evaluate(
     df: pd.DataFrame,
     target_col: str,
@@ -81,14 +86,14 @@ def train_and_evaluate(
 
 def fit_candidates(train_df: pd.DataFrame, val_df: pd.DataFrame) -> dict:
     """Hàm tương thích với test suite yêu cầu fit_candidates."""
-    # Tự động nhận diện cột mục tiêu (target) và các đặc trưng (features)
-   if "asking_price_vnd" in train_df.columns:
+    if "asking_price_vnd" in train_df.columns:
         target_col = "asking_price_vnd"
     else:
         target_col = train_df.columns[-1]
+
     exclude_cols = {target_col, "source_id", "listing_id", "property_group_id", "split"}
     features = [col for col in train_df.columns if col not in exclude_cols]
-    
+
     num_features = [col for col in features if pd.api.types.is_numeric_dtype(train_df[col])]
     cat_features = [col for col in features if col not in num_features]
 
@@ -98,6 +103,3 @@ def fit_candidates(train_df: pd.DataFrame, val_df: pd.DataFrame) -> dict:
         num_features=num_features,
         cat_features=cat_features
     )
-def metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
-    """Hàm wrapper tương thích với ml/evaluate.py"""
-    return evaluate_predictions(y_true, y_pred)
