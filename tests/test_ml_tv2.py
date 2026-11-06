@@ -3,12 +3,10 @@ tests/test_ml_tv2.py
 Unit tests cho các module của TV2.
 """
 
-import numpy as np
 import pandas as pd
 import pytest
 
 from ml.models import build_linear_model, create_shared_preprocessor
-from ml.train import evaluate_predictions
 
 
 @pytest.fixture
