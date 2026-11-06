@@ -30,7 +30,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 #### Tuần 2
 
-- [ ] **TV1-04** Hoàn thiện grouping từ dữ liệu thô, audit nhóm nghi trùng và chọn đại diện (P02).
+- [X] **TV1-04** Hoàn thiện grouping từ dữ liệu thô, audit nhóm nghi trùng và chọn đại diện (P02).
 - [ ] **TV1-05** Bàn giao split đề xuất, seed/hash và kiểm tra nhóm rời cho TV6; không đưa nhãn test lên GitHub.
 - [ ] **TV1-06** Bàn giao snapshot/card bất biến cho TV2/TV3; báo missingness, khu vực thiếu nhóm và tập trung dự án.
 
