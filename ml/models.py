@@ -9,86 +9,85 @@ from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import Ridge
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, PolynomialFeatures, StandardScaler
-from sklearn.imputer import SimpleImputer
 from sklearn.tree import DecisionTreeRegressor
 
-from ml.schema import NUMERIC_FEATURES, CATEGORICAL_FEATURES
+from ml.schema import CATEGORICAL_FEATURES, NUMERIC_FEATURES
 
 
-def build_shared_preprocessor() -> ColumnTransformer:
-    """Tạo ColumnTransformer dùng chung cho số và phân loại để chống rò rỉ."""
+def create_shared_preprocessor(num_cols=None, cat_cols=None) -> ColumnTransformer:
+    """Tạo ColumnTransformer dùng chung cho số và phân loại."""
+    n_cols = num_cols if num_cols is not None else NUMERIC_FEATURES
+    c_cols = cat_cols if cat_cols is not None else CATEGORICAL_FEATURES
+
     num_pipeline = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
         ("scaler", StandardScaler()),
     ])
-    
+
     cat_pipeline = Pipeline([
         ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
     ])
-    
+
     return ColumnTransformer(
         transformers=[
-            ("num", num_pipeline, NUMERIC_FEATURES),
-            ("cat", cat_pipeline, CATEGORICAL_FEATURES),
+            ("num", num_pipeline, n_cols),
+            ("cat", cat_pipeline, c_cols),
         ]
     )
 
 
-def get_baseline_model() -> BaseEstimator:
+def build_baseline_model() -> BaseEstimator:
     """Mô hình B0: Baseline (Median)."""
     return DummyRegressor(strategy="median")
 
 
-def get_linear_model() -> BaseEstimator:
+def build_linear_model(num_cols=None, cat_cols=None, model_type: str = "ridge") -> BaseEstimator:
     """Mô hình M1: Linear/Ridge Regression kết hợp preprocessor."""
-    return Pipeline([
-        ("preprocessor", build_shared_preprocessor()),
-        ("regressor", Ridge(alpha=1.0))
-    ])
-
-
-def get_polynomial_model(degree: int = 2) -> BaseEstimator:
-    """Mô hình M2: Polynomial Regression (Bậc 2 trên đặc trưng số)."""
-    num_poly_pipeline = Pipeline([
-        ("imputer", SimpleImputer(strategy="median")),
-        ("poly", PolynomialFeatures(degree=degree, include_bias=False)),
-        ("scaler", StandardScaler()),
-    ])
-    
-    cat_pipeline = Pipeline([
-        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
-    ])
-    
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num_poly", num_poly_pipeline, NUMERIC_FEATURES),
-            ("cat", cat_pipeline, CATEGORICAL_FEATURES),
-        ]
-    )
-    
+    preprocessor = create_shared_preprocessor(num_cols, cat_cols)
     return Pipeline([
         ("preprocessor", preprocessor),
         ("regressor", Ridge(alpha=1.0))
     ])
 
 
-def get_tree_model() -> BaseEstimator:
-    """Mô hình M3: Decision Tree Regressor kết hợp preprocessor."""
+def build_polynomial_model(num_cols=None, cat_cols=None, degree: int = 2) -> BaseEstimator:
+    """Mô hình M2: Polynomial Regression (Bậc 2 trên đặc trưng số)."""
+    n_cols = num_cols if num_cols is not None else NUMERIC_FEATURES
+    c_cols = cat_cols if cat_cols is not None else CATEGORICAL_FEATURES
+
+    num_poly_pipeline = Pipeline([
+        ("poly", PolynomialFeatures(degree=degree, include_bias=False)),
+        ("scaler", StandardScaler()),
+    ])
+
+    cat_pipeline = Pipeline([
+        ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+    ])
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num_poly", num_poly_pipeline, n_cols),
+            ("cat", cat_pipeline, c_cols),
+        ]
+    )
+
     return Pipeline([
-        ("preprocessor", build_shared_preprocessor()),
-        ("regressor", DecisionTreeRegressor(random_state=42))
+        ("preprocessor", preprocessor),
+        ("regressor", Ridge(alpha=1.0))
     ])
 
 
 def make_model(name: str) -> BaseEstimator:
     """Factory function chuẩn cho các test suite và conftest."""
     if name == "baseline":
-        return get_baseline_model()
+        return build_baseline_model()
     elif name == "linear":
-        return get_linear_model()
+        return build_linear_model()
     elif name == "polynomial":
-        return get_polynomial_model(degree=2)
+        return build_polynomial_model(degree=2)
     elif name == "tree":
-        return get_tree_model()
+        return Pipeline([
+            ("preprocessor", create_shared_preprocessor()),
+            ("regressor", DecisionTreeRegressor(random_state=42))
+        ])
     else:
         raise ValueError(f"Unknown model name: {name}")
