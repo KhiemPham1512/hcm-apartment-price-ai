@@ -24,15 +24,15 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 #### Tuần 1
 
-- [ ] **TV1-01** Xác minh nguồn/quyền dùng và ghi evidence, revision, thời điểm giá/active, phạm vi TP.HCM hiện hành (P01).
-- [ ] **TV1-02** Chốt mapping khu vực có nguồn, ngày hiệu lực, version/hash; đối chiếu schema cùng TV2/TV4.
-- [ ] **TV1-03** Chuẩn hóa CSV/card, audit bán/thuê/đơn vị/timestamps và thống kê mẫu; bàn giao GO/NO-GO ngày 3 cho TV6.
+- [X] **TV1-01** Xác minh nguồn/quyền dùng và ghi evidence, revision, thời điểm giá/active, phạm vi TP.HCM hiện hành (P01).
+- [X] **TV1-02** Chốt mapping khu vực có nguồn, ngày hiệu lực, version/hash; đối chiếu schema cùng TV2/TV4.
+- [X] **TV1-03** Chuẩn hóa CSV/card, audit bán/thuê/đơn vị/timestamps và thống kê mẫu; bàn giao GO/NO-GO ngày 3 cho TV6.
 
 #### Tuần 2
 
-- [ ] **TV1-04** Hoàn thiện grouping từ dữ liệu thô, audit nhóm nghi trùng và chọn đại diện (P02).
-- [ ] **TV1-05** Bàn giao split đề xuất, seed/hash và kiểm tra nhóm rời cho TV6; không đưa nhãn test lên GitHub.
-- [ ] **TV1-06** Bàn giao snapshot/card bất biến cho TV2/TV3; báo missingness, khu vực thiếu nhóm và tập trung dự án.
+- [X] **TV1-04** Hoàn thiện grouping từ dữ liệu thô, audit nhóm nghi trùng và chọn đại diện (P02).
+- [X] **TV1-05** Bàn giao split đề xuất, seed/hash và kiểm tra nhóm rời cho TV6; không đưa nhãn test lên GitHub.
+- [X] **TV1-06** Bàn giao snapshot/card bất biến cho TV2/TV3; báo missingness, khu vực thiếu nhóm và tập trung dự án.
 
 #### Tuần 3
 
