@@ -140,9 +140,18 @@ def test_cli_handoff_preserves_frozen_holdout(tmp_path, listings):
     assert not (run / "evaluation.json").exists()
     winner = json.loads((run / "selection.json").read_text())["winner"]
     subprocess.run(
-        [sys.executable, "-m", "ml.freeze", "--run-dir", str(run),
-         "--reviewer", "synthetic-integration-reviewer"],
-        check=True, capture_output=True, text=True,
+        [
+            sys.executable,
+            "-m",
+            "ml.freeze",
+            "--run-dir",
+            str(run),
+            "--reviewer",
+            "synthetic-integration-reviewer",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
     )
     command = [sys.executable, "-m", "ml.evaluate", "--run-dir", str(run)]
     subprocess.run(command, check=True, capture_output=True, text=True)
