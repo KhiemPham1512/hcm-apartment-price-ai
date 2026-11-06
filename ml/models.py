@@ -1,7 +1,7 @@
 """
 ml/models.py
 Tác giả: TV2 — ML Linear/Polynomial
-Mục đích: Định nghĩa Shared Preprocessing Pipeline và Factory tạo mô hình Baseline/Linear/Polynomial.
+Mục đích: Định nghĩa Shared Preprocessing và các Factory Model.
 """
 
 from typing import List
@@ -78,10 +78,9 @@ def build_polynomial_model(
         ('regressor', Ridge(alpha=alpha))
     ])
     return model_pipeline
-def make_model(num_features: List[str], cat_features: List[str], model_type: str = "ridge", **kwargs):
-    """Hàm wrapper tương thích ngược với conftest.py của nhóm."""
-    if model_type.lower() == "poly" or "degree" in kwargs:
-        degree = kwargs.get("degree", 2)
+def make_model(
+    num_features: List[str], cat_features: List[str], model_type: str = "ridge", **kwargs
+):
         alpha = kwargs.get("alpha", 1.0)
         return build_polynomial_model(num_features, cat_features, degree=degree, alpha=alpha)
     else:
