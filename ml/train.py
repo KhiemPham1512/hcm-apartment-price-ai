@@ -95,3 +95,6 @@ def fit_candidates(train_df: pd.DataFrame, val_df: pd.DataFrame) -> dict:
         num_features=num_features,
         cat_features=cat_features
     )
+def metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
+    """Hàm wrapper tương thích với ml/evaluate.py"""
+    return evaluate_predictions(y_true, y_pred)
