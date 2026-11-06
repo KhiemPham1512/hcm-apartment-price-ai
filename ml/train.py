@@ -81,11 +81,3 @@ def train_and_evaluate(
         "best_model_name": best_model_name,
         "best_pipeline": best_pipeline
     }
-def fit_candidates(X, y):
-    """Hàm wrapper tương thích với test của nhóm"""
-    return train_and_evaluate(
-        df=pd.concat([X, y], axis=1),
-        target_col=y.name if hasattr(y, 'name') else 'target',
-        num_features=list(X.select_dtypes(include=[np.number]).columns),
-        cat_features=list(X.select_dtypes(exclude=[np.number]).columns)
-    )
