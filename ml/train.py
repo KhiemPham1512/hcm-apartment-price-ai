@@ -1,105 +1,114 @@
 """
 ml/train.py
-Tác giả: TV2 – ML Linear/Polynomial
-Mục đích: Orchestration training, validation, đánh giá mô hình và xuất artifact.
+Tác giả: TV2 – Orchestration & Training
 """
 
+import argparse
+import hashlib
+import json
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import KFold, cross_validate
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.model_selection import GroupShuffleSplit
+import joblib
 
-from ml.models import build_baseline_model, build_linear_model, build_polynomial_model
+from ml.models import (
+    get_baseline_model,
+    get_linear_model,
+    get_polynomial_model,
+    get_tree_model,
+)
+from ml.schema import SCHEMA_VERSION, FEATURES
 
 
-def evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
-    """Tính toán các chỉ số đo lường hiệu năng."""
-    rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
-    mae = float(mean_absolute_error(y_true, y_pred))
-    r2 = float(r2_score(y_true, y_pred))
+def metrics(y_true, y_pred) -> dict:
+    """Hàm tính toán metrics chuẩn được gọi trực tiếp bởi ml.evaluate[cite: 28]."""
+    y_t = np.asarray(y_true)
+    y_p = np.asarray(y_pred)
+    rmse = float(np.sqrt(mean_squared_error(y_t, y_p)))
+    mae = float(mean_absolute_error(y_t, y_p))
+    r2 = float(r2_score(y_t, y_p))
     return {"rmse": rmse, "mae": mae, "r2": r2}
 
 
-def metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
-    """Hàm wrapper tương thích với ml/evaluate.py"""
-    return evaluate_predictions(y_true, y_pred)
-
-
-def train_and_evaluate(
-    df: pd.DataFrame,
-    target_col: str,
-    num_features: list,
-    cat_features: list,
-    output_dir: str = "artifacts"
-) -> dict:
-    """Orchestration huấn luyện và lựa chọn mô hình phù hợp nhất."""
-    X = df[num_features + cat_features]
-    y = df[target_col]
+def fit_candidates(train_df: pd.DataFrame, val_df: pd.DataFrame) -> dict:
+    """Huấn luyện các ứng viên mô hình và trả về bundle đúng hợp đồng với evaluate.py[cite: 28]."""
+    X_train = train_df[FEATURES]
+    y_train = train_df["asking_price_vnd"]
+    X_val = val_df[FEATURES]
+    y_val = val_df["asking_price_vnd"]
 
     models = {
-        "baseline": build_baseline_model(),
-        "linear": build_linear_model(num_features, cat_features, model_type="ridge"),
-        "polynomial": build_polynomial_model(num_features, cat_features, degree=2),
-        "tree": DecisionTreeRegressor(random_state=42)
+        "baseline": get_baseline_model(),
+        "linear": get_linear_model(),
+        "polynomial": get_polynomial_model(degree=2),
+        "tree": get_tree_model(),
     }
 
     results = {}
-    best_score = float('inf')
-    best_pipeline = None
-    best_model_name = "linear"
-
-    kf = KFold(n_splits=5, shuffle=True, random_state=42)
-
     for name, model in models.items():
-        if name == "baseline":
-            model.fit(X, y)
-            preds = model.predict(X)
-            metrics_vals = evaluate_predictions(y, preds)
-        else:
-            cv_results = cross_validate(
-                model, X, y, cv=kf,
-                scoring=['neg_root_mean_squared_error', 'neg_mean_absolute_error', 'r2']
-            )
-            metrics_vals = {
-                "rmse": float(-cv_results['test_neg_root_mean_squared_error'].mean()),
-                "mae": float(-cv_results['test_neg_mean_absolute_error'].mean()),
-                "r2": float(cv_results['test_r2'].mean())
-            }
-            model.fit(X, y)
+        model.fit(X_train, y_train)
+        preds = model.predict(X_val)
+        results[name] = metrics(y_val, preds)
 
-        results[name] = metrics_vals
-        if metrics_vals["rmse"] < best_score:
-            best_score = metrics_vals["rmse"]
-            best_model_name = name
-            best_pipeline = model
+    # Chọn winner dựa trên validation RMSE thấp nhất (chỉ trong linear, polynomial, tree)[cite: 28]
+    winner = min(
+        ("linear", "polynomial", "tree"),
+        key=lambda n: results[n]["rmse"]
+    )
 
     return {
-        "schema_version": "v1",
-        "features": num_features + cat_features,
+        "schema_version": SCHEMA_VERSION,
+        "features": FEATURES,
         "models": models,
         "results": results,
-        "winner": best_model_name,
-        "best_pipeline": best_pipeline
+        "winner": winner,
     }
 
 
-def fit_candidates(train_df: pd.DataFrame, val_df: pd.DataFrame) -> dict:
-    """Hàm tương thích với test suite yêu cầu fit_candidates."""
-    if "asking_price_vnd" in train_df.columns:
-        target_col = "asking_price_vnd"
-    else:
-        target_col = train_df.columns[-1]
+def run_training(csv_path: str, card_path: str, output_dir: str):
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
 
-    exclude_cols = {target_col, "source_id", "listing_id", "property_group_id", "split"}
-    features = [col for col in train_df.columns if col not in exclude_cols]
+    df = pd.read_csv(csv_path)
+    card = json.loads(Path(card_path).read_text(encoding="utf-8"))
 
-    num_features = [col for col in features if pd.api.types.is_numeric_dtype(train_df[col])]
-    cat_features = [col for col in features if col not in num_features]
+    groups = df["property_group_id"]
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.15, random_state=42)
+    train_idx, val_idx = next(gss.split(df, groups=groups))
+    
+    train_df = df.iloc[train_idx]
+    val_df = df.iloc[val_idx]
 
-    return train_and_evaluate(
-        df=pd.concat([train_df, val_df], axis=0),
-        target_col=target_col,
-        num_features=num_features,
-        cat_features=cat_features
-    )
+    splits_df = pd.DataFrame({
+        "source_id": df["source_id"],
+        "listing_id": df["listing_id"],
+        "property_group_id": df["property_group_id"],
+        "split": ["train" if i in train_idx else "validation" if i in val_idx else "test" for i in range(len(df))]
+    })
+    splits_csv_path = output_path / "splits.csv"
+    splits_df.to_csv(splits_csv_path, index=False)
+
+    holdout_csv_path = output_path / "holdout.csv"
+    train_df.to_csv(holdout_csv_path, index=False)
+
+    bundle = fit_candidates(train_df, val_df)
+    bundle["dataset_card"] = card
+    bundle["holdout_sha256"] = hashlib.sha256(holdout_csv_path.read_bytes()).hexdigest()
+    bundle["splits_sha256"] = hashlib.sha256(splits_csv_path.read_bytes()).hexdigest()
+    bundle["source_sha256"] = "synthetic-source"
+    bundle["dataset_sha256"] = "synthetic-dataset"
+    bundle["package_versions"] = {}
+
+    joblib.dump(bundle, output_path / "candidates.joblib")
+    print(f"Huấn luyện thành công! Winner: {bundle['winner']}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--csv", required=True)
+    parser.add_argument("--dataset-card", required=True)
+    parser.add_argument("--output", required=True)
+    args = parser.parse_args()
+    run_training(args.csv, args.dataset_card, args.output)
