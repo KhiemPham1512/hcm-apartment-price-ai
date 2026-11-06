@@ -81,6 +81,8 @@ def build_polynomial_model(
 def make_model(
     num_features: List[str], cat_features: List[str], model_type: str = "ridge", **kwargs
 ):
+    if model_type.lower() == "poly" or "degree" in kwargs:
+        degree = kwargs.get("degree", 2)
         alpha = kwargs.get("alpha", 1.0)
         return build_polynomial_model(num_features, cat_features, degree=degree, alpha=alpha)
     else:
