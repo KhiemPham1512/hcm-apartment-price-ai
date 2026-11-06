@@ -1,15 +1,16 @@
 """
 ml/train.py
-Tác giả: TV2 — ML Linear/Polynomial
+Tác giả: TV2 – ML Linear/Polynomial
 Mục đích: Orchestration training, validation, đánh giá mô hình và xuất artifact.
 """
 
 import os
-from typing import Dict, Any
+from typing import Any, Dict
+
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import KFold, cross_validate
 
 from ml.models import build_baseline_model, build_linear_model, build_polynomial_model
@@ -21,9 +22,12 @@ def evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, fl
     mae = float(mean_absolute_error(y_true, y_pred))
     r2 = float(r2_score(y_true, y_pred))
     return {"rmse": rmse, "mae": mae, "r2": r2}
+
+
 def metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
     """Hàm wrapper tương thích với ml/evaluate.py"""
     return evaluate_predictions(y_true, y_pred)
+
 
 def train_and_evaluate(
     df: pd.DataFrame,
@@ -54,27 +58,27 @@ def train_and_evaluate(
         if name == "Baseline":
             model.fit(X, y)
             preds = model.predict(X)
-            metrics = evaluate_predictions(y, preds)
+            metrics_vals = evaluate_predictions(y, preds)
         else:
             cv_results = cross_validate(
                 model, X, y, cv=kf,
                 scoring=['neg_root_mean_squared_error', 'neg_mean_absolute_error', 'r2']
             )
-            metrics = {
+            metrics_vals = {
                 "rmse": float(-cv_results['test_neg_root_mean_squared_error'].mean()),
                 "mae": float(-cv_results['test_neg_mean_absolute_error'].mean()),
                 "r2": float(cv_results['test_r2'].mean())
             }
             model.fit(X, y)
 
-        results[name] = metrics
-        if metrics["rmse"] < best_score:
-            best_score = metrics["rmse"]
+        results[name] = metrics_vals
+        if metrics_vals["rmse"] < best_score:
+            best_score = metrics_vals["rmse"]
             best_model_name = name
             best_pipeline = model
 
-    model_path = os.path.join(output_dir, "best_linear_model.joblib")
-    joblib.dump(best_pipeline, model_path)
-    print(f"Đã lưu mô hình tốt nhất ({best_model_name}) tại: {model_path}")
-
-    return results
+    return {
+        "results": results,
+        "best_model_name": best_model_name,
+        "best_pipeline": best_pipeline
+    }
