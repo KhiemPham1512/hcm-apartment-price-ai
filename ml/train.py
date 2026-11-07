@@ -1,4 +1,4 @@
-"""Fit and select using validation only. This command never evaluates test labels."""
+"""Fit và lựa chọn mô hình chỉ dùng validation; không bao giờ đánh giá nhãn test."""
 
 import argparse
 import hashlib
@@ -100,7 +100,6 @@ def main():
         )
     ).hexdigest()
     args.output.mkdir(parents=True)
-    # Holdout remains private and is opened only by the separate evaluate command.
     splits["test"].to_csv(args.output / "holdout.csv", index=False)
     pd.concat(
         [
