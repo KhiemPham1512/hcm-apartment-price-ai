@@ -8,7 +8,15 @@ import pandas as pd
 import pytest
 from pydantic import ValidationError
 
-from ml.data import feature_frame, load_current_csv, representatives, split_groups
+from ml.data import (
+    assign_property_group_id,
+    feature_frame,
+    load_current_csv,
+    parse_asking_price_vnd,
+    prepare_raw_listings,
+    representatives,
+    split_groups,
+)
 from ml.evaluate import evaluate
 from ml.models import make_model
 from ml.schema import FEATURES, ApartmentFeatures
@@ -157,3 +165,114 @@ def test_cli_handoff_preserves_frozen_holdout(tmp_path, listings):
     result = subprocess.run(command, capture_output=True, text=True)
     assert result.returncode != 0
     assert "Frozen holdout" in result.stderr
+
+@pytest.mark.parametrize(
+    ("raw_price", "expected_vnd", "expected_reason"),
+    [
+        ("3,2 tỷ", 3_200_000_000.0, None),
+        ("3.2 tỷ", 3_200_000_000.0, None),
+        ("3 tỷ 250 triệu", 3_250_000_000.0, None),
+        ("2850 triệu", 2_850_000_000.0, None),
+        ("55 triệu/m2", None, "unconverted_price_per_m2"),
+        ("60 tr/m²", None, "unconverted_price_per_m2"),
+        ("15 triệu/tháng", None, "rental_or_installment_price"),
+        ("Cho thuê 12 triệu", None, "rental_or_installment_price"),
+        ("Giá thỏa thuận", None, "ambiguous_or_negotiable_price"),
+        (-100, None, "invalid_asking_price"),
+    ],
+)
+def test_tv1_price_parser_handles_units_and_quarantine_reasons(
+    raw_price, expected_vnd, expected_reason
+):
+    val, reason = parse_asking_price_vnd(raw_price)
+    assert val == expected_vnd
+    assert reason == expected_reason
+
+
+def test_tv1_group_assignment_ignores_price_and_avoids_area_district_only_merge(
+    listings,
+):
+    raw = listings.iloc[:4].copy()
+    raw["property_group_id"] = None
+    raw["project_name_normalized"] = [
+        "vin_grand_park",
+        "vin_grand_park",
+        None,
+        None,
+    ]
+    raw["district_code"] = "thu_duc"
+    raw["area_m2"] = 70.0
+    raw["bedrooms"] = [2, 2, None, None]
+    raw["bathrooms"] = [2, 2, None, None]
+    raw["floor_level"] = [12, 12, None, None]
+
+    groups_a = assign_property_group_id(raw)
+
+    groups_b = assign_property_group_id(
+        raw.assign(
+            asking_price_vnd=[1e9, 9e9, 2e9, 8e9]
+        )
+    )
+
+    assert groups_a.tolist() == groups_b.tolist()
+    assert groups_a.iloc[0] == groups_a.iloc[1]
+    assert groups_a.iloc[2] != groups_a.iloc[3]
+
+
+def test_tv1_prepare_raw_listings_quarantines_invalid_rows_and_loads_cleanly(
+    tmp_path, listings, now
+):
+    raw = listings.copy()
+    raw["property_group_id"] = None
+    raw["asking_price_vnd"] = "3,2 tỷ"
+
+    raw.loc[0, "asking_price_vnd"] = "55 triệu/m2"
+    raw.loc[1, "listing_type"] = "rent"
+    raw.loc[2, "area_m2"] = 9.5
+    raw.loc[3, "active_at_snapshot"] = False
+    raw.loc[4, "listing_id"] = "lien_he_0901234567"
+    raw.loc[5, "bathrooms"] = None
+
+    dup = raw.iloc[[10]].copy()
+    dup["price_observed_at"] = now - timedelta(days=3)
+
+    raw_with_dup = pd.concat(
+        [raw, dup],
+        ignore_index=True,
+    )
+
+    clean_df, quarantine_df, audit = prepare_raw_listings(
+        raw_with_dup,
+        now=now,
+    )
+
+    assert len(quarantine_df) == 5
+
+    assert set(quarantine_df["reason_code"]) == {
+        "unconverted_price_per_m2",
+        "non_sale_listing",
+        "area_out_of_bounds",
+        "missing_active_evidence",
+        "invalid_identifier_or_pii",
+    }
+
+    assert audit["exact_duplicates_removed"] == 1
+
+    assert pd.isna(
+        clean_df.loc[
+            clean_df["listing_id"] == "synthetic_listing_5",
+            "bathrooms",
+        ]
+    ).all()
+
+    assert audit["go_no_go"]["status"] == "GO"
+
+    out_csv = tmp_path / "clean.csv"
+    clean_df.to_csv(out_csv, index=False)
+
+    reloaded = load_current_csv(
+        out_csv,
+        now=now,
+    )
+
+    assert len(reloaded) == len(clean_df)
