@@ -51,14 +51,14 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 #### Tuần 1
 
-- [ ] **TV2-01** Rà soát và bàn giao shared feature pipeline; loại nhãn/ID/giá suy từ nhãn khỏi X, optional null đúng contract (P03).
-- [ ] **TV2-02** Kiểm tra preprocessing chỉ fit train; baseline median và Linear fit/predict qua cùng interface.
-- [ ] **TV2-03** Chạy CSV sạch → candidate bằng lệnh tái lập, ghi config/seed/hash và kết quả validation; fixture không gọi là dữ liệu thị trường.
+- [x] **TV2-01** Rà soát và bàn giao shared feature pipeline; loại nhãn/ID/giá suy từ nhãn khỏi X, optional null đúng contract (P03).
+- [x] **TV2-02** Kiểm tra preprocessing chỉ fit train; baseline median và Linear fit/predict qua cùng interface.
+- [x] **TV2-03** Chạy CSV sạch → candidate bằng lệnh tái lập, ghi config/seed/hash và kết quả validation; fixture không gọi là dữ liệu thị trường.
 
 #### Tuần 2
 
-- [ ] **TV2-04** Hoàn thiện Polynomial bậc 2 và ngân sách cấu hình theo protocol (P04).
-- [ ] **TV2-05** So baseline/Linear/Polynomial/Tree trên cùng split; chỉ chọn cấu hình/winner bằng validation.
+- [x] **TV2-04** Hoàn thiện Polynomial bậc 2 và ngân sách cấu hình theo protocol (P04).
+- [x] **TV2-05** So baseline/Linear/Polynomial/Tree trên cùng split; chỉ chọn cấu hình/winner bằng validation.
 - [ ] **TV2-06** Khóa feature set/config/candidate cùng TV6 trước khi mở test; bàn giao phiên bản môi trường và artifact hashes.
 
 #### Tuần 3
