@@ -125,3 +125,52 @@ test("form remains usable on a narrow mobile viewport", async ({ page }) => {
   await expect(page.getByLabel("Diện tích sử dụng")).toBeVisible();
   await expect(page.getByLabel("Khu vực được hỗ trợ")).toBeVisible();
 });
+
+
+test("network failure clears any previous prediction and shows an explicit error", async ({ page }) => {
+  await mockMetadata(page);
+  let attempts = 0;
+  await page.route("**/api/v1/predictions", async (route) => {
+    attempts += 1;
+    if (attempts === 1) {
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(readyPrediction) });
+      return;
+    }
+    await route.abort("failed");
+  });
+
+  await page.goto("/");
+  await page.getByLabel("Diện tích sử dụng").fill("70");
+  await page.getByLabel("Khu vực được hỗ trợ").selectOption("fixture_area_1");
+  await page.getByRole("button", { name: /Ước tính giá căn hộ/ }).click();
+  await expect(page.getByText("5.000.000.000 ₫")).toBeVisible();
+
+  await page.getByRole("button", { name: /Ước tính giá căn hộ/ }).click();
+  await expect(page.getByRole("alert")).toContainText("Không kết nối được máy chủ");
+  await expect(page.getByText("Chưa có kết quả")).toBeVisible();
+  await expect(page.getByText("5.000.000.000 ₫")).toHaveCount(0);
+});
+
+test("report API failure does not leave previously loaded report metrics visible", async ({ page }) => {
+  await mockMetadata(page);
+  let attempts = 0;
+  await page.route("**/api/v1/report", async (route) => {
+    attempts += 1;
+    if (attempts === 1) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ test: { baseline: { rmse_vnd: 100000000, mae_vnd: 80000000, r2: 0.2, n: 80 } } }),
+      });
+      return;
+    }
+    await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ error: { code: "model_unavailable", message: "Báo cáo hiện chưa khả dụng." } }) });
+  });
+
+  await page.goto("/");
+  await page.getByRole("button", { name: "Xem báo cáo mô hình" }).click();
+  await expect(page.getByRole("table")).toBeVisible();
+  await page.getByRole("button", { name: "Xem báo cáo mô hình" }).click();
+  await expect(page.getByRole("status")).toContainText("Báo cáo hiện chưa khả dụng");
+  await expect(page.getByRole("table")).toHaveCount(0);
+});
