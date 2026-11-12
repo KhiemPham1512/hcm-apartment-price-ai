@@ -79,8 +79,8 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 #### Tuần 1
 
 - [ ] **TV3-01** Cùng TV1 kiểm tra EDA, độ phủ và tập trung dự án; biểu đồ có n/kỳ/đơn vị.
-- [ ] **TV3-02** Thống nhất interface cây với TV2, chạy Decision Tree ban đầu trên fixture đúng contract.
-- [ ] **TV3-03** Chốt kế hoạch tuning, importance và ablation trước khi xem test.
+- [x] **TV3-02** Thống nhất interface cây với TV2, chạy Decision Tree ban đầu trên fixture đúng contract.
+- [x] **TV3-03** Chốt kế hoạch tuning, importance và ablation trước khi xem test.
 
 #### Tuần 2
 
