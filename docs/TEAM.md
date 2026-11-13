@@ -80,7 +80,8 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 - [ ] **TV3-01** Cùng TV1 kiểm tra EDA, độ phủ và tập trung dự án; biểu đồ có n/kỳ/đơn vị.
 - [x] **TV3-02** Thống nhất interface cây với TV2, chạy Decision Tree ban đầu trên fixture đúng contract.
-- [x] **TV3-03** Chốt kế hoạch tuning, importance và ablation trước khi xem test.
+  - Bằng chứng: Test Decision Tree trên fixture đạt (`1 passed`). Sử dụng interface hiện có của repo: `make_model("tree", ...)` và `feature_frame()`
+- [ ] **TV3-03** Chốt kế hoạch tuning, importance và ablation trước khi xem test.
 
 #### Tuần 2
 
