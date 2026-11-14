@@ -321,13 +321,13 @@ Mỗi ngày làm việc cập nhật task: done / next / blocker kèm link PR/ru
 | P11 Security/integration release | TV4 + TV6 | P06/P07/P10 | Release gates và reviewer pass |
 | P12 Refresh/demo/report | Cả nhóm, TV6 điều phối | P01–P11 | Độ mới kiểm tra lại, báo cáo/diễn tập, giới hạn công bố |
 
-Đây là danh mục phân công; khi nhận việc xác định vai trò TV, mã Pxx và phạm vi theo [quy ước](../AGENTS.md), không cần tạo issue. Checklist nghiệm thu và bước tiếp/blocker theo vai trò nằm ở [đầu file](#checklist); PR giữ thay đổi, phạm vi file và kiểm chứng. Không sao chép hợp đồng hoặc giao cả backlog như một việc.
+Đây là danh mục phân công; khi nhận việc xác định vai trò TV, mã Pxx và phạm vi theo [quy ước](../CLAUDE.md), không cần tạo issue. Checklist nghiệm thu và bước tiếp/blocker theo vai trò nằm ở [đầu file](#checklist); PR giữ thay đổi, phạm vi file và kiểm chứng. Không sao chép hợp đồng hoặc giao cả backlog như một việc.
 
 
 <a id="github-workflow"></a>
 ## Làm việc trên GitHub: nhánh riêng → Pull Request → review → merge
 
-Nguồn chuẩn quy tắc là [AGENTS.md](../AGENTS.md). **Không commit công việc trực tiếp trên `main`, không chạy `git push origin main` và không force-push.** `main` nhận thay đổi qua PR có CI xanh; không cần tạo issue hay có reviewer GitHub. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection.
+Nguồn chuẩn quy tắc là [CLAUDE.md](../CLAUDE.md). **Không commit công việc trực tiếp trên `main`, không chạy `git push origin main` và không force-push.** `main` nhận thay đổi qua PR có CI xanh; không cần tạo issue hay có reviewer GitHub. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection.
 
 **1. Nhận việc và chốt phạm vi.** Một phạm vi, một owner triển khai, một nhánh. Theo chỉ dẫn chủ repo, làm trực tiếp, không tạo issue mới. Ghi vai trò TV, yêu cầu, file sẽ sửa và phụ thuộc trên PR/handoff; kiểm tra PR đang mở để tránh hai người cùng sửa file chung. Không nhận toàn bộ backlog làm một việc.
 
