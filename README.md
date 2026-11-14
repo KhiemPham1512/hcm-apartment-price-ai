@@ -55,7 +55,7 @@ ml/             schema, dữ liệu, mô hình, train và evaluate
 tests/          toàn bộ test chính thức và fixture kỹ thuật
 docs/           SPEC.md: yêu cầu; TEAM.md: phân công và mốc
 .gitignore      chặn môi trường, cache, dữ liệu riêng và artifact
-AGENTS.md       quy tắc làm việc và review
+CLAUDE.md       quy tắc làm việc và review cho AI agent
 README.md       hướng dẫn, hợp đồng, thuật ngữ và quyết định kỹ thuật
 pyproject.toml  package Python và cấu hình pytest/Ruff
 ```
@@ -146,13 +146,13 @@ AI học như sau: **train** dùng các đặc trưng X và nhãn giá y để f
 
 **Vai trò đề xuất để nắm toàn dự án: TV6 — giữ luồng tích hợp và kiểm định xuyên suốt.** Người phụ trách chạy lại sản phẩm của từng thành viên, kiểm tra điểm bàn giao và điều phối tiếp quản khi có người trễ. Lộ trình ngày 1–28, bằng chứng cần nhận và cách giữ holdout độc lập nằm trong [TEAM](docs/TEAM.md).
 
-Yêu cầu chỉ ở [SPEC](docs/SPEC.md), phân công và [hướng dẫn GitHub từng bước](docs/TEAM.md#github-workflow) ở TEAM, quy tắc Git ở [AGENTS](AGENTS.md). Không tạo issue mới; PR ghi phạm vi và kiểm chứng, TEAM giữ tiến độ. **Không push trực tiếp lên `main`: tạo nhánh riêng từ `origin/main`, push nhánh đó rồi mở PR.** Merge cần CI xanh, không bắt buộc reviewer GitHub theo chỉ dẫn chủ repo; không force-push. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection. Việc bỏ review PR không bỏ gate kiểm định/phê duyệt model.
+Yêu cầu chỉ ở [SPEC](docs/SPEC.md), phân công và [hướng dẫn GitHub từng bước](docs/TEAM.md#github-workflow) ở TEAM, quy tắc Git ở [CLAUDE.md](CLAUDE.md). Không tạo issue mới; PR ghi phạm vi và kiểm chứng, TEAM giữ tiến độ. **Không push trực tiếp lên `main`: tạo nhánh riêng từ `origin/main`, push nhánh đó rồi mở PR.** Merge cần CI xanh, không bắt buộc reviewer GitHub theo chỉ dẫn chủ repo; không force-push. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection. Việc bỏ review PR không bỏ gate kiểm định/phê duyệt model.
 
 Với ticket tính năng đã có tên và tiêu chí: viết test hành vi thất bại → sửa tối thiểu → chạy lại test → dọn file tạm/cache → PR. Test nghiệp vụ cần giữ được chuyển thành test chính thức trong `tests/`; không dùng test tạm bị xóa làm bằng chứng duy nhất.
 
 ### Khi thành viên dùng AI riêng
 
-Tài liệu đủ để hiểu mục tiêu và quy tắc; **phạm vi người dùng giao và checklist TEAM xác định việc cần làm**. Theo chỉ dẫn chủ repo, làm trực tiếp, không tạo issue mới. Clone repo không mang theo nội dung GitHub Issues/PR. Trước mỗi việc, AI cần đọc README → AGENTS → SPEC → dòng vai trò trong TEAM → thảo luận/PR liên quan nếu có → code/test liên quan. Không cần đọc mọi module để sửa một phần nhỏ.
+Tài liệu đủ để hiểu mục tiêu và quy tắc; **phạm vi người dùng giao và checklist TEAM xác định việc cần làm**. Theo chỉ dẫn chủ repo, làm trực tiếp, không tạo issue mới. Clone repo không mang theo nội dung GitHub Issues/PR. Trước mỗi việc, AI cần đọc README → CLAUDE.md → SPEC → dòng vai trò trong TEAM → thảo luận/PR liên quan nếu có → code/test liên quan. Không cần đọc mọi module để sửa một phần nhỏ.
 
 AI đọc trực tiếp [checklist TV1–TV6 trong TEAM](docs/TEAM.md#checklist) để biết mục đã xong, bước tiếp và blocker; các ô được cập nhật bằng Markdown và commit cùng PR. [Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues) giữ thảo luận từng ticket, [PR](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pulls) và [CI](https://github.com/KhiemPham1512/hcm-apartment-price-ai/actions) là bằng chứng đối chiếu: code đã merge vào `main` là bản tích hợp; PR mở vẫn đang đề xuất. Không tạo bản checklist vai trò thứ hai trên GitHub Issues. Nếu chưa kiểm tra được evidence online, AI ghi rõ giới hạn đó và không tự suy ô chưa tick thành việc chưa có code.
 
@@ -160,7 +160,7 @@ Có thể giao AI bằng mẫu sau, thay vai trò và phạm vi trước khi g�
 
 ```text
 Tôi phụ trách TV<1–6>, triển khai <phạm vi và tiêu chí nghiệm thu> của repo này.
-Đọc README.md trước, rồi AGENTS.md, docs/SPEC.md, docs/TEAM.md.
+Đọc README.md trước, rồi CLAUDE.md, docs/SPEC.md, docs/TEAM.md.
 Đọc thảo luận liên quan và kiểm tra PR đang mở để biết owner, phạm vi và phụ thuộc.
 Fetch origin, tạo nhánh từ origin/main; chỉ sửa file trong phạm vi được giao, không tạo issue.
 Đọc code và test liên quan; kiểm tra hành vi hiện có trước khi sửa.
