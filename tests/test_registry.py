@@ -278,7 +278,7 @@ def test_mixed_reservation_is_atomic_and_exposure_facts_can_be_recorded_after_re
     assert cli("reserve-test", *common).returncode == 0
 
 
-def train_cli(tmp_path, listings, data_kind, *args):
+def train_cli(tmp_path, listings, data_kind, *args, source_verified=False):
     """Synthetic rows; data_kind="real" only exercises the real-mode gate."""
     from datetime import datetime, timedelta, timezone
 
@@ -293,7 +293,7 @@ def train_cli(tmp_path, listings, data_kind, *args):
         "data_kind": data_kind,
         "geography_version": "hcm_current_v1",
         "license_reference": "synthetic test fixture",
-        "source_verified": False,
+        "source_verified": source_verified,
         "grouping_version": "fixture-v1",
         "district_labels": {f"fixture_{i}": f"Fixture {i}" for i in range(3)},
     }

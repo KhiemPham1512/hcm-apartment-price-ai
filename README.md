@@ -125,11 +125,12 @@ Kỳ vọng khi chưa có model: live trả `status=live`, metadata trả `servi
 Import-Csv artifacts/run-001/splits.csv | Where-Object split -eq test | Select-Object property_group_id | Export-Csv artifacts/run-001/test-groups.csv -NoTypeInformation -Encoding utf8
 .venv/Scripts/python.exe -m ml.registry reserve-test --registry-dir artifacts/private-registry --groups-csv artifacts/run-001/test-groups.csv --run-id run-001 --actor TV6
 .venv/Scripts/python.exe -m ml.evaluate --run-dir artifacts/run-001 --registry-dir artifacts/private-registry --run-id run-001 --actor TV6
+.venv/Scripts/python.exe -m ml.release --run-dir artifacts/run-001 --csv data/processed/current.csv --output artifacts/approved-run --reviewer TV6 --reviewer TV4
 ```
 
-Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`, bắt buộc ghi `geography_version="hcm_current_v1"`; card thiếu phiên bản hoặc dùng phạm vi cũ bị từ chối, không tự đổi nhãn để tiếp tục chạy. Dùng thư mục run mới; sau review candidate/config/winner, TV6 chạy `freeze` rồi `evaluate`. `freeze` ghi hash vào `freeze.json`, không nạp model hay phân tích nhãn; `--reviewer TV6` chỉ là ví dụ tên vai trò, không xác thực danh tính. `evaluate` từ chối thiếu/sai bản khóa trước khi nạp candidate hoặc phân tích holdout, rồi kiểm tra đủ mô hình, winner, split và membership. Các lệnh không ghi đè bản khóa/báo cáo đã có và **không tự phê duyệt model**.
+Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`, bắt buộc ghi `geography_version="hcm_current_v1"`; card thiếu phiên bản hoặc dùng phạm vi cũ bị từ chối, không tự đổi nhãn để tiếp tục chạy. Dùng thư mục run mới; sau review candidate/config/winner, TV6 chạy `freeze` rồi `evaluate`. `freeze` ghi hash vào `freeze.json`, không nạp model hay phân tích nhãn; `--reviewer TV6` chỉ là ví dụ tên vai trò, không xác thực danh tính. `evaluate` từ chối thiếu/sai bản khóa trước khi nạp candidate hoặc phân tích holdout, rồi kiểm tra đủ mô hình, winner, split và membership. Các lệnh không ghi đè bản khóa/báo cáo đã có. Chỉ `release` tạo gói approved, và chỉ khi mọi gate ở Quyết định 8 đều đạt.
 
-Khi đã được bàn giao gói phát hành đáng tin cậy gồm `manifest.json`, `pipeline.joblib` và báo cáo nếu có, đặt `MODEL_DIR` trỏ tới thư mục đó trước khi chạy Uvicorn:
+Khi đã có gói phát hành đáng tin cậy do `ml.release` tạo (`manifest.json`, `pipeline.joblib`, `report.json`), đặt `MODEL_DIR` trỏ tới thư mục đó trước khi chạy Uvicorn:
 
 ```powershell
 $env:MODEL_DIR = (Resolve-Path artifacts/approved-run).Path
@@ -322,9 +323,9 @@ Permutation importance trên **validation** sau chọn ứng viên, gọi pipeli
 
 Mỗi lần chạy có `run_id`, `evaluation_kind`, dataset/split hashes, schema version, git SHA hoặc source archive SHA khi chưa commit, Python/package versions, seed, config, train/validation/test counts, timestamp, metrics, số dự đoán invalid và người đánh giá. Chỉ bắt buộc cutoff/chronology khi thực sự chạy thiết kế B; thiết kế A ghi rõ snapshot và phương pháp nhóm. Báo cáo metric là số thực từ lần chạy, không điền trước vào tài liệu.
 
-Gói phát hành mục tiêu gồm `pipeline.joblib`, `manifest.json`, `metrics.json`, `model-card.md`, `figures/`. Hiện CLI train tạo `candidates.joblib`, `selection.json`, `holdout.csv`, `splits.csv`; evaluate tạo `evaluation.json`. Chưa có bước chuyển candidate thành gói approved tự động. Manifest ghi hash artifact, data window/age, supported districts, train ranges, feature list, environment và `release_status` ∈ {`candidate`, `approved`, `rejected`}. API chỉ nạp `approved`. Joblib chỉ từ pipeline nội bộ đáng tin; hash đơn thuần không chứng minh người phát hành hợp lệ. Xem [bảo mật](#bao-mat).
+Gói phát hành mục tiêu gồm `pipeline.joblib`, `manifest.json`, `metrics.json`, `model-card.md`, `figures/`. Hiện CLI train tạo `candidates.joblib`, `selection.json`, `holdout.csv`, `splits.csv`; evaluate tạo `evaluation.json`; release tạo `pipeline.joblib`, `manifest.json`, `report.json`. Chưa có `metrics.json`, `model-card.md`, `figures/`. Manifest ghi hash artifact, data window/age, supported districts, train ranges, feature list, environment và `release_status` ∈ {`candidate`, `approved`, `rejected`}. API chỉ nạp `approved`. Joblib chỉ từ pipeline nội bộ đáng tin; hash đơn thuần không chứng minh người phát hành hợp lệ. Xem [bảo mật](#bao-mat).
 
-Đã có `python -m ml.train`, `python -m ml.freeze` và `python -m ml.evaluate`. `ml.prepare` và `ml.release` còn trong kế hoạch; chi tiết trách nhiệm ở [TEAM](docs/TEAM.md).
+Đã có `python -m ml.train`, `ml.freeze`, `ml.evaluate` và `ml.release`. `ml.prepare` còn trong kế hoạch; chi tiết trách nhiệm ở [TEAM](docs/TEAM.md).
 
 </details>
 
@@ -501,6 +502,8 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 **Quyết định 6 — ghi tiếp xúc trước mở test:** evaluator dùng `evaluation_claim` của registry để kiểm tra và tiêu thụ reservation rồi giữ khóa suốt đọc nhãn/tính metric/ghi báo cáo. Chọn chặn retry bảo thủ khi lỗi sau claim thay vì coi lần chạy thất bại là chưa tiếp xúc. Sự kiện giữ purpose `evaluation` hiện có, nghĩa là đã cấp quyền đọc, không bảo đảm đánh giá thành công. Model/data approval vẫn là bước riêng.
 
 **Quyết định 7 — train tự ghi fit/tune:** `ml.train` nhận bộ ba `--registry-dir --run-id --actor` cùng nhau; dữ liệu khai `real` bắt buộc có bộ ba này. Sau khi split và trước khi fit, train ghi nhóm train là `fit`, nhóm validation là `tune` trong một khóa: ghi đủ cả hai hoặc không ghi gì. Event được giữ lại kể cả khi fit thất bại sau đó; registry thiếu/hỏng/bận thì chặn trước fit và chưa tạo thư mục run. Không ghi nhóm test. Dùng cùng `run_id` cho `reserve-test` và `evaluate`. Train không từ chối nhóm từng tiếp xúc; vi phạm trên nhóm test sẽ bị evaluator chặn.
+
+**Quyết định 8 — release dùng chính contract serving:** `ml.release --run-dir --csv --output --reviewer A --reviewer B` chỉ đóng gói khi đủ các điều kiện sau. (1) Bản khóa hợp lệ. (2) `evaluation.json` khớp hash candidate/freeze hiện tại và có `registry_status="checked"`. (3) CSV khớp `dataset_sha256` của candidate và còn hạn công bố tại lúc release. (4) Split tái lập khớp nhóm train trong `splits.csv`. Phần còn lại giao cho `Manifest` của `backend/service.py` kiểm: real, nguồn đã xác minh, winner thắng B0, R²>0, không có output không hợp lệ, ≥500 nhóm, ≥75 test, ≥2 reviewer khác nhau. Như vậy offline và HTTP dùng đúng một contract. Gói gồm pipeline của winner chọn bằng validation, manifest (data window/age tính từ CSV, khu vực có ≥20 nhóm train, khoảng train của feature số) và `report.json` = evaluation + validation. Lỗi bất kỳ thì không tạo thư mục output; thư mục đã tồn tại thì không ghi đè. Sau khi ghi, release tự nạp lại bằng `load_approved`. Reviewer là tên vai trò, không xác thực danh tính; release chưa ghi registry và chưa có trạng thái `rejected`.
 
 </details>
 

@@ -156,7 +156,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn:** Freeze/guard schema, CLI registry và gate registry trong evaluator đã merge qua PR #19/#21/#22/#23. Nhánh `feat/tv6-train-registry`: `ml.train` tự ghi fit/tune vào registry trước fit, real bắt buộc registry; TV2 review vì đổi `ml/train.py`. Không tạo issue; chủ repo duyệt mỗi PR trước merge, không cần reviewer khác. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07/09. Training/freeze/release chưa tự ghi history.
+**Bước tiếp / Chặn:** Freeze/guard schema, CLI registry và gate registry trong evaluator đã merge qua PR #19/#21/#22/#23. Nhánh `feat/tv6-train-registry`: `ml.train` tự ghi fit/tune vào registry trước fit, real bắt buộc registry; TV2 review vì đổi `ml/train.py`. Nhánh `feat/tv6-release`: `ml.release` tạo gói approved theo gate. Không tạo issue; chủ repo duyệt mỗi PR trước merge, không cần reviewer khác. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07/09. Training/freeze/release chưa tự ghi history.
 
 #### Tuần 1
 
@@ -174,7 +174,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 - [ ] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10).
 - [ ] **TV6-08** Cùng TV4 kiểm tra parity offline/HTTP, model thiếu/chưa duyệt/quá hạn và security/release gates (P11).
-- [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry đã merge qua [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22): init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check và CI đạt. Gate evaluator đã merge qua [PR #23](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/23). Train tự ghi fit/tune trên nhánh `feat/tv6-train-registry` (5 ca TDD qua CLI). Còn thiếu lịch sử thực tế và release. Chủ repo duyệt mỗi PR, không cần reviewer khác; không thay gate model.
+- [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry đã merge qua [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22): init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check và CI đạt. Gate evaluator đã merge qua [PR #23](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/23). Train tự ghi fit/tune trên nhánh `feat/tv6-train-registry` (5 ca TDD qua CLI). `ml.release` trên nhánh `feat/tv6-release`: đóng gói approved chỉ khi đủ gate, dùng chung `Manifest` của serving (7 ca TDD qua CLI; toàn bộ local 132 pass). Còn thiếu lịch sử và candidate thực tế; chưa duyệt model thị trường nào. Chủ repo duyệt mỗi PR, không cần reviewer khác; không thay gate model.
 
 #### Tuần 4
 
