@@ -34,6 +34,8 @@ Checklist nghiệm thu theo thành viên nằm trực tiếp trong `docs/TEAM.md
 5. **Hoàn tất và bàn giao.** Cập nhật contract trong README, đúng checklist/evidence/bước tiếp trong TEAM khi có thay đổi tương ứng; không tick cả mục nếu mới xong một phần kỹ thuật. PR ghi vấn đề, hành vi sau khi sửa, phạm vi, kiểm chứng và giới hạn. Gom các cập nhật tài liệu/QA nhỏ vào thay đổi liên quan; không mở PR riêng cho từng kết quả kiểm tra. Stage đường dẫn cụ thể, không force-add hàng loạt. Trước merge, giải thích thay đổi, nhánh đích, CI, giới hạn, ảnh hưởng triển khai, rồi chờ người dùng duyệt rõ ràng. Quyền mở PR không phải quyền merge.
 6. **Giữ ngữ cảnh, dọn phần tạm, tiếp tục.** Cập nhật `handoff.md` với mục tiêu, nhánh, SHA base/HEAD, PR/trạng thái, bằng chứng kiểm tra, quyết định còn hiệu lực, phụ thuộc và việc tiếp theo. Phân biệt local, đã merge và đã xác minh triển khai. Dọn artifact đúng phạm vi bên dưới. Tiếp tục việc độc lập trong phạm vi đã giao khi còn chờ phụ thuộc; không trộn tính năng mới vào nhánh chưa xong, không tự merge để đi tiếp.
 
+**Lệnh "update":** khi người dùng nhắn `update`, tự cập nhật `handoff.md` theo công việc hiện tại (nhánh, SHA, PR/CI, bằng chứng, việc tiếp). Nếu handoff đã phản ánh đúng trạng thái ở bước trước thì không sửa lại, chỉ báo "handoff đã cập nhật".
+
 Nếu thiếu skill, thực hiện quy trình tương ứng và báo giới hạn, không tự cài hay nhận là đã dùng. Áp dụng skill theo bản chất công việc. Hướng dẫn người dùng và hợp đồng hiện hành của repo được ưu tiên.
 
 Sau mỗi vòng, báo ngắn gọn bằng tiếng Việt: đã thay đổi gì và giải quyết việc gì, kiểm tra nào thực sự đã chạy, giới hạn còn lại, trạng thái PR/merge/triển khai, bước tiếp theo kèm lý do và phụ thuộc. Viết đủ rõ cho người mới; không chỉ liệt kê file hoặc số test.
