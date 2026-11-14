@@ -101,15 +101,22 @@ def record(directory: Path, groups_csv: Path, run_id: str, actor: str, purpose: 
         if len(set(reader.fieldnames)) != len(reader.fieldnames):
             raise ValueError("Duplicate CSV column")
         groups = [row["property_group_id"] for row in reader]
-    if not _valid_groups(groups):
+    record_groups(directory, {purpose: groups}, run_id, actor)
+
+
+def record_groups(directory: Path, exposures: dict, run_id: str, actor: str) -> None:
+    """Append all exposures under one lock, or none if any check fails."""
+    if not run_id.strip() or not actor.strip():
+        raise ValueError("Run and actor must not be blank")
+    if not all(_valid_groups(groups) for groups in exposures.values()):
         raise ValueError("Invalid or duplicate group identity")
     with _locked(directory):
         events = _history(directory)
-        if purpose == "test_reserved" and any(
-            set(groups).intersection(e["groups"]) for e in events
-        ):
+        reserved = exposures.get("test_reserved", [])
+        if any(set(reserved).intersection(e["groups"]) for e in events):
             raise ValueError("Previously exposed or reserved groups; new test refused")
-        _append(directory, groups, run_id, actor, purpose)
+        for purpose, groups in exposures.items():
+            _append(directory, groups, run_id, actor, purpose)
 
 
 @contextmanager

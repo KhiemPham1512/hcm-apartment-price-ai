@@ -276,3 +276,95 @@ def test_mixed_reservation_is_atomic_and_exposure_facts_can_be_recorded_after_re
     # The unused group was not consumed by the rejected mixed request.
     groups.write_text("property_group_id\n002\n", encoding="utf-8")
     assert cli("reserve-test", *common).returncode == 0
+
+
+def train_cli(tmp_path, listings, data_kind, *args):
+    """Synthetic rows; data_kind="real" only exercises the real-mode gate."""
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+    listings.assign(
+        published_at=now - timedelta(days=30),
+        price_observed_at=now - timedelta(days=1),
+        source_snapshot_at=now,
+    ).to_csv(tmp_path / "input.csv", index=False)
+    card = {
+        "dataset_version": "synthetic-registry-test",
+        "data_kind": data_kind,
+        "geography_version": "hcm_current_v1",
+        "license_reference": "synthetic test fixture",
+        "source_verified": False,
+        "grouping_version": "fixture-v1",
+        "district_labels": {f"fixture_{i}": f"Fixture {i}" for i in range(3)},
+    }
+    (tmp_path / "card.json").write_text(json.dumps(card), encoding="utf-8")
+    command = [sys.executable, "-B", "-m", "ml.train", "--csv", tmp_path / "input.csv"]
+    command += ["--dataset-card", tmp_path / "card.json", "--output", tmp_path / "run", *args]
+    return subprocess.run(list(map(str, command)), capture_output=True, text=True)
+
+
+def test_training_records_fit_and_tune_groups_then_registered_evaluation_passes(tmp_path, listings):
+    registry = tmp_path / "registry"
+    assert cli("init", "--registry-dir", registry).returncode == 0
+    trained = train_cli(
+        tmp_path,
+        listings,
+        "synthetic",
+        "--registry-dir",
+        registry,
+        "--run-id",
+        "r1",
+        "--actor",
+        "TV6",
+    )
+    assert trained.returncode == 0, trained.stderr
+    events = [json.loads(p.read_text(encoding="utf-8")) for p in (registry / "events").iterdir()]
+    splits = (tmp_path / "run" / "splits.csv").read_text(encoding="utf-8").splitlines()[1:]
+    expected = {"fit": "train", "tune": "validation"}
+    assert sorted(e["purpose"] for e in events) == ["fit", "tune"]
+    for event in events:
+        assert event["run_id"] == "r1" and event["actor"] == "TV6"
+        assert event["groups"] == sorted(
+            row.split(",")[2] for row in splits if row.split(",")[3] == expected[event["purpose"]]
+        )
+    assert "asking_price_vnd" not in json.dumps(events)
+    test_groups = tmp_path / "test-groups.csv"
+    test_groups.write_text(
+        "property_group_id\n"
+        + "\n".join(row.split(",")[2] for row in splits if row.endswith(",test")),
+        encoding="utf-8",
+    )
+    reserve = ["--groups-csv", test_groups, "--run-id", "r1", "--actor", "TV6"]
+    assert cli("reserve-test", "--registry-dir", registry, *reserve).returncode == 0
+    for command in (
+        ["ml.freeze", "--run-dir", tmp_path / "run", "--reviewer", "technical-test-reviewer"],
+        ["ml.evaluate", "--run-dir", tmp_path / "run", "--registry-dir", registry]
+        + ["--run-id", "r1", "--actor", "TV6"],
+    ):
+        result = subprocess.run(
+            [sys.executable, "-B", "-m", *map(str, command)], capture_output=True, text=True
+        )
+        assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize("problem", ["real_without_registry", "partial", "missing", "busy"])
+def test_training_registry_gate_fails_before_fit_without_output_or_history(
+    tmp_path, listings, problem
+):
+    registry = tmp_path / "registry"
+    if problem != "missing":
+        assert cli("init", "--registry-dir", registry).returncode == 0
+    if problem == "busy":
+        (registry / ".write-lock").write_text("another writer", encoding="utf-8")
+    args = {
+        "real_without_registry": [],
+        "partial": ["--registry-dir", registry, "--run-id", "r1"],
+    }.get(problem, ["--registry-dir", registry, "--run-id", "r1", "--actor", "TV6"])
+    data_kind = "real" if problem == "real_without_registry" else "synthetic"
+    result = train_cli(tmp_path, listings, data_kind, *args)
+    assert result.returncode != 0
+    assert not (tmp_path / "run").exists()
+    if registry.exists():
+        assert not list((registry / "events").iterdir())
+    if problem == "busy":
+        assert (registry / ".write-lock").read_text(encoding="utf-8") == "another writer"
