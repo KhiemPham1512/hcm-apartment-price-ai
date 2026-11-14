@@ -14,6 +14,7 @@ from sklearn.metrics import mean_absolute_error, r2_score, root_mean_squared_err
 
 from ml.data import feature_frame, load_current_csv, split_groups
 from ml.models import make_model
+from ml.registry import record_groups
 from ml.schema import FEATURES, NUMERIC_FEATURES, SCHEMA_VERSION, DatasetCard
 
 
@@ -76,15 +77,35 @@ def main():
     parser.add_argument("--csv", type=Path, required=True)
     parser.add_argument("--dataset-card", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--registry-dir", type=Path)
+    parser.add_argument("--run-id")
+    parser.add_argument("--actor")
     args = parser.parse_args()
     if args.output.exists():
         parser.error("Output already exists; use a new run directory")
+    registry_options = (args.registry_dir, args.run_id, args.actor)
+    if any(value is not None for value in registry_options) and not all(
+        value is not None and str(value).strip() for value in registry_options
+    ):
+        parser.error("Registry requires registry-dir, nonblank run-id and actor together")
     card = DatasetCard.model_validate_json(args.dataset_card.read_text(encoding="utf-8"))
     now = datetime.now(timezone.utc)
     frame = load_current_csv(args.csv, now)
     if not set(frame["district_code"]).issubset(card.district_labels):
         parser.error("District labels missing from dataset card")
+    if card.data_kind == "real" and args.registry_dir is None:
+        parser.error("Real training requires registry")
     splits = split_groups(frame)
+    if args.registry_dir is not None:
+        # Record before fitting so a failed attempt still leaves its exposure history.
+        exposures = {
+            purpose: splits[name]["property_group_id"].astype(str).tolist()
+            for purpose, name in (("fit", "train"), ("tune", "validation"))
+        }
+        try:
+            record_groups(args.registry_dir, exposures, args.run_id, args.actor)
+        except (OSError, ValueError, TypeError) as exc:
+            parser.error(str(exc))
     bundle = fit_candidates(splits["train"], splits["validation"])
     bundle["dataset_card"] = card.model_dump()
     bundle["created_at"] = now.isoformat()
