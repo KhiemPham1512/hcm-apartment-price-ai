@@ -31,11 +31,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function fieldBounds(metadata: Metadata | null, name: string, fallback: [number, number]) {
   const field = metadata?.feature_schema?.properties?.[name];
   const nullable = field?.anyOf?.find((item) => item.type === "integer" || item.type === "number");
+  const min = field?.minimum ?? nullable?.minimum ?? fallback[0];
+  const max = field?.maximum ?? nullable?.maximum ?? fallback[1];
   return {
-    min: field?.minimum ?? nullable?.minimum ?? fallback[0],
-    max: field?.maximum ?? nullable?.maximum ?? fallback[1],
+    min: field?.exclusiveMinimum === undefined ? min : Math.max(min, field.exclusiveMinimum + Number.EPSILON),
+    max: field?.exclusiveMaximum === undefined ? max : Math.min(max, field.exclusiveMaximum - Number.EPSILON),
   };
 }
+
+const fieldDefinitions = [
+  { key: "area_m2", label: "Diện tích sử dụng", placeholder: "Ví dụ: 70", fallback: [10, 500] as [number, number], wide: true },
+  { key: "bedrooms", label: "Phòng ngủ", placeholder: "Không bắt buộc", fallback: [0, 10] as [number, number], wide: false },
+  { key: "bathrooms", label: "Phòng tắm", placeholder: "Không bắt buộc", fallback: [0, 10] as [number, number], wide: false },
+  { key: "floor_level", label: "Tầng căn hộ", placeholder: "Không bắt buộc", fallback: [0, 100] as [number, number], wide: true },
+] as const;
 
 function App() {
   const [metadata, setMetadata] = useState<Metadata | null>(null);
@@ -50,11 +59,14 @@ function App() {
   const [reportLoading, setReportLoading] = useState(false);
 
   const status = metadata?.serving_status ?? "unavailable";
-  const canPredict = status === "ready" && (metadata?.supported_districts?.length ?? 0) > 0;
-  const areaBounds = useMemo(() => fieldBounds(metadata, "area_m2", [10, 500]), [metadata]);
-  const bedroomBounds = useMemo(() => fieldBounds(metadata, "bedrooms", [0, 10]), [metadata]);
-  const bathroomBounds = useMemo(() => fieldBounds(metadata, "bathrooms", [0, 10]), [metadata]);
-  const floorBounds = useMemo(() => fieldBounds(metadata, "floor_level", [0, 100]), [metadata]);
+  const canPredict = status === "ready"
+    && (metadata?.supported_districts?.length ?? 0) > 0
+    && Boolean(metadata?.feature_schema?.properties?.area_m2)
+    && Boolean(metadata?.feature_schema?.properties?.district_code);
+  const requiredFields = metadata?.feature_schema?.required ?? ["area_m2", "district_code"];
+  const availableFields = useMemo(() => fieldDefinitions.filter(({ key }) =>
+    Boolean(metadata?.feature_schema?.properties?.[key]),
+  ), [metadata]);
 
   async function refreshMetadata() {
     setLoadingMetadata(true);
@@ -111,6 +123,7 @@ function App() {
 
   async function loadReport() {
     setReportLoading(true);
+    setReport(null);
     setReportMessage("");
     try {
       setReport(await getReport());
@@ -193,34 +206,48 @@ function App() {
           <form className="form-card" onSubmit={submit}>
             <div className="card-heading"><span className="step-number">01</span><div><h3>Đặc điểm bất động sản</h3><p>Các trường có dấu * là bắt buộc</p></div></div>
             <div className="form-grid">
-              <label className="field field-wide">
-                <span>Diện tích sử dụng <b>*</b></span>
-                <div className="input-unit"><input aria-label="Diện tích sử dụng" type="number" inputMode="decimal" min={areaBounds.min} max={areaBounds.max} step="any" required value={form.area_m2} onChange={(e) => update("area_m2", e.target.value)} placeholder="Ví dụ: 70" disabled={!canPredict || submitting} /><span>m²</span></div>
-                <small>Trong khoảng {areaBounds.min}–{areaBounds.max} m²</small>
-              </label>
-              <label className="field field-wide">
-                <span>Khu vực được hỗ trợ <b>*</b></span>
-                <select aria-label="Khu vực được hỗ trợ" required value={form.district_code} onChange={(e) => update("district_code", e.target.value)} disabled={!canPredict || submitting}>
-                  <option value="">Chọn khu vực</option>
-                  {metadata?.supported_districts?.map((district) => <option key={district.code} value={district.code}>{district.label}</option>)}
-                </select>
-                <small>Danh sách lấy trực tiếp từ metadata API</small>
-              </label>
-              <label className="field">
-                <span>Phòng ngủ</span>
-                <input aria-label="Phòng ngủ" type="number" min={bedroomBounds.min} max={bedroomBounds.max} step="1" value={form.bedrooms} onChange={(e) => update("bedrooms", e.target.value)} placeholder="Không bắt buộc" disabled={!canPredict || submitting} />
-                <small>Bỏ trống nếu chưa rõ</small>
-              </label>
-              <label className="field">
-                <span>Phòng tắm</span>
-                <input aria-label="Phòng tắm" type="number" min={bathroomBounds.min} max={bathroomBounds.max} step="1" value={form.bathrooms} onChange={(e) => update("bathrooms", e.target.value)} placeholder="Không bắt buộc" disabled={!canPredict || submitting} />
-                <small>Bỏ trống nếu chưa rõ</small>
-              </label>
-              <label className="field field-wide">
-                <span>Tầng căn hộ</span>
-                <input aria-label="Tầng căn hộ" type="number" min={floorBounds.min} max={floorBounds.max} step="1" value={form.floor_level} onChange={(e) => update("floor_level", e.target.value)} placeholder="Không bắt buộc" disabled={!canPredict || submitting} />
-                <small>Nhập tầng của căn hộ, không phải số tầng tòa nhà</small>
-              </label>
+              {availableFields.map((field) => {
+                const key = field.key;
+                const bounds = fieldBounds(metadata, key, field.fallback);
+                const isRequired = requiredFields.includes(key);
+                const schemaField = metadata?.feature_schema?.properties?.[key];
+                const isInteger = schemaField?.type === "integer" || schemaField?.anyOf?.some((item) => item.type === "integer");
+                const description = schemaField?.description;
+                const input = (
+                  <input
+                    aria-label={field.label}
+                    type="number"
+                    inputMode="decimal"
+                    min={bounds.min}
+                    max={bounds.max}
+                    step={isInteger ? "1" : "any"}
+                    required={isRequired}
+                    value={form[key]}
+                    onChange={(event) => update(key, event.target.value)}
+                    placeholder={field.placeholder}
+                    disabled={!canPredict || submitting}
+                  />
+                );
+                return (
+                  <label className={`field${field.wide ? " field-wide" : ""}`} key={key}>
+                    <span>{schemaField?.title ?? field.label}{isRequired && <> <b>*</b></>}</span>
+                    {key === "area_m2" ? <div className="input-unit">{input}<span>m²</span></div> : input}
+                    <small>{description ?? (isRequired
+                      ? `Bắt buộc · Trong khoảng ${bounds.min}–${bounds.max}`
+                      : `Không bắt buộc · Trong khoảng ${bounds.min}–${bounds.max}`)}</small>
+                  </label>
+                );
+              })}
+              {metadata?.feature_schema?.properties?.district_code && (
+                <label className="field field-wide">
+                  <span>{metadata.feature_schema.properties.district_code.title ?? "Khu vực được hỗ trợ"}{requiredFields.includes("district_code") && <> <b>*</b></>}</span>
+                  <select aria-label="Khu vực được hỗ trợ" required={requiredFields.includes("district_code")} value={form.district_code} onChange={(event) => update("district_code", event.target.value)} disabled={!canPredict || submitting}>
+                    <option value="">Chọn khu vực</option>
+                    {metadata?.supported_districts?.map((district) => <option key={district.code} value={district.code}>{district.label}</option>)}
+                  </select>
+                  <small>{metadata.feature_schema.properties.district_code.description ?? "Danh sách lấy trực tiếp từ metadata API"}</small>
+                </label>
+              )}
             </div>
             {predictionError && <div className="inline-error" role="alert">{predictionError}</div>}
             <button className="primary-button" type="submit" disabled={!canPredict || submitting || loadingMetadata}>
@@ -239,8 +266,11 @@ function App() {
                 {prediction.warnings?.length > 0 && <div className="notice warning compact"><strong>Lưu ý từ mô hình</strong><ul>{prediction.warnings.map((warning) => <li key={warning}>{warning === "outside_training_range" ? "Một số thông tin nằm ngoài khoảng dữ liệu huấn luyện." : warning === "optional_features_missing" ? "Có trường thông tin tùy chọn chưa được cung cấp." : warning}</li>)}</ul></div>}
                 <dl className="metadata-list">
                   <div><dt>Ngày dữ liệu</dt><dd>{dateLabel(prediction.data_as_of)}</dd></div>
+                  <div><dt>Quan sát mới nhất</dt><dd>{dateLabel(prediction.data_latest_at)}</dd></div>
+                  <div><dt>Snapshot nguồn</dt><dd>{dateLabel(prediction.source_snapshot_at)}</dd></div>
                   <div><dt>Phạm vi diện tích</dt><dd>{prediction.area_basis}</dd></div>
                   <div><dt>Phiên bản dữ liệu</dt><dd>{prediction.dataset_version}</dd></div>
+                  <div><dt>Phiên bản schema</dt><dd>{prediction.schema_version}</dd></div>
                   <div><dt>Mã mô hình</dt><dd>{prediction.model_id}</dd></div>
                 </dl>
                 <small className="request-id">Mã yêu cầu: {prediction.request_id}</small>
@@ -268,6 +298,8 @@ function App() {
           <div className="data-tile"><span>Ngày quan sát mới nhất</span><strong>{dateLabel(metadata?.data_latest_at)}</strong></div>
           <div className="data-tile"><span>Phiên bản schema</span><strong>{metadata?.schema_version ?? "—"}</strong></div>
           <div className="data-tile"><span>Khu vực hỗ trợ</span><strong>{metadata?.supported_districts?.length ?? 0}</strong></div>
+          <div className="data-tile"><span>Phiên bản dữ liệu</span><strong>{metadata?.dataset_version ?? "—"}</strong></div>
+          <div className="data-tile"><span>Mã mô hình</span><strong>{metadata?.model_id ?? "Chưa có"}</strong></div>
         </div>
         {reportMessage && <div className="notice info report-message" role="status">{reportMessage}</div>}
         {report && (
@@ -302,7 +334,7 @@ function App() {
             )}
           </div>
         )}
-        <p className="data-note">Thông tin được đọc từ metadata API. Khi chưa có model, các giá trị có thể chưa được cung cấp.</p>
+        <p className="data-note">Thông tin được đọc từ metadata API. Khi chưa có model, các giá trị có thể chưa được cung cấp. Metric chỉ được hiển thị theo báo cáo API, không được frontend tự tính lại.</p>
       </section>
 
       <footer className="footer">

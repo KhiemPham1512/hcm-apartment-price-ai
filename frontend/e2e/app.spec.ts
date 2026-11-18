@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockMetadata, readyPrediction } from "./fixtures";
+import { mockMetadata, readyMetadata, readyPrediction } from "./fixtures";
 
 test("valid flow submits only the public feature contract and renders API price", async ({ page }) => {
   await mockMetadata(page);
@@ -16,6 +16,8 @@ test("valid flow submits only the public feature contract and renders API price"
   await page.getByRole("button", { name: /Ước tính giá căn hộ/ }).click();
 
   await expect(page.getByText("5.000.000.000 ₫")).toBeVisible();
+  await expect(page.getByText("Quan sát mới nhất", { exact: true })).toBeVisible();
+  await expect(page.getByText("Snapshot nguồn")).toBeVisible();
   expect(submitted).toEqual({
     area_m2: 70,
     district_code: "fixture_area_1",
@@ -173,4 +175,28 @@ test("report API failure does not leave previously loaded report metrics visible
   await page.getByRole("button", { name: "Xem báo cáo mô hình" }).click();
   await expect(page.getByRole("status")).toContainText("Báo cáo hiện chưa khả dụng");
   await expect(page.getByRole("table")).toHaveCount(0);
+});
+
+
+test("form labels, required fields and numeric bounds follow API feature metadata", async ({ page }) => {
+  const customMetadata = structuredClone(readyMetadata);
+  customMetadata.feature_schema.required = ["area_m2", "district_code"];
+  customMetadata.feature_schema.properties.bedrooms = {
+    anyOf: [{ type: "integer", minimum: 0, maximum: 4 }, { type: "null" }],
+  } as typeof customMetadata.feature_schema.properties.bedrooms;
+
+  Object.assign(customMetadata.feature_schema.properties.bedrooms, {
+    title: "Số phòng ngủ theo metadata",
+    description: "Mô tả trường từ API",
+  });
+  await page.route("**/api/v1/metadata", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(customMetadata) }),
+  );
+  await page.goto("/");
+
+  const bedrooms = page.getByLabel("Phòng ngủ");
+  await expect(bedrooms).toHaveAttribute("max", "4");
+  await expect(bedrooms).not.toHaveAttribute("required", "");
+  await expect(page.getByText("Mô tả trường từ API")).toBeVisible();
+  await expect(page.getByText("Số phòng ngủ theo metadata")).toBeVisible();
 });
