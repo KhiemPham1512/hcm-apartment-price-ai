@@ -327,7 +327,7 @@ Mỗi ngày làm việc cập nhật task: done / next / blocker kèm link PR/ru
 <a id="github-workflow"></a>
 ## Làm việc trên GitHub: nhánh riêng → Pull Request → review → merge
 
-Nguồn chuẩn quy tắc Git là [git.md](../.claude/rules/agent/git.md). **Không commit công việc trực tiếp trên `main`, không chạy `git push origin main` và không force-push.** `main` nhận thay đổi qua PR có CI xanh; không cần tạo issue hay có reviewer GitHub. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection.
+Quy tắc Git của repo nằm ở mục này. **Không commit công việc trực tiếp trên `main`, không chạy `git push origin main` và không force-push.** `main` nhận thay đổi qua PR có CI xanh; không cần tạo issue hay có reviewer GitHub. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection.
 
 **1. Nhận việc và chốt phạm vi.** Một phạm vi, một owner triển khai, một nhánh. Theo chỉ dẫn chủ repo, làm trực tiếp, không tạo issue mới. Ghi vai trò TV, yêu cầu, file sẽ sửa và phụ thuộc trên PR/handoff; kiểm tra PR đang mở để tránh hai người cùng sửa file chung. Không nhận toàn bộ backlog làm một việc.
 
