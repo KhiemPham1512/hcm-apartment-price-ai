@@ -505,6 +505,14 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 
 **Quyết định 8 — release dùng chính contract serving:** `ml.release --run-dir --csv --output --reviewer A --reviewer B` chỉ đóng gói khi đủ các điều kiện sau. (1) Bản khóa hợp lệ. (2) `evaluation.json` khớp hash candidate/freeze hiện tại và có `registry_status="checked"`. (3) CSV khớp `dataset_sha256` của candidate và còn hạn công bố tại lúc release. (4) Split tái lập khớp nhóm train trong `splits.csv`. Phần còn lại giao cho `Manifest` của `backend/service.py` kiểm: real, nguồn đã xác minh, winner thắng B0, R²>0, không có output không hợp lệ, ≥500 nhóm, ≥75 test, ≥2 reviewer khác nhau. Như vậy offline và HTTP dùng đúng một contract. Gói gồm pipeline của winner chọn bằng validation, manifest (data window/age tính từ CSV, khu vực có ≥20 nhóm train, khoảng train của feature số) và `report.json` = evaluation + validation. Lỗi bất kỳ thì không tạo thư mục output; thư mục đã tồn tại thì không ghi đè. Sau khi ghi, release tự nạp lại bằng `load_approved`. Reviewer là tên vai trò, không xác thực danh tính; release chưa ghi registry và chưa có trạng thái `rejected`.
 
+**Quyết định 9 — đánh giá trên snapshot lịch sử (phương án B, 22/11/2026):** TV1 báo NO-GO cho giá hiện hành: hai bộ Kaggle trả 404, TiniX là dữ liệu 2025 và không có bằng chứng tin còn bán. Nhóm dùng snapshot lịch sử có quyền dùng phi thương mại (TiniX, revision `c3f4dc`, CC BY-NC 4.0) để chạy hết pipeline, so sánh B0/M1/M2/M3 và viết báo cáo. Tính năng giá hiện tại **vẫn NO-GO** cho tới khi có nguồn hiện hành (phương án A).
+
+- `DatasetCard` thêm `snapshot_kind` ∈ {`current`, `historical`}, mặc định `current`. Với `historical`, loader bỏ kiểm tra tuổi so với `now` (7 ngày công bố, 90 ngày tin) nhưng vẫn giữ: chronology `published_at <= price_observed_at <= source_snapshot_at`, timezone, schema, đơn vị, quarantine, grouping, split nhóm rời, registry, freeze, evaluate. Không sửa timestamp; khoảng thời gian báo cáo lấy từ dữ liệu thật.
+- **Không bao giờ phát hành snapshot lịch sử:** `ml.release` từ chối, API giữ `unavailable`, UI không demo giá từ nó. Báo cáo, slide và UI ghi rõ "đánh giá trên dữ liệu lịch sử" kèm khoảng `published_at`/`price_observed_at` thật. Evaluation report ghi `snapshot_kind`.
+- `floor_level` thiếu toàn bộ: giữ trong API schema (optional, nhận `null`) để không đổi contract với TV4/TV5. Feature số thiếu toàn bộ ở train được giữ dạng cột hằng (không mang thông tin), train ghi tên nó vào `uninformative_features` của candidate/selection. Không suy từ `floor_count`.
+- Khu vực: TV1 map vào danh mục `hcm_current_v1`, ghi version/hash bảng mapping trong card; dòng không map được vào quarantine `unsupported_district`. Gộp đủ 10 shard và loại trùng xuyên shard trước khi chia split. Parquet/CSV thô không commit.
+- License NC chỉ cho mục đích học thuật; TV6-01 xác nhận với giảng viên trước khi nộp.
+
 </details>
 
 <a id="van-hanh"></a>
