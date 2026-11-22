@@ -165,7 +165,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn:** Freeze/guard schema, CLI registry và gate registry trong evaluator đã merge qua PR #19/#21/#22/#23. [PR #35](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/35) và [PR #36](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/36) đã merge: `ml.train` tự ghi fit/tune vào registry trước fit (real bắt buộc registry); `ml.release` tạo gói approved theo gate. Không tạo issue; chủ repo duyệt mỗi PR trước merge, không cần reviewer khác. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07/09. Training/freeze/release chưa tự ghi history.
+**Bước tiếp / Chặn:** Công cụ freeze, registry, evaluate, train ghi fit/tune, release và test parity serving đã merge (#19–#42). 22/11 TV1 báo NO-GO giá hiện hành; nhóm chọn **phương án B** (README Quyết định 9): đánh giá trên snapshot lịch sử TiniX, không phát hành. Chờ: TV1 thêm `snapshot_kind` vào card/loader và bàn giao CSV + card lịch sử (đủ 10 shard, mapping `hcm_current_v1`); TV2 cho train nhận card lịch sử và xử lý `floor_level` thiếu toàn bộ; sau đó TV6 chặn release lịch sử, chạy freeze/evaluate. TV6-01 (rubric, giảng viên xác nhận dùng dữ liệu CC BY-NC) chưa xong. Chưa tick TV6-04..10.
 
 #### Tuần 1
 
