@@ -129,29 +129,38 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv5"></a>
 ### TV5 — Frontend và demo
 
-**Bước tiếp / Chặn:** Nhận contract/metadata từ TV4, bắt đầu form và các trạng thái bằng mock có nhãn rõ; hiện chưa có frontend.
+**Bước tiếp / Chặn:** Frontend TV5 đã có form metadata-driven, xử lý lỗi, responsive và bộ E2E 11/11 đạt trên nhánh `feat/web-tv5-demo` (commit `d09d622`). Còn chờ xác minh request API thật/model được TV6 phê duyệt, báo cáo chính thức và demo cuối. Không xem fixture E2E là bằng chứng dự đoán giá thị trường.
 
 #### Tuần 1
 
-- [ ] **TV5-01** Nhận metadata/OpenAPI và mẫu lỗi từ TV4; chốt form/kết quả/report tối thiểu.
-- [ ] **TV5-02** Dựng form theo metadata, optional null đúng nghĩa, khu vực lấy từ API (P07).
-- [ ] **TV5-03** Làm loading/empty/error/unavailable với mock ghi nhãn rõ và một request API thật.
+- [x] **TV5-01** Nhận metadata/OpenAPI và mẫu lỗi từ TV4; chốt form/kết quả/report tối thiểu.
+  - Bằng chứng: `docs/Handoff.md`, `frontend/src/types.ts`, `frontend/src/api.ts`.
+- [x] **TV5-02** Dựng form theo metadata, optional null đúng nghĩa, khu vực lấy từ API (P07).
+  - Bằng chứng: `frontend/src/App.tsx`; E2E kiểm tra nhãn/mô tả, trường bắt buộc và giới hạn số liệu theo feature metadata (11/11 đạt, commit `d09d622`).
+- [x] **TV5-03** Làm loading/empty/error/unavailable với mock ghi nhãn rõ và một request API thật.
+  - Bằng chứng: Backend /health/live trả về live; frontend gọi GET /api/v1/metadata qua Vite proxy, nhận HTTP 200 từ Uvicorn. Response xác nhận serving_status=unavailable, model_id=null, supported_districts=[]. UI hiển thị trạng thái chưa có mô hình được duyệt và không hiển thị giá dự đoán giả.
 
 #### Tuần 2
 
 - [ ] **TV5-04** Nối predictions thật; hiển thị tổng giá VND, đơn giá/m², ngày dữ liệu, area basis và warnings.
-- [ ] **TV5-05** Xử lý 422/503/stale/mạng lỗi; không hiện giá từ mock/cache khi server từ chối.
+- [x] **TV5-05** Xử lý 422/503/stale/mạng lỗi; không hiện giá từ mock/cache khi server từ chối.
+  - Bằng chứng: `frontend/src/App.tsx`, `frontend/e2e/app.spec.ts`; E2E xác minh 422, 503, stale metadata, lỗi mạng và xóa kết quả cũ khi request thất bại (11/11 đạt).
 - [ ] **TV5-06** Nối report tổng hợp gồm baseline + ba mô hình, metric đúng đơn vị/n; không tính metric từ raw (P08).
 
 #### Tuần 3
 
-- [ ] **TV5-07** Kiểm tra màn hình nhỏ, khả năng dùng form và thông báo lỗi.
+- [x] **TV5-07** Kiểm tra màn hình nhỏ, khả năng dùng form và thông báo lỗi.
+  - Bằng chứng: E2E `form remains usable on a narrow mobile viewport` đạt; `npm run test:e2e` trả về 11/11 passed.
 - [ ] **TV5-08** Viết/chạy Playwright smoke valid/invalid/unavailable/stale cùng TV4/TV6, lưu evidence gắn phiên bản.
+  - Hiện có: `frontend/e2e/app.spec.ts` gồm 11 test UI dùng API fixtures; `frontend/e2e/integration.spec.ts` gồm 1 integration smoke test với backend thật. Tổng cộng 12/12 E2E đạt. Ảnh `playwright-11-tests-passed.png` là bằng chứng lịch sử của 11 test.
+  - Còn thiếu: smoke tích hợp với backend TV4 và artifact/model được TV6 duyệt.
+  - Bằng chứng bổ sung (22/11/2026): `frontend/e2e/integration.spec.ts` chạy với backend thật qua Vite Proxy, xác minh metadata HTTP 200 và trạng thái prediction availability. Smoke test 1/1 PASS; toàn bộ E2E 12/12 PASS; `npm run build` thành công.
 
 #### Tuần 4
 
 - [ ] **TV5-09** Chốt demo theo artifact/report cuối; công bố rõ giới hạn và phần chưa đủ điều kiện.
 - [ ] **TV5-10** Bàn giao hướng dẫn UI, ảnh/video có ngày/model và phần frontend trong báo cáo; diễn tập cùng TV6.
+  - Bằng chứng bổ sung (22/11/2026): `frontend/README.md` đã có hướng dẫn tiếng Việt về môi trường, khởi động frontend/backend, kiểm tra API, build, E2E, smoke test và giới hạn trạng thái mô hình.
 
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
