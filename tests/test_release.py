@@ -4,13 +4,18 @@ import json
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
+import joblib
+import pandas as pd
 import pytest
 from conftest import synthetic_listings
+from fastapi.testclient import TestClient
 from test_registry import cli, train_cli
 
+from backend.app import configured_app, create_app
 from backend.service import load_approved
+from ml.schema import FEATURES
 
 REGISTRY = ["--run-id", "r1", "--actor", "TV6"]
 
@@ -121,3 +126,43 @@ def test_release_gate_failure_writes_no_package(workspace, problem, message):
     assert result.returncode != 0 and message in result.stderr, result.stderr
     approved = workspace / "approved"
     assert not approved.exists() or not any(approved.iterdir())
+
+
+def test_released_package_serves_offline_prices_over_http(workspace, monkeypatch):
+    """TV6-08: the package written by ml.release is what MODEL_DIR serves, price for price."""
+    assert release(workspace, "TV6", "TV4").returncode == 0
+    approved = workspace / "approved"
+    monkeypatch.setenv("MODEL_DIR", str(approved))
+    client = TestClient(configured_app())
+    assert client.get("/health/ready").status_code == 200
+    metadata = client.get("/api/v1/metadata").json()
+    manifest = json.loads((approved / "manifest.json").read_text(encoding="utf-8"))
+    assert metadata["serving_status"] == "ready"
+    assert metadata["model_id"] == manifest["model_id"]
+    codes = sorted(manifest["supported_districts"])
+    assert [d["code"] for d in metadata["supported_districts"]] == codes
+    rows = [
+        {"area_m2": area, "district_code": code, "bedrooms": 2, "bathrooms": 1, "floor_level": None}
+        for code in codes
+        for area in (35.5, 80.0, 140.0)
+    ]
+    offline = joblib.load(approved / "pipeline.joblib").predict(
+        pd.DataFrame(rows, columns=FEATURES)
+    )
+    for row, expected in zip(rows, offline, strict=True):
+        response = client.post("/api/v1/predictions", json=row)
+        assert response.status_code == 200, response.text
+        assert response.json()["predicted_price_vnd"] == pytest.approx(float(expected), rel=1e-12)
+    assert client.get("/api/v1/report").json() == json.loads(
+        (approved / "report.json").read_text(encoding="utf-8")
+    )
+    served = load_approved(approved)
+    expired = served.manifest.data_as_of + timedelta(days=14, seconds=1)
+    stale = TestClient(create_app(served, lambda: expired))
+    assert stale.get("/api/v1/metadata").json()["serving_status"] == "stale"
+    assert stale.post("/api/v1/predictions", json=rows[0]).json()["error"]["code"] == "stale_model"
+    with (approved / "pipeline.joblib").open("ab") as handle:
+        handle.write(b"tampered")
+    unavailable = TestClient(configured_app())
+    assert unavailable.get("/api/v1/metadata").json()["serving_status"] == "unavailable"
+    assert unavailable.post("/api/v1/predictions", json=rows[0]).status_code == 503
