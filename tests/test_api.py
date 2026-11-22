@@ -123,3 +123,58 @@ def test_no_public_management_endpoints():
     client = TestClient(create_app())
     for path in ("/upload", "/api/v1/retrain", "/api/v1/models", "/data/raw", "/artifacts"):
         assert client.get(path).status_code == 404
+
+
+def test_rate_limit_returns_retry_after(serving_model, now):
+    client = TestClient(create_app(
+        serving_model, lambda: now, rate_limit_capacity=2, rate_limit_per_minute=30
+    ))
+    assert client.post("/api/v1/predictions", json=VALID).status_code == 200
+    assert client.post("/api/v1/predictions", json=VALID).status_code == 200
+    limited = client.post("/api/v1/predictions", json=VALID)
+    assert limited.status_code == 429
+    assert limited.json()["error"]["code"] == "rate_limited"
+    assert int(limited.headers["retry-after"]) >= 1
+    assert limited.json()["error"]["request_id"]
+
+
+def test_prediction_capacity_returns_429(serving_model, now):
+    client = TestClient(create_app(serving_model, lambda: now, max_concurrent_predictions=0))
+    response = client.post("/api/v1/predictions", json=VALID)
+    assert response.status_code == 429
+    assert response.json()["error"]["code"] == "prediction_capacity_exceeded"
+
+
+def test_cors_does_not_allow_unknown_origin(serving_model, now):
+    client = TestClient(create_app(serving_model, lambda: now))
+    response = client.options(
+        "/api/v1/predictions",
+        headers={
+            "Origin": "https://untrusted.example",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert "access-control-allow-origin" not in response.headers
+
+
+def test_wildcard_cors_is_rejected(monkeypatch):
+    monkeypatch.setenv("CORS_ORIGINS", "*")
+    with pytest.raises(ValueError, match="Wildcard"):
+        create_app()
+
+
+def test_report_is_read_only_and_served_when_attached(serving_model, now):
+    serving_model.report = {"run_id": "approved-run", "models": []}
+    client = TestClient(create_app(serving_model, lambda: now))
+    response = client.get("/api/v1/report")
+    assert response.status_code == 200
+    assert response.json()["run_id"] == "approved-run"
+
+
+def test_openapi_exposes_expected_routes():
+    schema = TestClient(create_app()).get("/openapi.json").json()
+    paths = schema["paths"]
+    assert set(paths) >= {
+        "/health/live", "/health/ready", "/api/v1/metadata",
+        "/api/v1/predictions", "/api/v1/report",
+    }
