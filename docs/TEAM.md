@@ -137,7 +137,8 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
   - Bằng chứng: `docs/Handoff.md`, `frontend/src/types.ts`, `frontend/src/api.ts`.
 - [x] **TV5-02** Dựng form theo metadata, optional null đúng nghĩa, khu vực lấy từ API (P07).
   - Bằng chứng: `frontend/src/App.tsx`; E2E kiểm tra nhãn/mô tả, trường bắt buộc và giới hạn số liệu theo feature metadata (11/11 đạt, commit `d09d622`).
-- [ ] **TV5-03** Làm loading/empty/error/unavailable với mock ghi nhãn rõ và một request API thật.
+- [x] **TV5-03** Làm loading/empty/error/unavailable với mock ghi nhãn rõ và một request API thật.
+  - Bằng chứng: Backend /health/live trả về live; frontend gọi GET /api/v1/metadata qua Vite proxy, nhận HTTP 200 từ Uvicorn. Response xác nhận serving_status=unavailable, model_id=null, supported_districts=[]. UI hiển thị trạng thái chưa có mô hình được duyệt và không hiển thị giá dự đoán giả.
 
 #### Tuần 2
 
@@ -151,13 +152,15 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 - [x] **TV5-07** Kiểm tra màn hình nhỏ, khả năng dùng form và thông báo lỗi.
   - Bằng chứng: E2E `form remains usable on a narrow mobile viewport` đạt; `npm run test:e2e` trả về 11/11 passed.
 - [ ] **TV5-08** Viết/chạy Playwright smoke valid/invalid/unavailable/stale cùng TV4/TV6, lưu evidence gắn phiên bản.
-  - Hiện có: `frontend/e2e/app.spec.ts`, `frontend/evidence/playwright-11-tests-passed.png`; 11/11 E2E đạt trên API fixtures.
+  - Hiện có: `frontend/e2e/app.spec.ts` gồm 11 test UI dùng API fixtures; `frontend/e2e/integration.spec.ts` gồm 1 integration smoke test với backend thật. Tổng cộng 12/12 E2E đạt. Ảnh `playwright-11-tests-passed.png` là bằng chứng lịch sử của 11 test.
   - Còn thiếu: smoke tích hợp với backend TV4 và artifact/model được TV6 duyệt.
+  - Bằng chứng bổ sung (22/11/2026): `frontend/e2e/integration.spec.ts` chạy với backend thật qua Vite Proxy, xác minh metadata HTTP 200 và trạng thái prediction availability. Smoke test 1/1 PASS; toàn bộ E2E 12/12 PASS; `npm run build` thành công.
 
 #### Tuần 4
 
 - [ ] **TV5-09** Chốt demo theo artifact/report cuối; công bố rõ giới hạn và phần chưa đủ điều kiện.
 - [ ] **TV5-10** Bàn giao hướng dẫn UI, ảnh/video có ngày/model và phần frontend trong báo cáo; diễn tập cùng TV6.
+  - Bằng chứng bổ sung (22/11/2026): `frontend/README.md` đã có hướng dẫn tiếng Việt về môi trường, khởi động frontend/backend, kiểm tra API, build, E2E, smoke test và giới hạn trạng thái mô hình.
 
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
