@@ -7,6 +7,7 @@ from datetime import timedelta
 
 import pandas as pd
 import pytest
+from pydantic import ValidationError
 
 from ml.data import (
     audit_registry_exposure,
@@ -14,6 +15,8 @@ from ml.data import (
     build_refresh_report,
     build_release_dataset_card,
     export_unexposed_test_candidates,
+    load_current_csv,
+    prepare_raw_listings,
     verify_pre_demo_readiness,
 )
 from ml.registry import initialize as init_registry
@@ -254,3 +257,71 @@ def test_tv1_10_release_dataset_card_contains_required_manifest_fields(listings,
             reviewed_by="TV1",
             area_basis="source_reported_unknown",
         )
+
+def test_historical_loader_bypasses_7d_90d_freshness_but_keeps_chronology_quarantine_and_grouping(
+    tmp_path, listings, now
+):
+    hist_card = DatasetCard(
+        dataset_version="tinix-historical-test",
+        data_kind="real",
+        snapshot_kind="historical",
+        license_reference="CC BY-NC 4.0",
+        source_verified=True,
+        geography_version="hcm_current_v1",
+        grouping_version="tv1-group-v1",
+        district_labels={f"fixture_{i}": f"Khu vuc {i}" for i in range(3)},
+    )
+
+    old = listings.iloc[:12].copy()
+    old["property_group_id"] = None
+    old["project_name_normalized"] = "project_alpha"
+    old["published_at"] = now - timedelta(days=300)
+    old["price_observed_at"] = now - timedelta(days=120)
+    old["source_snapshot_at"] = now - timedelta(days=60)
+    old["floor_level"] = None
+
+    # 2 dòng cùng căn để kiểm tra grouping vẫn hoạt động
+    old.loc[1, ["district_code", "area_m2", "bedrooms", "bathrooms"]] = old.loc[
+        0, ["district_code", "area_m2", "bedrooms", "bathrooms"]
+    ]
+    # Dòng vi phạm quarantine (tin thuê)
+    old.loc[2, "listing_type"] = "rent"
+    # Dòng vi phạm chronology (price_observed_at < published_at)
+    old.loc[3, "price_observed_at"] = now - timedelta(days=350)
+    # Dòng vi phạm tương lai (source_snapshot_at > now)
+    old.loc[4, "source_snapshot_at"] = now + timedelta(days=1)
+
+    # Ở chế độ current, toàn bộ đều bị loại vì quá hạn 7 ngày / 90 ngày
+    clean_cur, _, _ = prepare_raw_listings(old, now=now, snapshot_kind="current")
+    assert clean_cur.empty
+
+    # Ở chế độ historical, giữ lại 9 dòng hợp lệ, cách ly đúng 3 dòng lỗi và gộp nhóm 0 & 1
+    clean_hist, quarantine_hist, _ = prepare_raw_listings(old, now=now, card=hist_card)
+    assert len(clean_hist) == 9
+    assert len(quarantine_hist) == 3
+    assert set(quarantine_hist["reason_code"]) == {
+        "non_sale_listing",
+        "invalid_timestamp_order",
+        "future_timestamp",
+    }
+    groups_by_id = clean_hist.set_index("listing_id")["property_group_id"]
+    assert groups_by_id["synthetic_listing_0"] == groups_by_id["synthetic_listing_1"]
+
+    csv_path = tmp_path / "historical.csv"
+    clean_hist.to_csv(csv_path, index=False)
+
+    # load_current_csv ở chế độ current phải từ chối, còn historical phải nạp thành công
+    with pytest.raises(ValueError, match="too old for publication"):
+        load_current_csv(csv_path, now=now)
+
+    reloaded = load_current_csv(csv_path, now=now, card=hist_card)
+    assert len(reloaded) == 9
+    assert reloaded["floor_level"].isna().all()
+
+    # Chronology lỗi trong CSV vẫn bị từ chối ở chế độ historical
+    bad_csv = tmp_path / "historical_bad_chrono.csv"
+    bad_df = clean_hist.copy()
+    bad_df.loc[0, "price_observed_at"] = now - timedelta(days=400)
+    bad_df.to_csv(bad_csv, index=False)
+    with pytest.raises(ValidationError, match="published_at <= price_observed_at"):
+        load_current_csv(bad_csv, now=now, card=hist_card)

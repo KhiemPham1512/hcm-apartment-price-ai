@@ -6,7 +6,7 @@ import json
 import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -48,6 +48,14 @@ _PHONE_RE = re.compile(r"(?<!\d)(?:0|\+?84)\d{9,10}(?!\d)")
 MARKET_MIN_TOTAL_GROUPS = 500
 MARKET_MIN_TEST_GROUPS = 75
 
+def _resolve_snapshot_kind(
+    snapshot_kind: Literal["current", "historical"] = "current",
+    card: DatasetCard | None = None,
+) -> Literal["current", "historical"]:
+    resolved = card.snapshot_kind if card is not None else snapshot_kind
+    if resolved not in ("current", "historical"):
+        raise ValueError(f"Unsupported snapshot_kind: {resolved}")
+    return resolved
 
 def _is_missing(value: Any) -> bool:
     if value is None or isinstance(value, bool):
@@ -229,8 +237,12 @@ def prepare_raw_listings(
     now: datetime,
     district_mapping: dict[str, str] | None = None,
     expected_area_basis: str | None = None,
+    *,
+    snapshot_kind: Literal["current", "historical"] = "current",
+    card: DatasetCard | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any]]:
     """Normalize raw records into contract-compliant listings and a quarantine table."""
+    resolved_kind = _resolve_snapshot_kind(snapshot_kind, card)
     clean_candidates: list[dict[str, Any]] = []
     quarantine_rows: list[dict[str, Any]] = []
 
@@ -346,8 +358,11 @@ def prepare_raw_listings(
             "area_basis": area_basis,
         }
         try:
-            validated = Listing.model_validate(candidate)
-            validated.check_current(now)
+         validated = Listing.model_validate(candidate)
+         if resolved_kind == "current":
+             validated.check_current(now)
+         elif validated.source_snapshot_at > now:
+             raise ValueError("Future snapshot")
         except (ValidationError, ValueError) as exc:
             msg = str(exc)
             if "Future snapshot" in msg:
@@ -521,20 +536,23 @@ def build_dataset_audit(
     }
 
 
-def load_current_csv(path: Path, now: datetime) -> pd.DataFrame:
+def load_current_csv(
+    path: Path,
+    now: datetime,
+    *,
+    snapshot_kind: Literal["current", "historical"] = "current",
+    card: DatasetCard | None = None,
+) -> pd.DataFrame:
+    resolved_kind = _resolve_snapshot_kind(snapshot_kind, card)
     frame = pd.read_csv(path)
     rows = []
     for record in frame.to_dict("records"):
-        record = {
-            key: None if isinstance(value, float) and np.isnan(value) else value
-            for key, value in record.items()
-        }
-        for key in ("bedrooms", "bathrooms", "floor_level"):
-            value = record.get(key)
-            if isinstance(value, float) and np.isfinite(value) and value.is_integer():
-                record[key] = int(value)
+        record = _clean_listing_record(record)
         listing = Listing.model_validate(record)
-        listing.check_current(now)
+        if resolved_kind == "current":
+            listing.check_current(now)
+        elif listing.source_snapshot_at > now:
+            raise ValueError("Future snapshot")
         rows.append(listing.model_dump())
     if not rows:
         raise ValueError("Dataset is empty")
@@ -978,6 +996,9 @@ def verify_pre_demo_readiness(
     )
     if not license_ok:
         blockers.append("unverified_or_non_real_source")
+
+    if card.snapshot_kind != "current":
+        blockers.append("historical_snapshot_not_servable")
 
     districts = set(clean_frame["district_code"].astype(str))
     labels_valid = bool(card.district_labels) and all(

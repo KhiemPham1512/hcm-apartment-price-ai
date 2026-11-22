@@ -72,8 +72,13 @@ class DatasetCard(BaseModel):
 
     dataset_version: str = Field(min_length=1)
     data_kind: Literal["real", "synthetic"]
+    snapshot_kind: Literal["current", "historical"] = "current"
     license_reference: str = Field(min_length=1)
     source_verified: bool = False
     geography_version: Literal["hcm_current_v1"]
     grouping_version: str = Field(min_length=1)
     district_labels: dict[str, str]
+    mapping_version: str | None = Field(default=None, min_length=1)
+    mapping_sha256: Annotated[
+        str, Field(pattern=r"^[a-f0-9]{64}$")
+    ] | None = None
