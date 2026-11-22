@@ -27,3 +27,28 @@ def test_dataset_card_does_not_silently_choose_a_geography():
 def test_dataset_card_rejects_the_retired_geography():
     with pytest.raises(ValidationError):
         DatasetCard(**CARD, geography_version="hcm_pre2025_v1")
+
+def test_dataset_card_defaults_snapshot_kind_to_current_and_accepts_historical():
+    default_card = DatasetCard(**CARD, geography_version="hcm_current_v1")
+    assert default_card.snapshot_kind == "current"
+
+    hist_card = DatasetCard(
+        **CARD,
+        geography_version="hcm_current_v1",
+        snapshot_kind="historical",
+        mapping_version="hcm_current_v1",
+        mapping_sha256="a" * 64,
+    )
+    assert hist_card.snapshot_kind == "historical"
+    assert hist_card.mapping_sha256 == "a" * 64
+
+
+def test_dataset_card_rejects_invalid_snapshot_kind_or_mapping_hash():
+    with pytest.raises(ValidationError):
+        DatasetCard(**CARD, geography_version="hcm_current_v1", snapshot_kind="archive")
+    with pytest.raises(ValidationError):
+        DatasetCard(
+            **CARD,
+            geography_version="hcm_current_v1",
+            mapping_sha256="not-a-valid-sha256",
+        )
