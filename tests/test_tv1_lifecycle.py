@@ -364,10 +364,13 @@ def test_tv1_10_release_dataset_card_rejects_non_go_historical_or_missing_gates(
         "pre_demo_check": pre_demo,
     }
 
-    # 1. Audit kh?ng ph?i GO
+    # 1. Audit kh?ng ph?i GO ho?c thi?u h?n kh?a go_no_go
     nogo_audit = {**audit, "go_no_go": {"status": "NO-GO", "reasons": ["insufficient_groups"]}}
     with pytest.raises(ValueError, match="GO audit"):
         build_release_dataset_card(card, nogo_audit, **valid_kwargs)
+    missing_key_audit = {k: v for k, v in audit.items() if k != "go_no_go"}
+    with pytest.raises(ValueError, match="GO audit"):
+        build_release_dataset_card(card, missing_key_audit, **valid_kwargs)
 
     # 2. snapshot_kind kh?ng ph?i current
     hist_card = card.model_copy(update={"snapshot_kind": "historical"})
