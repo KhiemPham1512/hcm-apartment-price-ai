@@ -45,6 +45,7 @@ Nguồn duy nhất cho nghĩa của thuật ngữ trong dự án. Hợp đồng 
 | --- | --- |
 | Candidate / approved | Ứng viên chưa được phục vụ / artifact qua kiểm định và review nội bộ |
 | Bản khóa candidate (freeze record) | Bằng chứng phiên bản candidate và dữ liệu được người kiểm định ghi nhận trước đánh giá; không đồng nghĩa đã đánh giá hoặc được duyệt phát hành |
+| Pool test (`test_pool`) | Tập nhóm chưa từng tiếp xúc được phép làm test mới; `split_groups` chỉ chọn nhóm test trong pool này |
 | Registry lịch sử tiếp xúc / dành test mới | Sổ nhóm đã dùng cho fit, tune, phân tích nhãn hoặc đánh giá qua nhiều run / ghi nhận nhóm mới được dành cho test; việc dành không tự chứng minh test còn độc lập khi thực sự đánh giá |
 | Gói phát hành | Thư mục `ml.release` tạo ra (`pipeline.joblib`, `manifest.json`, `report.json`) cho model winner đã đánh giá. API chỉ nạp gói `approved` |
 | Trạng thái phục vụ (`serving_status`) | `ready`: có gói approved còn hạn. `stale`: dữ liệu quá 14 ngày. `unavailable`: chưa có gói hợp lệ. Hai trạng thái sau thì API không trả giá |
