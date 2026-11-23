@@ -402,10 +402,12 @@ Report trả `run_id`, `dataset_version`, `evaluation_window_start/end`, n từn
 | 415 | `unsupported_media_type` | POST không phải JSON |
 | 422 | `invalid_input` | Thiếu/sai kiểu/ngoài hard bounds, extra fields |
 | 422 | `unsupported_district` | Khu vực không có trong metadata |
-| 429 | `rate_limited` | Kế hoạch: quá giới hạn request; chưa triển khai |
+| 429 | `rate_limited` | Quá giới hạn request theo IP (burst 5, 30/phút); có `Retry-After` |
+| 429 | `prediction_capacity_exceeded` | Hết slot suy luận đồng thời (mặc định 4); có `Retry-After` |
 | 503 | `model_unavailable` | Chưa có artifact approved hoặc nạp thất bại |
 | 503 | `stale_model` | Quá giới hạn freshness, `details` có ngày dữ liệu |
-| 503 | `prediction_unavailable` | Dự đoán không hợp lệ hoặc hết thời gian |
+| 503 | `prediction_unavailable` | Dự đoán không hợp lệ |
+| 503 | `prediction_timeout` | Suy luận vượt ngân sách 5 giây (kiểm sau khi chạy xong, không hủy được) |
 | 500 | `internal_error` | Lỗi không dự kiến, không lộ chi tiết nội bộ |
 
 TV4 viết exception handler để lỗi validation dùng cùng envelope thay vì mặc định FastAPI. Không trả lại nguyên request trong `details`. Các giới hạn request và quyền chỉ định nghĩa tại [security](#bao-mat).
