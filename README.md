@@ -56,8 +56,9 @@ frontend/       giao diện React/TypeScript của TV5 (cần Node.js)
 tests/          toàn bộ test chính thức và fixture kỹ thuật
 docs/           SPEC.md: yêu cầu; TEAM.md: phân công và mốc
 .gitignore      chặn môi trường, cache, dữ liệu riêng và artifact
+GLOSSARY.md     thuật ngữ của dự án (nguồn duy nhất cho nghĩa từ)
 CLAUDE.md       hướng dẫn ngắn cho AI agent
-README.md       hướng dẫn, hợp đồng, thuật ngữ và quyết định kỹ thuật
+README.md       hướng dẫn, hợp đồng và quyết định kỹ thuật
 pyproject.toml  package Python và cấu hình pytest/Ruff
 ```
 
@@ -490,19 +491,7 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 <details>
 <summary><strong>Thuật ngữ và quyết định</strong></summary>
 
-| Thuật ngữ | Ý nghĩa trong dự án |
-| --- | --- |
-| Giá rao bán / giá giao dịch | Giá người bán chào / giá mua bán đã hoàn tất; dataset chỉ nhắm giá rao |
-| Giá ước tính / đơn giá diện tích | Tổng giá mô hình suy ra / tổng giá chia m²; đơn giá suy từ nhãn không được đưa vào X |
-| Tin rao / căn hộ / dự án | Một tin đăng / một căn cụ thể / cụm chung cư; cùng dự án chưa chắc cùng căn |
-| Nhóm nghi trùng | Các tin có bằng chứng cùng căn, dùng để ngăn trùng qua các tập |
-| Ngày dữ liệu | Mốc quan sát giá bảo thủ, khác ngày tải file hay ngày train |
-| Cửa sổ dữ liệu / cửa sổ tin | Khoảng quan sát giá / khoảng ngày đăng; không thay thế lẫn nhau |
-| Khu vực được hỗ trợ | Khu vực thuộc ranh giới nghiên cứu và đủ nhóm train theo hợp đồng |
-| Candidate / approved | Ứng viên chưa được phục vụ / artifact qua kiểm định và review nội bộ |
-| Bản khóa candidate (freeze record) | Bằng chứng phiên bản candidate và dữ liệu được người kiểm định ghi nhận trước đánh giá; không đồng nghĩa đã đánh giá hoặc được duyệt phát hành |
-| Registry lịch sử tiếp xúc / dành test mới | Sổ nhóm đã dùng cho fit, tune, phân tích nhãn hoặc đánh giá qua nhiều run / ghi nhận nhóm mới được dành cho test; việc dành không tự chứng minh test còn độc lập khi thực sự đánh giá |
-| Train / validation / test | Fit tham số / chọn cấu hình / đánh giá độc lập sau freeze |
+Nghĩa của thuật ngữ nằm ở [GLOSSARY.md](GLOSSARY.md), nguồn duy nhất; phần dưới là các quyết định kỹ thuật.
 
 <a id="qd1"></a>
 **Quyết định 1 — phạm vi:** căn hộ rao bán trong TP.HCM theo địa giới hiện hành, dùng giá gần thời điểm snapshot có bằng chứng. Giữ bài toán căn hộ để ba mô hình so sánh cùng một loại tài sản; TV6 vẫn cần đối chiếu rubric nhà/đất với giảng viên. Phạm vi được chốt bằng mapping có version và nguồn, không lấy dữ liệu cũ làm giá hiện tại. Độ mới là khoảng tuổi dữ liệu theo hợp đồng, không phải một năm cutoff cố định.
