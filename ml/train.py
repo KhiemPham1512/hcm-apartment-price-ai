@@ -40,38 +40,54 @@ def select_winner(scores: dict[str, dict]) -> str:
         if scores[name]["rmse_vnd"] <= best * 1.01:
             return name
     raise ValueError("No valid candidate")
-
-
 def fit_candidates(train: pd.DataFrame, validation: pd.DataFrame) -> dict:
     x_train, x_val = feature_frame(train), feature_frame(validation)
-    if x_train[NUMERIC_FEATURES].isna().all().any():
-        raise ValueError("Entirely missing numeric feature requires a contract decision")
+
+    uninformative_features = [
+        feature
+        for feature in NUMERIC_FEATURES
+        if x_train[feature].isna().all()
+    ]
+
     fitted, scores, configs = {}, {}, {}
+
     for name in ("baseline", "linear", "polynomial", "tree"):
         choices = (
             [(depth, leaf) for depth in (3, 5, 8, 12) for leaf in (5, 10, 20)]
             if name == "tree"
             else [(5, 5)]
         )
+
         for depth, leaf in choices:
-            model = make_model(name, max_depth=depth, min_samples_leaf=leaf)
+            model = make_model(
+                name,
+                max_depth=depth,
+                min_samples_leaf=leaf,
+            )
             model.fit(x_train, train["asking_price_vnd"])
-            score = metrics(validation["asking_price_vnd"], model.predict(x_val))
+
+            score = metrics(
+                validation["asking_price_vnd"],
+                model.predict(x_val),
+            )
+
             if name not in scores or score["rmse_vnd"] < scores[name]["rmse_vnd"]:
                 fitted[name], scores[name] = model, score
                 configs[name] = (
-                    {"max_depth": depth, "min_samples_leaf": leaf} if (name == "tree") else {}
+                    {"max_depth": depth, "min_samples_leaf": leaf}
+                    if name == "tree"
+                    else {}
                 )
+
     return {
         "models": fitted,
         "validation": scores,
         "configs": configs,
         "winner": select_winner(scores),
         "features": FEATURES,
+        "uninformative_features": uninformative_features,
         "schema_version": SCHEMA_VERSION,
     }
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--csv", type=Path, required=True)
@@ -88,9 +104,17 @@ def main():
         value is not None and str(value).strip() for value in registry_options
     ):
         parser.error("Registry requires registry-dir, nonblank run-id and actor together")
-    card = DatasetCard.model_validate_json(args.dataset_card.read_text(encoding="utf-8"))
+    card = DatasetCard.model_validate_json(
+        args.dataset_card.read_text(encoding="utf-8")
+    )
+
     now = datetime.now(timezone.utc)
-    frame = load_current_csv(args.csv, now)
+
+    frame = load_current_csv(
+        args.csv,
+        now,
+        card=card,
+    )
     if not set(frame["district_code"]).issubset(card.district_labels):
         parser.error("District labels missing from dataset card")
     if card.data_kind == "real" and args.registry_dir is None:
@@ -133,7 +157,16 @@ def main():
             (args.output / f"{name}.csv").read_bytes()
         ).hexdigest()
     joblib.dump(bundle, args.output / "candidates.joblib")
-    public = {key: bundle[key] for key in ("winner", "validation", "configs", "created_at")}
+    public = {
+        key: bundle[key]
+        for key in (
+            "winner",
+            "validation",
+            "configs",
+            "created_at",
+            "uninformative_features",
+        )
+    }
     public["counts"] = {name: len(part) for name, part in splits.items()}
     public["release_status"] = "candidate"
     (args.output / "selection.json").write_text(
