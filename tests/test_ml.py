@@ -175,6 +175,7 @@ def test_cli_handoff_preserves_frozen_holdout(tmp_path, listings):
     assert result.returncode != 0
     assert "Frozen holdout" in result.stderr
 
+
 @pytest.mark.parametrize(
     ("raw_price", "expected_vnd", "expected_reason"),
     [
@@ -217,11 +218,7 @@ def test_tv1_group_assignment_ignores_price_and_avoids_area_district_only_merge(
 
     groups_a = assign_property_group_id(raw)
 
-    groups_b = assign_property_group_id(
-        raw.assign(
-            asking_price_vnd=[1e9, 9e9, 2e9, 8e9]
-        )
-    )
+    groups_b = assign_property_group_id(raw.assign(asking_price_vnd=[1e9, 9e9, 2e9, 8e9]))
 
     assert groups_a.tolist() == groups_b.tolist()
     assert groups_a.iloc[0] == groups_a.iloc[1]
@@ -285,3 +282,22 @@ def test_tv1_prepare_raw_listings_quarantines_invalid_rows_and_loads_cleanly(
     )
 
     assert len(reloaded) == len(clean_df)
+
+
+def test_prepare_raw_listings_quarantine_excludes_raw_columns_and_pii(listings, now):
+    raw = listings.iloc[:5].copy()
+    raw["seller_phone"] = "0909123456"
+    raw["seller_email"] = "owner@example.com"
+    raw["description"] = "Lien he 0909123456 de xem nha"
+    raw.loc[1, "listing_type"] = "rent"
+    raw.loc[2, "area_basis"] = "gross_area"
+
+    clean_df, quarantine_df, _ = prepare_raw_listings(raw, now=now)
+
+    assert len(clean_df) == 3
+    assert list(quarantine_df.columns) == ["row_index", "reason_code"]
+    assert set(quarantine_df["row_index"]) == {1, 2}
+    assert set(quarantine_df["reason_code"]) == {"non_sale_listing", "inconsistent_area_basis"}
+    serialized = quarantine_df.to_json()
+    assert "0909123456" not in serialized
+    assert "owner@example.com" not in serialized
