@@ -74,7 +74,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv3"></a>
 ### TV3 — Decision Tree và giải thích
 
-**Bước tiếp / Chặn:** Chốt interface và kế hoạch importance với TV2; số liệu thị trường chờ dữ liệu được duyệt.
+**Bước tiếp / Chặn:** Chốt interface và kế hoạch importance với TV2; số liệu thị trường chờ dữ liệu được duyệt. Công cụ `ml.importance` (permutation importance + ablation trên validation, README mục Giải thích) đã có do TV6 làm giúp; TV3 chạy trên candidate thật, vẽ biểu đồ, viết diễn giải và đối chiếu coefficients của M1.
 
 #### Tuần 1
 
@@ -86,7 +86,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 #### Tuần 2
 
 - [ ] **TV3-04** Tuning cây trong ngân sách đã chốt, giữ cùng split và feature set với các mô hình khác.
-- [ ] **TV3-05** Chạy permutation importance trên cột gốc và ablation diện tích/vị trí trên validation.
+- [ ] **TV3-05** Chạy permutation importance trên cột gốc và ablation diện tích/vị trí trên validation. Công cụ: `python -m ml.importance` (11 test, kiểm đúng/sai bằng dữ liệu giả có đáp án và test bất biến theo nhãn test); chưa chạy trên candidate thật.
 - [ ] **TV3-06** Bàn giao config cây đã khóa, log validation, script/figures tái lập và giới hạn tương quan.
 
 #### Tuần 3
