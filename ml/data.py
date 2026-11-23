@@ -48,6 +48,8 @@ ID_COLUMNS = (
     "availability_evidence_id",
     "district_code",
 )
+# Owner decision 24/11/2026: an asking unit price outside this range is a parsing/data error.
+UNIT_PRICE_BOUNDS_VND_PER_M2 = (10_000_000, 500_000_000)
 MARKET_MIN_TOTAL_GROUPS = 500
 MARKET_MIN_TEST_GROUPS = 75
 
@@ -233,6 +235,11 @@ def assign_property_group_id(frame: pd.DataFrame) -> pd.Series:
     return pd.Series(group_ids, index=frame.index, dtype="object")
 
 
+def _implausible_unit_price(price_vnd: float, area_m2: float) -> bool:
+    low, high = UNIT_PRICE_BOUNDS_VND_PER_M2
+    return not low <= price_vnd / area_m2 <= high
+
+
 def _quarantined(idx: int, reason: str | None) -> dict[str, Any]:
     """Quarantine rows keep only the raw row number and the reason, never raw fields (PII)."""
     return {"row_index": idx, "reason_code": reason}
@@ -305,6 +312,9 @@ def prepare_raw_listings(
         price_vnd, price_reason = parse_asking_price_vnd(record.get("asking_price_vnd"))
         if price_reason is not None or price_vnd is None:
             quarantine_rows.append(_quarantined(idx, price_reason))
+            continue
+        if _implausible_unit_price(price_vnd, area_m2):
+            quarantine_rows.append(_quarantined(idx, "implausible_unit_price"))
             continue
 
         bedrooms, ok_bed = _parse_optional_int(record.get("bedrooms"), 0, 10)
@@ -582,9 +592,14 @@ def load_current_csv(
     resolved_kind = _resolve_snapshot_kind(snapshot_kind, card)
     frame = pd.read_csv(path, dtype=dict.fromkeys(ID_COLUMNS, str))
     rows = []
-    for record in frame.to_dict("records"):
+    for row, record in enumerate(frame.to_dict("records")):
         record = _clean_listing_record(record)
         listing = Listing.model_validate(record)
+        if _implausible_unit_price(listing.asking_price_vnd, listing.area_m2):
+            raise ValueError(
+                f"Implausible unit price at CSV row {row}: outside 10-500 million VND/m2; "
+                "quarantine it in prepare_raw_listings before training"
+            )
         if resolved_kind == "current":
             listing.check_current(now)
         elif listing.source_snapshot_at > now:

@@ -20,7 +20,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv1"></a>
 ### TV1 — Dữ liệu và nguồn
 
-**Bước tiếp / Chặn (cập nhật 24/11, TV6 kiểm):** Đã giao dữ liệu TiniX lịch sử (203.973 dòng sạch, 37.280 nhóm, 21 khu vực đủ chuẩn); hash và mọi con số khớp khi TV6 nạp lại. Cần làm tiếp: (1) **cách ly giá bất thường** theo ngưỡng chốt cùng TV6 trước khi chạy mô hình (8 nhóm giá trên 1.000 tỷ, 19 nhóm đơn giá trên 1 tỷ/m²; 50 nhóm chiếm 99,4% tổng bình phương sai lệch), rồi giao lại CSV + hash; (2) xác nhận revision TiniX (card ghi `ca3fedc…`, tên file ghi `c3f4dc`); (3) ghi vào card/audit hai giới hạn: `price_observed_at` bằng ngày đăng ở 100% dòng, bằng chứng còn bán chỉ có 1 giá trị chung; (4) nếu nhóm muốn hiển thị giá thật: tìm nguồn dữ liệu **hiện hành** (không quá 7 ngày, có quyền dùng). Không commit dữ liệu.
+**Bước tiếp / Chặn (cập nhật 24/11, TV6 kiểm):** Đã giao dữ liệu TiniX lịch sử (203.973 dòng sạch, 37.280 nhóm, 21 khu vực đủ chuẩn); hash và mọi con số khớp khi TV6 nạp lại. Cần làm tiếp: (1) **chạy lại `prepare_raw_listings`** với quy tắc đơn giá 10–500 triệu/m² đã có trong code (bỏ khoảng 436 dòng có giá lỗi, ví dụ 26.500 tỷ) rồi giao lại CSV + card + hash; bộ nạp hiện từ chối file cũ; (2) xác nhận revision TiniX (card ghi `ca3fedc…`, tên file ghi `c3f4dc`); (3) ghi vào card/audit hai giới hạn: `price_observed_at` bằng ngày đăng ở 100% dòng, bằng chứng còn bán chỉ có 1 giá trị chung; (4) nếu nhóm muốn hiển thị giá thật: tìm nguồn dữ liệu **hiện hành** (không quá 7 ngày, có quyền dùng). Không commit dữ liệu.
 
 #### Tuần 1
 
@@ -165,7 +165,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn (cập nhật 24/11):** Đã xong công cụ: khóa candidate, sổ tiếp xúc, đánh giá (theo nhóm + bootstrap + `snapshot_kind`), train ghi fit/tune và pool test, release chặn dữ liệu lịch sử, parity serving, `ml.importance`, rubric từ đề (SPEC). Diễn tập quy mô TiniX giả lập chạy thông (khoảng 25 giây). 23/11 nhận dữ liệu TiniX: hash và số liệu khớp; **chưa chạy chuỗi thật** vì giá bất thường sẽ chi phối RMSE và train sẽ ghi sổ tiếp xúc vĩnh viễn. Tiếp: chốt ngưỡng cách ly giá cùng TV1, nhận CSV sạch, chạy train → importance → freeze → reserve-test → evaluate (TV6-05/06/07); hỏi giảng viên các câu ở SPEC (TV6-01). Hạn: tuần 4 (25/11–01/12).
+**Bước tiếp / Chặn (cập nhật 24/11):** Đã xong công cụ: khóa candidate, sổ tiếp xúc, đánh giá (theo nhóm + bootstrap + `snapshot_kind`), train ghi fit/tune và pool test, release chặn dữ liệu lịch sử, parity serving, `ml.importance`, rubric từ đề (SPEC). Diễn tập quy mô TiniX giả lập chạy thông (khoảng 25 giây). 23/11 nhận dữ liệu TiniX: hash và số liệu khớp; **chưa chạy chuỗi thật** vì giá bất thường sẽ chi phối RMSE và train sẽ ghi sổ tiếp xúc vĩnh viễn. Ngưỡng đơn giá 10–500 triệu/m² đã chốt và đưa vào code. Tiếp: nhận CSV đã lọc từ TV1, chạy train → importance → freeze → reserve-test → evaluate (TV6-05/06/07); hỏi giảng viên các câu ở SPEC (TV6-01). Hạn: tuần 4 (25/11–01/12).
 
 #### Tuần 1
 

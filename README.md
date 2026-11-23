@@ -190,6 +190,7 @@ Owner: TV1. Reviewer: TV2 và TV6. Đây là nguồn chuẩn cho đơn vị, tê
 ## Nhãn và phạm vi
 
 - Nhãn duy nhất: `asking_price_vnd`, tổng giá rao **bán** toàn bộ căn hộ; tiền VND. Thuê, trả góp theo tháng, giá mỗi m² chưa quy đổi, giá “thỏa thuận”, giao dịch không rõ loại đều bị loại hoặc cách ly để xác minh.
+- **Đơn giá hợp lệ: 10–500 triệu VND/m²** (`asking_price_vnd / area_m2`, tính cả hai biên; quyết định của chủ repo 24/11/2026, chốt trước khi chạy mô hình, không chỉnh theo kết quả test). Ngoài khoảng này `prepare_raw_listings` cách ly với lý do `implausible_unit_price`, và `load_current_csv` từ chối CSV còn dòng như vậy. Với dữ liệu TiniX TV1 giao 23/11, quy tắc bỏ 436 dòng (108 nhóm) và đưa giá cao nhất từ 26.500 tỷ xuống 185 tỷ.
 - `property_type = apartment`, `listing_type = sale` là trường kiểm tra phạm vi, không phải đặc trưng cho mô hình trong MVP một loại.
 - MVP ưu tiên một nguồn chính qua gate, không ghép thêm nguồn để tăng số mẫu trước khi kiểm tra quyền, đơn vị và trùng liên nguồn. `source_id` vẫn lưu để truy vết và hỗ trợ adapter mở rộng về sau.
 - Phạm vi là TP.HCM theo địa giới hiện hành tại thời điểm snapshot. `geography_version="hcm_current_v1"` là phiên bản danh mục khu vực được chốt cho đợt dữ liệu này; TV1 bàn giao mapping có nguồn, ngày hiệu lực và checksum. Nếu địa giới hoặc đơn vị thay đổi, tạo phiên bản mapping/contract mới qua PR, không sửa ngầm danh mục đã khóa. Chưa có mapping thực tế kèm repo.
