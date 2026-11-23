@@ -16,7 +16,7 @@ Dùng `gh` cho PR/CI. Frontend ở `frontend/` (React/Vite/Playwright, của TV5
 
 ## Cấu trúc mã
 
-`ml/` schema, data, models, train, freeze, registry, evaluate, release · `backend/` FastAPI và nạp gói approved · `frontend/` UI · `tests/` test chính thức · `docs/SPEC.md` yêu cầu · `docs/TEAM.md` phân công + checklist · `README.md` hợp đồng, thuật ngữ, quyết định (không tách GLOSSARY/ADR).
+`ml/` schema, data, models, train, freeze, registry, evaluate, release · `backend/` FastAPI và nạp gói approved · `frontend/` UI · `tests/` test chính thức · `docs/SPEC.md` yêu cầu · `docs/TEAM.md` phân công + checklist · `GLOSSARY.md` thuật ngữ (nguồn duy nhất cho nghĩa từ) · `README.md` hợp đồng và quyết định (chưa tách ADR).
 
 ## Việc LUÔN làm (chi tiết ở `.claude/rules/`, cục bộ của chủ repo, tự nạp)
 
