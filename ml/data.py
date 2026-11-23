@@ -25,12 +25,8 @@ from ml.schema import (
 )
 
 _PRICE_PER_M2_RE = re.compile(r"(/\s*m2|/\s*m²|m2|m²|mét\s*vuông)", re.IGNORECASE)
-_RENTAL_RE = re.compile(
-    r"(/\s*tháng|/\s*thang|thuê|thue|trả\s*góp|tra\s*gop)", re.IGNORECASE
-)
-_NEGOTIABLE_RE = re.compile(
-    r"(thỏa\s*thuận|thoa\s*thuan|liên\s*hệ|lien\s*he|inbox)", re.IGNORECASE
-)
+_RENTAL_RE = re.compile(r"(/\s*tháng|/\s*thang|thuê|thue|trả\s*góp|tra\s*gop)", re.IGNORECASE)
+_NEGOTIABLE_RE = re.compile(r"(thỏa\s*thuận|thoa\s*thuan|liên\s*hệ|lien\s*he|inbox)", re.IGNORECASE)
 _TY_TRIEU_RE = re.compile(
     r"^\s*(\d+(?:[.,]\d+)?)\s*t[ỷy]\s*(\d+(?:[.,]\d+)?)?\s*(?:triệu|trieu|tr)?\s*$",
     re.IGNORECASE,
@@ -40,13 +36,12 @@ _UNIT_VALUE_RE = re.compile(
     re.IGNORECASE,
 )
 _AREA_RANGE_RE = re.compile(r"\d+\s*[-~–]\s*\d+")
-_AREA_RE = re.compile(
-    r"^\s*([+-]?\d+(?:[.,]\d+)?)\s*(?:m2|m²|sqm)?\s*$", re.IGNORECASE
-)
+_AREA_RE = re.compile(r"^\s*([+-]?\d+(?:[.,]\d+)?)\s*(?:m2|m²|sqm)?\s*$", re.IGNORECASE)
 _PHONE_RE = re.compile(r"(?<!\d)(?:0|\+?84)\d{9,10}(?!\d)")
 
 MARKET_MIN_TOTAL_GROUPS = 500
 MARKET_MIN_TEST_GROUPS = 75
+
 
 def _resolve_snapshot_kind(
     snapshot_kind: Literal["current", "historical"] = "current",
@@ -56,6 +51,7 @@ def _resolve_snapshot_kind(
     if resolved not in ("current", "historical"):
         raise ValueError(f"Unsupported snapshot_kind: {resolved}")
     return resolved
+
 
 def _is_missing(value: Any) -> bool:
     if value is None or isinstance(value, bool):
@@ -147,9 +143,7 @@ def parse_area_m2(raw_area: Any) -> tuple[float | None, str | None]:
     return val, None
 
 
-def _parse_optional_int(
-    value: Any, minimum: int, maximum: int
-) -> tuple[int | None, bool]:
+def _parse_optional_int(value: Any, minimum: int, maximum: int) -> tuple[int | None, bool]:
     if _is_missing(value):
         return None, True
     if isinstance(value, bool):
@@ -212,9 +206,7 @@ def assign_property_group_id(frame: pd.DataFrame) -> pd.Series:
         floor = record.get("floor_level")
 
         has_project = bool(project)
-        has_structure = not (
-            _is_missing(beds) and _is_missing(baths) and _is_missing(floor)
-        )
+        has_structure = not (_is_missing(beds) and _is_missing(baths) and _is_missing(floor))
         if has_project and has_structure:
             key = (
                 f"apt|{district}|{project}|{area:.1f}|"
@@ -358,11 +350,11 @@ def prepare_raw_listings(
             "area_basis": area_basis,
         }
         try:
-         validated = Listing.model_validate(candidate)
-         if resolved_kind == "current":
-             validated.check_current(now)
-         elif validated.source_snapshot_at > now:
-             raise ValueError("Future snapshot")
+            validated = Listing.model_validate(candidate)
+            if resolved_kind == "current":
+                validated.check_current(now)
+            elif validated.source_snapshot_at > now:
+                raise ValueError("Future snapshot")
         except (ValidationError, ValueError) as exc:
             msg = str(exc)
             if "Future snapshot" in msg:
@@ -383,7 +375,7 @@ def prepare_raw_listings(
 
     quarantine_df = pd.DataFrame(quarantine_rows)
     if not clean_candidates:
-        empty_clean = pd.DataFrame(columns= list(Listing.model_fields.keys()))
+        empty_clean = pd.DataFrame(columns=list(Listing.model_fields.keys()))
         audit = build_dataset_audit(
             raw_count=len(raw_frame),
             clean_frame=empty_clean,
@@ -395,16 +387,12 @@ def prepare_raw_listings(
 
     clean_df = pd.DataFrame(clean_candidates)
     if clean_df["area_basis"].nunique() > 1:
-        dominant_basis = (
-            expected_area_basis or str(clean_df["area_basis"].mode().iloc[0])
-        )
+        dominant_basis = expected_area_basis or str(clean_df["area_basis"].mode().iloc[0])
         mismatch_mask = clean_df["area_basis"] != dominant_basis
         if mismatch_mask.any():
             mismatched = clean_df.loc[mismatch_mask].copy()
             mismatched["reason_code"] = "inconsistent_area_basis"
-            quarantine_df = pd.concat(
-                [quarantine_df, mismatched], ignore_index=True
-            )
+            quarantine_df = pd.concat([quarantine_df, mismatched], ignore_index=True)
             clean_df = clean_df.loc[~mismatch_mask].reset_index(drop=True)
 
     before_dedup = len(clean_df)
@@ -443,8 +431,7 @@ def build_dataset_audit(
     reason_counts: dict[str, int] = {}
     if not quarantine_frame.empty and "reason_code" in quarantine_frame.columns:
         reason_counts = {
-            str(k): int(v)
-            for k, v in quarantine_frame["reason_code"].value_counts().items()
+            str(k): int(v) for k, v in quarantine_frame["reason_code"].value_counts().items()
         }
 
     if clean_frame.empty:
@@ -478,13 +465,9 @@ def build_dataset_audit(
     if n_groups >= 20:
         splits = split_groups(clean_frame)
         test_groups = int(splits["test"]["property_group_id"].nunique())
-        train_counts = splits["train"].groupby("district_code")[
-            "property_group_id"
-        ].nunique()
+        train_counts = splits["train"].groupby("district_code")["property_group_id"].nunique()
         supported_districts = sorted(
-            str(code)
-            for code, count in train_counts.items()
-            if int(count) >= MIN_DISTRICT_GROUPS
+            str(code) for code, count in train_counts.items() if int(count) >= MIN_DISTRICT_GROUPS
         )
 
     obs_series = pd.to_datetime(clean_frame["price_observed_at"], utc=True)
@@ -496,13 +479,9 @@ def build_dataset_audit(
 
     blockers: list[str] = []
     if n_groups < MARKET_MIN_TOTAL_GROUPS:
-        blockers.append(
-            f"insufficient_total_groups:{n_groups}<{MARKET_MIN_TOTAL_GROUPS}"
-        )
+        blockers.append(f"insufficient_total_groups:{n_groups}<{MARKET_MIN_TOTAL_GROUPS}")
     if test_groups < MARKET_MIN_TEST_GROUPS:
-        blockers.append(
-            f"insufficient_test_groups:{test_groups}<{MARKET_MIN_TEST_GROUPS}"
-        )
+        blockers.append(f"insufficient_test_groups:{test_groups}<{MARKET_MIN_TEST_GROUPS}")
     if not supported_districts:
         blockers.append("no_district_meets_min_train_groups")
 
@@ -610,9 +589,8 @@ def feature_frame(frame: pd.DataFrame) -> pd.DataFrame:
         ApartmentFeatures.model_validate(clean)
     return result
 
-_REGISTRY_PURPOSES = frozenset(
-    {"fit", "tune", "label_analysis", "evaluation", "test_reserved"}
-)
+
+_REGISTRY_PURPOSES = frozenset({"fit", "tune", "label_analysis", "evaluation", "test_reserved"})
 _SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 
 
@@ -764,9 +742,7 @@ def build_refresh_report(
     ):
         blockers.append("stale_for_publication")
     if len(new_groups) < MARKET_MIN_TOTAL_GROUPS:
-        blockers.append(
-            f"insufficient_total_groups:{len(new_groups)}<{MARKET_MIN_TOTAL_GROUPS}"
-        )
+        blockers.append(f"insufficient_total_groups:{len(new_groups)}<{MARKET_MIN_TOTAL_GROUPS}")
     if test_groups < MARKET_MIN_TEST_GROUPS:
         blockers.append(f"insufficient_test_groups:{test_groups}<{MARKET_MIN_TEST_GROUPS}")
     if not supported_districts:
@@ -824,16 +800,12 @@ def build_refresh_report(
                 "previous_median": round(prev_area_med, 2),
                 "refreshed_median": round(new_area_med, 2),
                 "delta_median": round(new_area_med - prev_area_med, 2),
-                "pct_change_median": round(
-                    (new_area_med - prev_area_med) / prev_area_med, 4
-                ),
+                "pct_change_median": round((new_area_med - prev_area_med) / prev_area_med, 4),
             },
             "asking_price_vnd": {
                 "previous_median": round(prev_price_med, 2),
                 "refreshed_median": round(new_price_med, 2),
-                "pct_change_median": round(
-                    (new_price_med - prev_price_med) / prev_price_med, 4
-                ),
+                "pct_change_median": round((new_price_med - prev_price_med) / prev_price_med, 4),
             },
             "missingness_shift": missingness_shift,
         },
@@ -876,9 +848,7 @@ def _read_registry_events(registry_dir: Path) -> list[dict[str, Any]]:
             type(event["version"]) is not int
             or event["version"] != 1
             or event["purpose"] not in _REGISTRY_PURPOSES
-            or not all(
-                isinstance(event[k], str) and event[k].strip() for k in ("actor", "run_id")
-            )
+            or not all(isinstance(event[k], str) and event[k].strip() for k in ("actor", "run_id"))
             or not valid_groups
         ):
             raise ValueError("Invalid registry event")
@@ -958,8 +928,7 @@ def export_unexposed_test_candidates(
 def _validate_mapping_metadata(mapping_metadata: dict[str, Any]) -> bool:
     required = ("source", "effective_date", "version", "sha256")
     if not all(
-        isinstance(mapping_metadata.get(k), str) and mapping_metadata[k].strip()
-        for k in required
+        isinstance(mapping_metadata.get(k), str) and mapping_metadata[k].strip() for k in required
     ):
         return False
     return bool(_SHA256_RE.fullmatch(mapping_metadata["sha256"].strip()))
@@ -1048,9 +1017,7 @@ def verify_pre_demo_readiness(
     area_basis_consistent = clean_frame["area_basis"].nunique() == 1
     rep = representatives(clean_frame)
     n_groups = int(rep["property_group_id"].nunique())
-    test_groups, supported_districts, underrepresented_districts = _district_coverage(
-        clean_frame
-    )
+    test_groups, supported_districts, underrepresented_districts = _district_coverage(clean_frame)
     coverage_ok = (
         area_basis_consistent
         and n_groups >= MARKET_MIN_TOTAL_GROUPS
@@ -1067,9 +1034,7 @@ def verify_pre_demo_readiness(
         blockers.append("no_district_meets_min_train_groups")
 
     unique_evidence = {
-        str(v).strip()
-        for v in clean_frame["availability_evidence_id"]
-        if not _is_missing(v)
+        str(v).strip() for v in clean_frame["availability_evidence_id"] if not _is_missing(v)
     }
 
     return {
