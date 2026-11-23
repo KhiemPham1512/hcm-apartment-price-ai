@@ -169,7 +169,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 #### Tuần 1
 
-- [ ] **TV6-01** Xác nhận rubric, tên/quỹ giờ của 6 người, lịch và phạm vi triển khai; không bịa GitHub username.
+- [ ] **TV6-01** Xác nhận rubric, tên/quỹ giờ của 6 người, lịch và phạm vi triển khai; không bịa GitHub username. Đã ghi: yêu cầu kỹ thuật của đề gốc đối chiếu với trạng thái ở [SPEC](SPEC.md#rubric-từ-đề-gốc-đề-21-mức-nâng-cao). Còn thiếu: thang điểm/trọng số, hạn và định dạng nộp từ giảng viên; tên và quỹ giờ 6 người.
 - [x] **TV6-02** Checklist Markdown cho AI đã tích hợp qua [PR #17](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/17), CI xanh.
 - [x] **TV6-03** P09 đã review/merge: cài môi trường sạch, smoke package ngoài repo, parity schema, pytest/Ruff/pip check và CI — [PR #8](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/8), 58 test pass; chỉ là kiểm chứng kỹ thuật.
 - [ ] **TV6-04** Cùng TV1 review nguồn/card/mapping/audit và ghi quyết định GO/NO-GO.

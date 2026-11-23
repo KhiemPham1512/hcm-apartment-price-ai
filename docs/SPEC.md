@@ -62,6 +62,20 @@ Test hành vi ở seam dữ liệu → thí nghiệm và HTTP → pipeline dùng
 
 Ngày 1 xác minh rubric/quỹ giờ/nguồn. Ngày 3 GO/NO-GO data: mục tiêu 1.000 mẫu, tối thiểu 500 nhóm, test tối thiểu 75 nhóm. Đây là ngưỡng tổ chức, không đảm bảo thống kê. Thiếu nguồn giá hiện tại/active/quyền dùng thì no-go tính năng hiện tại, không lách bằng dữ liệu cũ. Ngày 7 baseline xuyên suốt; ngày 14 ba mô hình/freeze; ngày 21 tích hợp/review; ngày 28 demo và kiểm tra lại độ mới.
 
+## Rubric từ đề gốc (đề 21, mức "Nâng cao")
+
+Nguồn: `docs/detai.docx` (file đề, giữ cục bộ). Đề **không có thang điểm hay trọng số**; bảng này chỉ chép các yêu cầu kỹ thuật đề nêu và đối chiếu với trạng thái thật.
+
+| Yêu cầu của đề | Mã | Trạng thái |
+| --- | --- | --- |
+| Hồi quy dự đoán giá nhà/đất theo vị trí, diện tích | REQ-01 | Đã có đầu vào diện tích + khu vực và API. Dự án chọn **căn hộ** (README Quyết định 1), đề ghi "nhà/đất": cần giảng viên xác nhận phạm vi |
+| So sánh hồi quy tuyến tính, đa thức và Decision Tree Regressor | REQ-02 | Công cụ đã có (B0, M1, M2, M3 cùng split). Chưa chạy trên dữ liệu thật |
+| Đánh giá RMSE/R² trên tập test độc lập | REQ-03 | Cơ chế freeze, registry, evaluate đã có, kèm sai số theo nhóm và bootstrap. Chưa chạy trên dữ liệu thật |
+| Phân tích các đặc trưng ảnh hưởng nhiều nhất đến giá | REQ-04 | **Chưa có code** (permutation importance, ablation; TV3-05/06) |
+| Nguồn dữ liệu: tự thu thập công khai hoặc Kaggle | REQ-06 | Hai bộ Kaggle gợi ý trả 404; dùng TiniX (Hugging Face, CC BY-NC 4.0) làm dữ liệu lịch sử (README Quyết định 9). Chủ repo báo giảng viên chấp nhận, chưa có văn bản gốc |
+
+**Chưa có từ giảng viên, TV6 cần hỏi (TV6-01):** thang điểm/trọng số từng phần; hạn nộp và định dạng nộp (báo cáo, slide, video, mã nguồn); có bắt buộc demo chạy không; chấp nhận phạm vi căn hộ thay cho nhà/đất; chấp nhận kết quả đánh giá trên dữ liệu lịch sử thay cho giá hiện hành.
+
 ## Out of Scope
 
 Môi giới/thanh toán, tài khoản/admin web, crawler liên tục, dự báo thị trường tương lai, định giá pháp lý, bản đồ live, LLM/RAG/deep learning. Mô hình mở rộng không thay ba kỹ thuật bắt buộc.
