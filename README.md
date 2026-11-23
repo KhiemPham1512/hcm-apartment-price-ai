@@ -318,6 +318,19 @@ Bảng chính giữ toàn bộ test hợp lệ đã khóa, kể cả district í
 
 ## Giải thích
 
+
+<a id="tv3-03-ke-hoach"></a>
+
+**Kế hoạch TV3-03.** Dùng cùng split theo nhóm và bộ cột gốc với B0/M1/M2. Fit preprocessing và mô hình trên train. Dùng validation cho các bước dưới đây. TV6 giữ nhãn holdout cho lần đánh giá sau freeze.
+
+| Thí nghiệm | Cách chạy và kết quả cần lưu |
+| --- | --- |
+| Tuning M3 | Thử đúng 12 tổ hợp: độ sâu 3, 5, 8, 12 và số mẫu tối thiểu mỗi lá 5, 10, 20. Dùng seed 42. Lưu RMSE train và validation (VND) từng tổ hợp. Chọn RMSE validation thấp nhất, giữ tổ hợp gặp trước trong `fit_candidates()` nếu hòa. |
+| Permutation importance | Dùng pipeline M3 đã fit. Với từng cột gốc trên validation, xáo trộn 10 lần (seed 42), giữ nguyên các cột khác và nhãn. Báo trung bình và độ lệch chuẩn của RMSE sau xáo trộn trừ RMSE gốc, tính bằng VND. Xáo trộn `district_code` trước one-hot. |
+| Ablation | So sánh đủ cột, bỏ riêng `area_m2`, bỏ riêng `district_code`. Giữ cấu hình M3, split và cách tính RMSE. Fit lại từng pipeline trên train với đúng cột còn lại, rồi báo RMSE validation và chênh lệch so với đủ cột. |
+
+Lưu run ID, phiên bản dữ liệu và split, SHA code, seed, cỡ mẫu và log validation. Các cột tương quan có thể thay thế thông tin cho nhau, nên đọc importance cùng ablation và EDA.
+
 Permutation importance trên **validation** sau chọn ứng viên, gọi pipeline trên cột gốc và dùng scorer RMSE nhất quán; 10 lần lặp, seed 42, nêu trung bình và độ lệch chuẩn. Như vậy district là một feature, tránh đếm mỗi one-hot như một khái niệm độc lập. Nếu feature tương quan, importance có thể bị chia sẻ; cần đối chiếu EDA/ablation trên validation.
 
 Đối chiếu coefficients của M1 với đơn vị/scale; cây có thể xuất hình giới hạn độ sâu. `feature_importances_` của cây không được dùng làm bằng chứng duy nhất. Không gọi importance là quan hệ nhân quả, không suy ra pháp lý căn hộ từ giá. MVP không trả “độ tin cậy 95%” cho một căn; muốn thêm prediction interval cần protocol calibration riêng.
