@@ -395,3 +395,19 @@ def test_tv1_10_release_dataset_card_rejects_non_go_historical_or_missing_gates(
         build_release_dataset_card(
             card, audit, **{**valid_kwargs, "pre_demo_check": {"status": "FAIL"}}
         )
+
+def test_load_current_csv_preserves_numeric_string_ids(tmp_path, listings, now):
+    sample = listings.iloc[:3].copy()
+    sample["source_id"] = "001"
+    sample["listing_id"] = ["00123", "00124", "00125"]
+    sample["property_group_id"] = ["00010", "00011", "00012"]
+    sample["availability_evidence_id"] = "00999"
+    csv_path = tmp_path / "numeric_ids.csv"
+    sample.to_csv(csv_path, index=False)
+
+    loaded = load_current_csv(csv_path, now=now)
+
+    assert list(loaded["source_id"]) == ["001", "001", "001"]
+    assert list(loaded["listing_id"]) == ["00123", "00124", "00125"]
+    assert list(loaded["property_group_id"]) == ["00010", "00011", "00012"]
+    assert list(loaded["availability_evidence_id"]) == ["00999", "00999", "00999"]

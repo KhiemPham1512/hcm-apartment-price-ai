@@ -642,7 +642,15 @@ def load_current_csv(
     card: DatasetCard | None = None,
 ) -> pd.DataFrame:
     resolved_kind = _resolve_snapshot_kind(snapshot_kind, card)
-    frame = pd.read_csv(path)
+    frame = pd.read_csv(
+        path,
+        dtype={
+            "source_id": str,
+            "listing_id": str,
+            "property_group_id": str,
+            "availability_evidence_id": str,
+        },
+    )
     rows = []
     for record in frame.to_dict("records"):
         record = _clean_listing_record(record)
