@@ -20,7 +20,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv1"></a>
 ### TV1 — Dữ liệu và nguồn
 
-**Bước tiếp / Chặn (cập nhật 24/11, TV6 kiểm):** Đã giao dữ liệu TiniX lịch sử (203.973 dòng sạch, 37.280 nhóm, 21 khu vực đủ chuẩn); hash và mọi con số khớp khi TV6 nạp lại. Cần làm tiếp: (1) **chạy lại `prepare_raw_listings`** với quy tắc đơn giá 10–500 triệu/m² đã có trong code (bỏ khoảng 436 dòng có giá lỗi, ví dụ 26.500 tỷ) rồi giao lại CSV + card + hash; bộ nạp hiện từ chối file cũ; (2) xác nhận revision TiniX (card ghi `ca3fedc…`, tên file ghi `c3f4dc`); (3) ghi vào card/audit hai giới hạn: `price_observed_at` bằng ngày đăng ở 100% dòng, bằng chứng còn bán chỉ có 1 giá trị chung; (4) nếu nhóm muốn hiển thị giá thật: tìm nguồn dữ liệu **hiện hành** (không quá 7 ngày, có quyền dùng). Không commit dữ liệu.
+**Bước tiếp / Chặn (cập nhật 24/11):** Dữ liệu chính thức là bản TV6 lọc từ file bạn giao 23/11 bằng quy tắc 10–500 triệu/m² trong code (bỏ 436 dòng; còn 203.537 dòng, 37.172 nhóm) — **không cần giao lại**. Việc của bạn, đủ đầu vào: (1) trả lời revision TiniX đúng là `ca3fedcbb089…` hay `c3f4dc`; (2) viết phần **Dữ liệu** của báo cáo (TV1-10) từ `audit.json`/`HANDOFF_SHA256.txt` của bạn và README: nguồn + license CC BY-NC, 279.948 → 203.973 → 203.537 dòng kèm lý do cách ly, 37.172 nhóm, 21 khu vực (Củ Chi thiếu), giới hạn: ngày quan sát giá = ngày đăng, bằng chứng còn bán chỉ một giá trị, khu vực theo quận cũ.
 
 #### Tuần 1
 
@@ -47,7 +47,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv2"></a>
 ### TV2 — Shared features, Linear và Polynomial
 
-**Bước tiếp / Chặn (cập nhật 24/11):** Huấn luyện trên snapshot lịch sử, feature số thiếu toàn bộ (`uninformative_features`) và `--test-pool-csv` đã merge qua #60 (TV6 nhận lại commit của bạn khi bạn bận; đừng mở PR trùng từ nhánh cũ). Cần: xem lại #60; khi TV1 giao CSV đã cách ly giá bất thường thì cùng TV6 chạy train và khóa cấu hình (TV2-06, TV2-07).
+**Bước tiếp / Chặn (cập nhật 24/11):** Candidate chính thức run-001 đã khóa và đánh giá (README mục Kết quả, `reports/run-001/`). Việc của bạn, đủ đầu vào: (1) viết phần **Linear/Polynomial** của báo cáo (TV2-10) từ `reports/run-001/selection.json` và `evaluation.json`: M1 RMSE test 7,89 tỷ, M2 7,87 tỷ, R² 0,56; giải thích vì sao M1/M2 cho 280/242 dự đoán ≤ 0 (giá lệch phải, mô hình tuyến tính) và vì sao Polynomial không hơn Linear; (2) xem lại #60 (code huấn luyện lịch sử của bạn TV6 đã nhận lại). Không chạy lại train trên sổ chính.
 
 #### Tuần 1
 
@@ -74,7 +74,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv3"></a>
 ### TV3 — Decision Tree và giải thích
 
-**Bước tiếp / Chặn (cập nhật 24/11):** Công cụ `ml.importance` (#65) đã có: permutation importance và ablation diện tích/khu vực trên validation, ghi `importance.json`. Đây là yêu cầu của đề (REQ-04). Cần: viết kế hoạch TV3-03 vào repo (PR #50 dẫn tới #33 nhưng #33 không đổi file nào); sửa #49 (license, làm cùng TV1, script tái lập); khi có candidate thật thì chạy `ml.importance`, vẽ biểu đồ, viết diễn giải, đối chiếu hệ số M1 (TV3-04..10).
+**Bước tiếp / Chặn (cập nhật 24/11):** Số liệu importance và sai số đã có, **không cần dữ liệu thô**. Việc của bạn: (1) vẽ biểu đồ từ `reports/run-001/importance.json` (permutation importance có độ lệch chuẩn, ablation bỏ diện tích/khu vực) và `evaluation.json` → `breakdowns.tree` (sai số theo khu vực, nhóm diện tích, nhóm giá; nhóm `descriptive_only` chỉ mô tả); (2) viết phần **Decision Tree và giải thích** (TV3-07..10): cây thắng (độ sâu 12, lá ≥ 10), importance không phải nhân quả; (3) cập nhật #49/#50 (#33 không có nội dung kế hoạch).
 
 #### Tuần 1
 
@@ -102,7 +102,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv4"></a>
 ### TV4 — Backend và serving
 
-**Bước tiếp / Chặn (cập nhật 24/11):** API đã có giới hạn tần suất/đồng thời, CORS, proxy tin cậy và ngân sách 5 giây theo runbook của bạn (#51, TV6 làm khi main đỏ). Cần: review #51; tick các mục TV4 đã xong (hiện 0/10); không trỏ `MODEL_DIR` vào gói dữ liệu lịch sử (bị `ml.release` từ chối). Hiển thị giá vẫn chờ gói approved từ dữ liệu hiện hành.
+**Bước tiếp / Chặn (cập nhật 24/11):** Không có gói phát hành vì dữ liệu là lịch sử (`ml.release` từ chối đúng thiết kế), nên API đúng ra trả `unavailable`. Việc của bạn: (1) review #51 (giới hạn tần suất/đồng thời, CORS, proxy); (2) tick các mục TV4 đã xong kèm bằng chứng (hiện 0/10); (3) chuẩn bị phần **API/serving** trong báo cáo và câu trả lời khi bị hỏi vì sao demo không hiện giá (giá lịch sử không được phục vụ như giá hiện hành).
 
 #### Tuần 1
 
@@ -129,7 +129,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv5"></a>
 ### TV5 — Frontend và demo
 
-**Bước tiếp / Chặn (cập nhật 24/11):** Giao diện đã merge (#40), E2E 11/11 bằng fixture. Cần trước demo: (1) trang báo cáo hiển thị `snapshot_kind` của report và nhãn "Đánh giá trên dữ liệu lịch sử, không phải giá hiện hành" khi là `historical`; (2) hiển thị `breakdowns` và `bootstrap` nếu kịp (README mục Metric; nhóm n<20 chỉ mô tả); (3) xử lý 429 theo `Retry-After` vì API đã có giới hạn tần suất; (4) thêm test Playwright cho report lịch sử. Giá thật chỉ có khi có gói approved từ dữ liệu hiện hành.
+**Bước tiếp / Chặn (cập nhật 24/11):** API chỉ trả `/api/v1/report` khi có gói approved, nên kết quả run-001 không đi qua API. Việc của bạn, đủ đầu vào: (1) thêm trang **Kết quả đánh giá** đọc file tĩnh `reports/run-001/evaluation.json` (chép vào `frontend/public/` hoặc import lúc build), hiện rõ nhãn "Đánh giá trên dữ liệu lịch sử, không phải giá hiện hành" khi `snapshot_kind=historical`, bảng B0–M3 (RMSE/MAE/R², khoảng 95% từ `bootstrap`), sai số theo `breakdowns` (nhóm `descriptive_only` không xếp hạng); (2) xử lý 429 theo `Retry-After`; (3) test Playwright cho trang này; (4) phần **Giao diện** trong báo cáo.
 
 #### Tuần 1
 
@@ -165,23 +165,23 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn (cập nhật 24/11):** Đã xong công cụ: khóa candidate, sổ tiếp xúc, đánh giá (theo nhóm + bootstrap + `snapshot_kind`), train ghi fit/tune và pool test, release chặn dữ liệu lịch sử, parity serving, `ml.importance`, rubric từ đề (SPEC). Diễn tập quy mô TiniX giả lập chạy thông (khoảng 25 giây). 23/11 nhận dữ liệu TiniX: hash và số liệu khớp; **chưa chạy chuỗi thật** vì giá bất thường sẽ chi phối RMSE và train sẽ ghi sổ tiếp xúc vĩnh viễn. Ngưỡng đơn giá 10–500 triệu/m² đã chốt và đưa vào code. Tiếp: nhận CSV đã lọc từ TV1, chạy train → importance → freeze → reserve-test → evaluate (TV6-05/06/07); hỏi giảng viên các câu ở SPEC (TV6-01). Hạn: tuần 4 (25/11–01/12).
+**Bước tiếp / Chặn (cập nhật 24/11):** Đã chạy chuỗi chính thức run-001 trên dữ liệu lịch sử đã lọc: sổ tiếp xúc → train → importance → khóa → dành test → đánh giá; `ml.release` từ chối đúng (dữ liệu lịch sử). Kết quả ở README và `reports/run-001/`. Tiếp: tổng hợp báo cáo + slide từ phần của TV1–TV5 (TV6-11), gói nộp (TV6-12), hỏi giảng viên các câu ở SPEC (TV6-01). Hạn: tuần 4 (25/11–01/12).
 
 #### Tuần 1
 
 - [ ] **TV6-01** Xác nhận rubric, tên/quỹ giờ của 6 người, lịch và phạm vi triển khai; không bịa GitHub username. Đã ghi: yêu cầu kỹ thuật của đề gốc đối chiếu với trạng thái ở [SPEC](SPEC.md#rubric-từ-đề-gốc-đề-21-mức-nâng-cao). Còn thiếu: thang điểm/trọng số, hạn và định dạng nộp từ giảng viên; tên và quỹ giờ 6 người.
 - [x] **TV6-02** Checklist Markdown cho AI đã tích hợp qua [PR #17](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/17), CI xanh.
 - [x] **TV6-03** P09 đã review/merge: cài môi trường sạch, smoke package ngoài repo, parity schema, pytest/Ruff/pip check và CI — [PR #8](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/8), 58 test pass; chỉ là kiểm chứng kỹ thuật.
-- [ ] **TV6-04** Cùng TV1 review nguồn/card/mapping/audit và ghi quyết định GO/NO-GO.
+- [x] **TV6-04** Cùng TV1 review nguồn/card/mapping/audit và ghi quyết định GO/NO-GO. **Xong 24/11:** đã kiểm dữ liệu TV1 giao (hash, số dòng/nhóm/split, card, cột); quyết định NO-GO giá hiện hành, GO đánh giá lịch sử (README Quyết định 9), lọc đơn giá 10–500 triệu/m² (#69).
 
 #### Tuần 2
 
-- [ ] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol. Guard contract schema/features đã merge qua [PR #21](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/21): 8 ca TDD qua CLI, toàn bộ local 76 pass; Ruff/pip check và CI đạt. Chưa có candidate thị trường để nghiệm thu toàn mục.
-- [ ] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu. Cơ chế bản khóa kỹ thuật đã merge qua [PR #19](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/19); chưa phải review candidate thị trường hay registry đầy đủ.
+- [x] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol. Guard contract schema/features đã merge qua [PR #21](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/21): 8 ca TDD qua CLI, toàn bộ local 76 pass; Ruff/pip check và CI đạt. Chưa có candidate thị trường để nghiệm thu toàn mục. **Xong 24/11 (run-001):** B0/M1/M2/M3 cùng split nhóm rời 26.020/5.576/5.576, hash dữ liệu/split/candidate trong `reports/run-001/`.
+- [x] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu. Cơ chế bản khóa kỹ thuật đã merge qua [PR #19](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/19); chưa phải review candidate thị trường hay registry đầy đủ. **Xong 24/11 (run-001):** review winner M3 và cấu hình trên validation trước khi khóa; sổ tiếp xúc ghi fit, tune, dành test, đánh giá (4 sự kiện).
 
 #### Tuần 3
 
-- [ ] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10). Công cụ đã có: `ml.evaluate` xuất sai số theo khu vực, nhóm diện tích, nhóm giá (kèm n, cờ n<20) và khoảng bootstrap (README mục Metric); chưa chạy trên candidate thật.
+- [x] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10). Công cụ đã có: `ml.evaluate` xuất sai số theo khu vực, nhóm diện tích, nhóm giá (kèm n, cờ n<20) và khoảng bootstrap (README mục Metric); chưa chạy trên candidate thật. **Xong 24/11 (run-001):** test 5.576 nhóm mở một lần; RMSE/MAE VND, R², n, khoảng bootstrap, hash trong `reports/run-001/evaluation.json`. Dữ liệu lịch sử, không phải giá hiện hành.
 - [ ] **TV6-08** Cùng TV4 kiểm tra parity offline/HTTP, model thiếu/chưa duyệt/quá hạn và security/release gates (P11). Kiểm tra kỹ thuật: gói do `ml.release` tạo, nạp qua `MODEL_DIR`, cho giá HTTP khớp pipeline offline; quá hạn trả `stale_model`, gói bị sửa trả `unavailable` (`tests/test_release.py`, dữ liệu synthetic). Chưa có gói thị trường thật; TV4 review.
 - [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry đã merge qua [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22): init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check và CI đạt. Gate evaluator đã merge qua [PR #23](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/23). Train tự ghi fit/tune đã merge qua [PR #35](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/35) (5 ca TDD qua CLI). `ml.release` đã merge qua [PR #36](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/36): đóng gói approved chỉ khi đủ gate, dùng chung `Manifest` của serving (7 ca TDD qua CLI; toàn bộ local 132 pass). Còn thiếu lịch sử và candidate thực tế; chưa duyệt model thị trường nào. Chủ repo duyệt mỗi PR, không cần reviewer khác; không thay gate model.
 
