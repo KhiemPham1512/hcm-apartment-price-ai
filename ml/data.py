@@ -40,6 +40,14 @@ _AREA_RANGE_RE = re.compile(r"\d+\s*[-~–]\s*\d+")
 _AREA_RE = re.compile(r"^\s*([+-]?\d+(?:[.,]\d+)?)\s*(?:m2|m²|sqm)?\s*$", re.IGNORECASE)
 _PHONE_RE = re.compile(r"(?<!\d)(?:0|\+?84)\d{9,10}(?!\d)")
 
+# Read as text: numeric-looking IDs such as "00123" must not become ints and lose their zeros.
+ID_COLUMNS = (
+    "source_id",
+    "listing_id",
+    "property_group_id",
+    "availability_evidence_id",
+    "district_code",
+)
 MARKET_MIN_TOTAL_GROUPS = 500
 MARKET_MIN_TEST_GROUPS = 75
 
@@ -225,6 +233,11 @@ def assign_property_group_id(frame: pd.DataFrame) -> pd.Series:
     return pd.Series(group_ids, index=frame.index, dtype="object")
 
 
+def _quarantined(idx: int, reason: str | None) -> dict[str, Any]:
+    """Quarantine rows keep only the raw row number and the reason, never raw fields (PII)."""
+    return {"row_index": idx, "reason_code": reason}
+
+
 def prepare_raw_listings(
     raw_frame: pd.DataFrame,
     now: datetime,
@@ -242,44 +255,24 @@ def prepare_raw_listings(
     for idx, record in enumerate(raw_frame.to_dict("records")):
         prop_type = str(record.get("property_type") or "").strip().lower()
         if prop_type != "apartment":
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "unsupported_property_type",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "unsupported_property_type"))
             continue
 
         list_type = str(record.get("listing_type") or "").strip().lower()
         if list_type != "sale":
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "non_sale_listing",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "non_sale_listing"))
             continue
 
         active = record.get("active_at_snapshot")
         evidence_raw = record.get("availability_evidence_id")
         if active is not True or _is_missing(evidence_raw):
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "missing_active_evidence",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "missing_active_evidence"))
             continue
 
         listing_id_raw = record.get("listing_id")
         source_id_raw = record.get("source_id")
         if _is_missing(listing_id_raw) or _is_missing(source_id_raw):
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "invalid_identifier_or_pii",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "invalid_identifier_or_pii"))
             continue
 
         listing_id = str(listing_id_raw).strip()
@@ -287,32 +280,17 @@ def prepare_raw_listings(
         evidence_id = str(evidence_raw).strip()
 
         if _contains_phone_pii(listing_id) or _contains_phone_pii(evidence_id):
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "invalid_identifier_or_pii",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "invalid_identifier_or_pii"))
             continue
 
         raw_district = str(record.get("district_code") or "").strip()
         if not raw_district:
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "unsupported_district",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "unsupported_district"))
             continue
 
         if district_mapping is not None:
             if raw_district not in district_mapping:
-                quarantine_rows.append(
-                    {
-                        "row_index": idx,
-                        "reason_code": "unsupported_district",
-                    }
-                )
+                quarantine_rows.append(_quarantined(idx, "unsupported_district"))
                 continue
 
             district_code = district_mapping[raw_district]
@@ -321,22 +299,12 @@ def prepare_raw_listings(
 
         area_m2, area_reason = parse_area_m2(record.get("area_m2"))
         if area_reason is not None or area_m2 is None:
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": area_reason,
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, area_reason))
             continue
 
         price_vnd, price_reason = parse_asking_price_vnd(record.get("asking_price_vnd"))
         if price_reason is not None or price_vnd is None:
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": price_reason,
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, price_reason))
             continue
 
         bedrooms, ok_bed = _parse_optional_int(record.get("bedrooms"), 0, 10)
@@ -344,32 +312,17 @@ def prepare_raw_listings(
         floor_level, ok_floor = _parse_optional_int(record.get("floor_level"), 0, 100)
 
         if not (ok_bed and ok_bath and ok_floor):
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "invalid_optional_feature",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "invalid_optional_feature"))
             continue
 
         area_basis_raw = record.get("area_basis")
         if _is_missing(area_basis_raw):
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "inconsistent_area_basis",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "inconsistent_area_basis"))
             continue
 
         area_basis = str(area_basis_raw).strip()
         if expected_area_basis is not None and area_basis != expected_area_basis:
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "inconsistent_area_basis",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "inconsistent_area_basis"))
             continue
 
         pub_at = _parse_utc_datetime(record.get("published_at"))
@@ -377,21 +330,11 @@ def prepare_raw_listings(
         snap_at = _parse_utc_datetime(record.get("source_snapshot_at"))
 
         if pub_at is None or obs_at is None or snap_at is None:
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "invalid_timestamp",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "invalid_timestamp"))
             continue
 
         if not (pub_at <= obs_at <= snap_at):
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": "invalid_timestamp_order",
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, "invalid_timestamp_order"))
             continue
 
         project_norm = (
@@ -446,12 +389,7 @@ def prepare_raw_listings(
             else:
                 reason = "schema_validation_failed"
 
-            quarantine_rows.append(
-                {
-                    "row_index": idx,
-                    "reason_code": reason,
-                }
-            )
+            quarantine_rows.append(_quarantined(idx, reason))
             continue
 
         dumped = validated.model_dump()
@@ -642,7 +580,7 @@ def load_current_csv(
     card: DatasetCard | None = None,
 ) -> pd.DataFrame:
     resolved_kind = _resolve_snapshot_kind(snapshot_kind, card)
-    frame = pd.read_csv(path)
+    frame = pd.read_csv(path, dtype=dict.fromkeys(ID_COLUMNS, str))
     rows = []
     for record in frame.to_dict("records"):
         record = _clean_listing_record(record)

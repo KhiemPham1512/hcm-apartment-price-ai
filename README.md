@@ -218,6 +218,8 @@ Owner: TV1. Reviewer: TV2 và TV6. Đây là nguồn chuẩn cho đơn vị, tê
 | `area_basis` | enum theo dataset card | Có | Không | Một quy ước diện tích nhất quán cho mỗi phiên bản |
 | `project_name_normalized` | string hoặc null | Không | Không | Chỉ hỗ trợ gộp trùng và phân tích tập trung dự án |
 
+**Cột định danh là chuỗi:** `source_id`, `listing_id`, `property_group_id`, `availability_evidence_id` và `district_code` được đọc từ CSV dưới dạng chuỗi, nên ID giống số như `00123` giữ nguyên số 0 đầu; ép kiểu số ở bước xuất CSV sẽ làm mất thông tin này.
+
 Phạm vi số ở trên là giới hạn MVP do nhóm chọn, không phải phát biểu về toàn bộ thị trường. Căn hộ ngoài phạm vi không nên ép về giá trị biên. Phải đếm và báo tỷ lệ bị loại; không thay giới hạn sau khi xem lỗi test. Nếu một cột tùy chọn thiếu toàn bộ trong train, bỏ khỏi feature set bằng một phiên bản hợp đồng mới trước khi freeze, không âm thầm đổi pipeline.
 
 `price_per_m2_vnd = asking_price_vnd / area_m2` chỉ phục vụ EDA/kiểm tra/hiển thị. Không được đưa vào X vì có nhãn giá. Không đưa ID, URL, điện thoại, tên người bán, nguyên văn mô tả hoặc địa chỉ căn cụ thể vào X.
