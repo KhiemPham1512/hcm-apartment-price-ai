@@ -19,6 +19,10 @@ def now():
 
 @pytest.fixture
 def listings(now):
+    return synthetic_listings(now)
+
+
+def synthetic_listings(now):
     rng = np.random.default_rng(42)
     n = 600
     area = rng.uniform(30, 150, n)

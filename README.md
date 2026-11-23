@@ -27,7 +27,7 @@ Người dùng nhập diện tích, khu vực và một số thuộc tính căn 
 | HTTP | FastAPI, Pydantic, Uvicorn | Kiểm tra JSON, phục vụ dự đoán, Swagger UI |
 | Kiểm tra | pytest, Ruff, GitHub Actions | Test hành vi, lint và CI |
 
-React/TypeScript là hướng UI dự kiến cho TV5; hiện chưa có frontend. Không cần Node.js để cài hoặc chạy repo Python này. Chưa cần database, tài khoản hay queue cho MVP.
+Giao diện React/TypeScript/Vite của TV5 nằm ở `frontend/` (xem `frontend/README.md`); chỉ phần này cần Node.js, cài đặt và chạy phần Python không cần. Chưa cần database, tài khoản hay queue cho MVP.
 
 <a id="luong"></a>
 <a id="kien-truc"></a>
@@ -51,11 +51,12 @@ flowchart LR
 ```text
 .github/        CI, lock thư viện Python, mẫu PR và CODEOWNERS
 backend/        app.py: HTTP; service.py: nạp model và kiểm tra đầu ra
-ml/             schema, dữ liệu, mô hình, train và evaluate
+ml/             schema, dữ liệu, mô hình, train, freeze, registry, evaluate, release
+frontend/       giao diện React/TypeScript của TV5 (cần Node.js)
 tests/          toàn bộ test chính thức và fixture kỹ thuật
 docs/           SPEC.md: yêu cầu; TEAM.md: phân công và mốc
 .gitignore      chặn môi trường, cache, dữ liệu riêng và artifact
-AGENTS.md       quy tắc làm việc và review
+CLAUDE.md       hướng dẫn ngắn cho AI agent
 README.md       hướng dẫn, hợp đồng, thuật ngữ và quyết định kỹ thuật
 pyproject.toml  package Python và cấu hình pytest/Ruff
 ```
@@ -118,18 +119,19 @@ Kỳ vọng khi chưa có model: live trả `status=live`, metadata trả `servi
 .venv/Scripts/python.exe -m ml.train --help
 .venv/Scripts/python.exe -m ml.freeze --help
 .venv/Scripts/python.exe -m ml.evaluate --help
-.venv/Scripts/python.exe -m ml.train --csv data/processed/current.csv --dataset-card data/processed/card.json --output artifacts/run-001
-.venv/Scripts/python.exe -m ml.freeze --run-dir artifacts/run-001 --reviewer TV6
 # Chỉ init một lần khi bắt đầu sổ lịch sử mới đã được xác minh, không lặp khi refresh.
 .venv/Scripts/python.exe -m ml.registry init --registry-dir artifacts/private-registry
+.venv/Scripts/python.exe -m ml.train --csv data/processed/current.csv --dataset-card data/processed/card.json --output artifacts/run-001 --registry-dir artifacts/private-registry --run-id run-001 --actor TV2
+.venv/Scripts/python.exe -m ml.freeze --run-dir artifacts/run-001 --reviewer TV6
 Import-Csv artifacts/run-001/splits.csv | Where-Object split -eq test | Select-Object property_group_id | Export-Csv artifacts/run-001/test-groups.csv -NoTypeInformation -Encoding utf8
 .venv/Scripts/python.exe -m ml.registry reserve-test --registry-dir artifacts/private-registry --groups-csv artifacts/run-001/test-groups.csv --run-id run-001 --actor TV6
 .venv/Scripts/python.exe -m ml.evaluate --run-dir artifacts/run-001 --registry-dir artifacts/private-registry --run-id run-001 --actor TV6
+.venv/Scripts/python.exe -m ml.release --run-dir artifacts/run-001 --csv data/processed/current.csv --output artifacts/approved-run --reviewer TV6 --reviewer TV4
 ```
 
-Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`, bắt buộc ghi `geography_version="hcm_current_v1"`; card thiếu phiên bản hoặc dùng phạm vi cũ bị từ chối, không tự đổi nhãn để tiếp tục chạy. Dùng thư mục run mới; sau review candidate/config/winner, TV6 chạy `freeze` rồi `evaluate`. `freeze` ghi hash vào `freeze.json`, không nạp model hay phân tích nhãn; `--reviewer TV6` chỉ là ví dụ tên vai trò, không xác thực danh tính. `evaluate` từ chối thiếu/sai bản khóa trước khi nạp candidate hoặc phân tích holdout, rồi kiểm tra đủ mô hình, winner, split và membership. Các lệnh không ghi đè bản khóa/báo cáo đã có và **không tự phê duyệt model**.
+Các đường dẫn trên là ví dụ đầu vào nội bộ, chưa có file dữ liệu kèm repo. Card phải khớp `DatasetCard` trong `ml/schema.py`, bắt buộc ghi `geography_version="hcm_current_v1"`; card thiếu phiên bản hoặc dùng phạm vi cũ bị từ chối, không tự đổi nhãn để tiếp tục chạy. Dùng thư mục run mới; sau review candidate/config/winner, TV6 chạy `freeze` rồi `evaluate`. `freeze` ghi hash vào `freeze.json`, không nạp model hay phân tích nhãn; `--reviewer TV6` chỉ là ví dụ tên vai trò, không xác thực danh tính. `evaluate` từ chối thiếu/sai bản khóa trước khi nạp candidate hoặc phân tích holdout, rồi kiểm tra đủ mô hình, winner, split và membership. Các lệnh không ghi đè bản khóa/báo cáo đã có. Chỉ `release` tạo gói approved, và chỉ khi mọi gate ở Quyết định 8 đều đạt.
 
-Khi đã được bàn giao gói phát hành đáng tin cậy gồm `manifest.json`, `pipeline.joblib` và báo cáo nếu có, đặt `MODEL_DIR` trỏ tới thư mục đó trước khi chạy Uvicorn:
+Khi đã có gói phát hành đáng tin cậy do `ml.release` tạo (`manifest.json`, `pipeline.joblib`, `report.json`), đặt `MODEL_DIR` trỏ tới thư mục đó trước khi chạy Uvicorn:
 
 ```powershell
 $env:MODEL_DIR = (Resolve-Path artifacts/approved-run).Path
@@ -146,13 +148,13 @@ AI học như sau: **train** dùng các đặc trưng X và nhãn giá y để f
 
 **Vai trò đề xuất để nắm toàn dự án: TV6 — giữ luồng tích hợp và kiểm định xuyên suốt.** Người phụ trách chạy lại sản phẩm của từng thành viên, kiểm tra điểm bàn giao và điều phối tiếp quản khi có người trễ. Lộ trình ngày 1–28, bằng chứng cần nhận và cách giữ holdout độc lập nằm trong [TEAM](docs/TEAM.md).
 
-Yêu cầu chỉ ở [SPEC](docs/SPEC.md), phân công và [hướng dẫn GitHub từng bước](docs/TEAM.md#github-workflow) ở TEAM, quy tắc Git ở [AGENTS](AGENTS.md). Không tạo issue mới; PR ghi phạm vi và kiểm chứng, TEAM giữ tiến độ. **Không push trực tiếp lên `main`: tạo nhánh riêng từ `origin/main`, push nhánh đó rồi mở PR.** Merge cần CI xanh, không bắt buộc reviewer GitHub theo chỉ dẫn chủ repo; không force-push. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection. Việc bỏ review PR không bỏ gate kiểm định/phê duyệt model.
+Yêu cầu chỉ ở [SPEC](docs/SPEC.md), phân công và [hướng dẫn GitHub từng bước](docs/TEAM.md#github-workflow) ở TEAM, quy tắc Git cũng ở đó. Không tạo issue mới; PR ghi phạm vi và kiểm chứng, TEAM giữ tiến độ. **Không push trực tiếp lên `main`: tạo nhánh riêng từ `origin/main`, push nhánh đó rồi mở PR.** Merge cần CI xanh, không bắt buộc reviewer GitHub theo chỉ dẫn chủ repo; không force-push. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection. Việc bỏ review PR không bỏ gate kiểm định/phê duyệt model.
 
 Với ticket tính năng đã có tên và tiêu chí: viết test hành vi thất bại → sửa tối thiểu → chạy lại test → dọn file tạm/cache → PR. Test nghiệp vụ cần giữ được chuyển thành test chính thức trong `tests/`; không dùng test tạm bị xóa làm bằng chứng duy nhất.
 
 ### Khi thành viên dùng AI riêng
 
-Tài liệu đủ để hiểu mục tiêu và quy tắc; **phạm vi người dùng giao và checklist TEAM xác định việc cần làm**. Theo chỉ dẫn chủ repo, làm trực tiếp, không tạo issue mới. Clone repo không mang theo nội dung GitHub Issues/PR. Trước mỗi việc, AI cần đọc README → AGENTS → SPEC → dòng vai trò trong TEAM → thảo luận/PR liên quan nếu có → code/test liên quan. Không cần đọc mọi module để sửa một phần nhỏ.
+Tài liệu đủ để hiểu mục tiêu và quy tắc; **phạm vi người dùng giao và checklist TEAM xác định việc cần làm**. Theo chỉ dẫn chủ repo, làm trực tiếp, không tạo issue mới. Clone repo không mang theo nội dung GitHub Issues/PR. Trước mỗi việc, AI cần đọc README → CLAUDE.md → SPEC → dòng vai trò trong TEAM → thảo luận/PR liên quan nếu có → code/test liên quan. Không cần đọc mọi module để sửa một phần nhỏ.
 
 AI đọc trực tiếp [checklist TV1–TV6 trong TEAM](docs/TEAM.md#checklist) để biết mục đã xong, bước tiếp và blocker; các ô được cập nhật bằng Markdown và commit cùng PR. [Issues](https://github.com/KhiemPham1512/hcm-apartment-price-ai/issues) giữ thảo luận từng ticket, [PR](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pulls) và [CI](https://github.com/KhiemPham1512/hcm-apartment-price-ai/actions) là bằng chứng đối chiếu: code đã merge vào `main` là bản tích hợp; PR mở vẫn đang đề xuất. Không tạo bản checklist vai trò thứ hai trên GitHub Issues. Nếu chưa kiểm tra được evidence online, AI ghi rõ giới hạn đó và không tự suy ô chưa tick thành việc chưa có code.
 
@@ -160,7 +162,7 @@ Có thể giao AI bằng mẫu sau, thay vai trò và phạm vi trước khi g�
 
 ```text
 Tôi phụ trách TV<1–6>, triển khai <phạm vi và tiêu chí nghiệm thu> của repo này.
-Đọc README.md trước, rồi AGENTS.md, docs/SPEC.md, docs/TEAM.md.
+Đọc README.md trước, rồi CLAUDE.md, docs/SPEC.md, docs/TEAM.md.
 Đọc thảo luận liên quan và kiểm tra PR đang mở để biết owner, phạm vi và phụ thuộc.
 Fetch origin, tạo nhánh từ origin/main; chỉ sửa file trong phạm vi được giao, không tạo issue.
 Đọc code và test liên quan; kiểm tra hành vi hiện có trước khi sửa.
@@ -305,6 +307,8 @@ Không đưa thời điểm tương lai, giá/m² suy từ nhãn, nội dung ch�
 
 Bảng chính giữ toàn bộ test hợp lệ đã khóa, kể cả district ít dữ liệu/không xuất hiện ở train; báo tỷ lệ unknown và các trường hợp không phục vụ. Có thể thêm bảng riêng cho tập con `supported_districts` suy từ train để mô tả hành vi serving, nhưng phải ghi n/tỷ lệ bao phủ và không thay bảng chính bằng tập con dễ dự đoán hơn. Không bỏ mẫu test khó sau khi xem residual.
 
+**Báo cáo chia nhóm và bootstrap (đã triển khai trong `ml.evaluate`):** `evaluation.json` có `breakdowns[mô hình]` với ba chiều. `district`: theo `district_code` của test, kể cả khu vực không có ở train. `area_band`: `lt_40`, `40_70`, `70_100`, `ge_100` m², cận dưới gồm. `price_band`: tứ phân vị `q1`–`q4` của giá test kèm `price_min_vnd`/`price_max_vnd`; nhóm giá theo giá thật chỉ để mô tả sai số, không dùng chọn mô hình. Mỗi nhóm có `n`, `rmse_vnd`, `mae_vnd`, `r2` (hoặc `null` kèm lý do) và `descriptive_only=true` khi n < 20. Tổng `n` của mỗi chiều bằng số mẫu test. `bootstrap` lấy mẫu có hoàn lại 1.000 lần theo hàng test (mỗi hàng là một nhóm tài sản), seed 42, chung chỉ số lấy mẫu cho mọi mô hình, khoảng phần trăm 2,5–97,5 cho `rmse_vnd` và `mae_vnd`; đây là độ biến thiên của **metric**, không phải khoảng dự đoán cho từng căn. Chưa có chiều thời gian.
+
 ## Tiêu chí phát hành và rút lui
 
 - Điều kiện nghiên cứu: đủ ba mô hình, split hợp lệ, metric và giới hạn minh bạch, chạy lại được.
@@ -322,9 +326,9 @@ Permutation importance trên **validation** sau chọn ứng viên, gọi pipeli
 
 Mỗi lần chạy có `run_id`, `evaluation_kind`, dataset/split hashes, schema version, git SHA hoặc source archive SHA khi chưa commit, Python/package versions, seed, config, train/validation/test counts, timestamp, metrics, số dự đoán invalid và người đánh giá. Chỉ bắt buộc cutoff/chronology khi thực sự chạy thiết kế B; thiết kế A ghi rõ snapshot và phương pháp nhóm. Báo cáo metric là số thực từ lần chạy, không điền trước vào tài liệu.
 
-Gói phát hành mục tiêu gồm `pipeline.joblib`, `manifest.json`, `metrics.json`, `model-card.md`, `figures/`. Hiện CLI train tạo `candidates.joblib`, `selection.json`, `holdout.csv`, `splits.csv`; evaluate tạo `evaluation.json`. Chưa có bước chuyển candidate thành gói approved tự động. Manifest ghi hash artifact, data window/age, supported districts, train ranges, feature list, environment và `release_status` ∈ {`candidate`, `approved`, `rejected`}. API chỉ nạp `approved`. Joblib chỉ từ pipeline nội bộ đáng tin; hash đơn thuần không chứng minh người phát hành hợp lệ. Xem [bảo mật](#bao-mat).
+Gói phát hành mục tiêu gồm `pipeline.joblib`, `manifest.json`, `metrics.json`, `model-card.md`, `figures/`. Hiện CLI train tạo `candidates.joblib`, `selection.json`, `holdout.csv`, `splits.csv`; evaluate tạo `evaluation.json`; release tạo `pipeline.joblib`, `manifest.json`, `report.json`. Chưa có `metrics.json`, `model-card.md`, `figures/`. Manifest ghi hash artifact, data window/age, supported districts, train ranges, feature list, environment và `release_status` ∈ {`candidate`, `approved`, `rejected`}. API chỉ nạp `approved`. Joblib chỉ từ pipeline nội bộ đáng tin; hash đơn thuần không chứng minh người phát hành hợp lệ. Xem [bảo mật](#bao-mat).
 
-Đã có `python -m ml.train`, `python -m ml.freeze` và `python -m ml.evaluate`. `ml.prepare` và `ml.release` còn trong kế hoạch; chi tiết trách nhiệm ở [TEAM](docs/TEAM.md).
+Đã có `python -m ml.train`, `ml.freeze`, `ml.evaluate` và `ml.release`. `ml.prepare` còn trong kế hoạch; chi tiết trách nhiệm ở [TEAM](docs/TEAM.md).
 
 </details>
 
@@ -401,10 +405,12 @@ Report trả `run_id`, `dataset_version`, `evaluation_window_start/end`, n từn
 | 415 | `unsupported_media_type` | POST không phải JSON |
 | 422 | `invalid_input` | Thiếu/sai kiểu/ngoài hard bounds, extra fields |
 | 422 | `unsupported_district` | Khu vực không có trong metadata |
-| 429 | `rate_limited` | Kế hoạch: quá giới hạn request; chưa triển khai |
+| 429 | `rate_limited` | Quá giới hạn request theo IP (burst 5, 30/phút); có `Retry-After` |
+| 429 | `prediction_capacity_exceeded` | Hết slot suy luận đồng thời (mặc định 4); có `Retry-After` |
 | 503 | `model_unavailable` | Chưa có artifact approved hoặc nạp thất bại |
 | 503 | `stale_model` | Quá giới hạn freshness, `details` có ngày dữ liệu |
-| 503 | `prediction_unavailable` | Dự đoán không hợp lệ hoặc hết thời gian |
+| 503 | `prediction_unavailable` | Dự đoán không hợp lệ |
+| 503 | `prediction_timeout` | Suy luận vượt ngân sách 5 giây (kiểm sau khi chạy xong, không hủy được) |
 | 500 | `internal_error` | Lỗi không dự kiến, không lộ chi tiết nội bộ |
 
 TV4 viết exception handler để lỗi validation dùng cùng envelope thay vì mặc định FastAPI. Không trả lại nguyên request trong `details`. Các giới hạn request và quyền chỉ định nghĩa tại [security](#bao-mat).
@@ -496,9 +502,21 @@ HTTPS, validation, hạn chế methods, bảo vệ management endpoints và khô
 
 **Quyết định 4 — khóa trước đánh giá:** dùng module `ml.freeze` với hai thao tác `freeze(run_dir, reviewer)` và `verify_freeze(run_dir)` dùng chung cho CLI và evaluator. Module giữ chi tiết hash/định dạng bản ghi; tests đi qua CLI như người vận hành. Không đổi code train của TV2 hoặc ghép logic duyệt release vào đánh giá. `selection.json` là bản tóm tắt; cấu hình và winner có thẩm quyền trong candidate được khóa bằng hash toàn file.
 
-**Quyết định 5 — lịch sử nhóm xuyên run:** registry v1 dùng thư mục event JSON chỉ thêm mới và khóa tạo file độc quyền, không thêm database/dependency cho MVP. Module giữ việc kiểm tra lịch sử và ghi nhận, tests qua CLI registry/evaluate. Đây là sổ nội bộ; train/freeze/release chưa tự ghi history, evaluator dùng gate ở Quyết định 6. Sổ không chống sửa/xóa bởi người có quyền thư mục. Không thay freeze bằng registry: hai cơ chế kiểm soát khác nhau.
+**Quyết định 5 — lịch sử nhóm xuyên run:** registry v1 dùng thư mục event JSON chỉ thêm mới và khóa tạo file độc quyền, không thêm database/dependency cho MVP. Module giữ việc kiểm tra lịch sử và ghi nhận, tests qua CLI registry/evaluate. Đây là sổ nội bộ; train tự ghi fit/tune (Quyết định 7), evaluator dùng gate ở Quyết định 6, freeze/release chưa ghi history. Sổ không chống sửa/xóa bởi người có quyền thư mục. Không thay freeze bằng registry: hai cơ chế kiểm soát khác nhau.
 
 **Quyết định 6 — ghi tiếp xúc trước mở test:** evaluator dùng `evaluation_claim` của registry để kiểm tra và tiêu thụ reservation rồi giữ khóa suốt đọc nhãn/tính metric/ghi báo cáo. Chọn chặn retry bảo thủ khi lỗi sau claim thay vì coi lần chạy thất bại là chưa tiếp xúc. Sự kiện giữ purpose `evaluation` hiện có, nghĩa là đã cấp quyền đọc, không bảo đảm đánh giá thành công. Model/data approval vẫn là bước riêng.
+
+**Quyết định 7 — train tự ghi fit/tune:** `ml.train` nhận bộ ba `--registry-dir --run-id --actor` cùng nhau; dữ liệu khai `real` bắt buộc có bộ ba này. Sau khi split và trước khi fit, train ghi nhóm train là `fit`, nhóm validation là `tune` trong một khóa: ghi đủ cả hai hoặc không ghi gì. Event được giữ lại kể cả khi fit thất bại sau đó; registry thiếu/hỏng/bận thì chặn trước fit và chưa tạo thư mục run. Không ghi nhóm test. Dùng cùng `run_id` cho `reserve-test` và `evaluate`. Train không từ chối nhóm từng tiếp xúc; vi phạm trên nhóm test sẽ bị evaluator chặn.
+
+**Quyết định 8 — release dùng chính contract serving:** `ml.release --run-dir --csv --output --reviewer A --reviewer B` chỉ đóng gói khi đủ các điều kiện sau. (1) Bản khóa hợp lệ. (2) `evaluation.json` khớp hash candidate/freeze hiện tại và có `registry_status="checked"`. (3) CSV khớp `dataset_sha256` của candidate và còn hạn công bố tại lúc release. (4) Split tái lập khớp nhóm train trong `splits.csv`. Phần còn lại giao cho `Manifest` của `backend/service.py` kiểm: real, nguồn đã xác minh, winner thắng B0, R²>0, không có output không hợp lệ, ≥500 nhóm, ≥75 test, ≥2 reviewer khác nhau. Như vậy offline và HTTP dùng đúng một contract. Gói gồm pipeline của winner chọn bằng validation, manifest (data window/age tính từ CSV, khu vực có ≥20 nhóm train, khoảng train của feature số) và `report.json` = evaluation + validation. Lỗi bất kỳ thì không tạo thư mục output; thư mục đã tồn tại thì không ghi đè. Sau khi ghi, release tự nạp lại bằng `load_approved`. Reviewer là tên vai trò, không xác thực danh tính; release chưa ghi registry và chưa có trạng thái `rejected`.
+
+**Quyết định 9 — đánh giá trên snapshot lịch sử (phương án B, 22/11/2026):** TV1 báo NO-GO cho giá hiện hành: hai bộ Kaggle trả 404, TiniX là dữ liệu 2025 và không có bằng chứng tin còn bán. Nhóm dùng snapshot lịch sử có quyền dùng phi thương mại (TiniX, revision `c3f4dc`, CC BY-NC 4.0) để chạy hết pipeline, so sánh B0/M1/M2/M3 và viết báo cáo. Tính năng giá hiện tại **vẫn NO-GO** cho tới khi có nguồn hiện hành (phương án A).
+
+- `DatasetCard` thêm `snapshot_kind` ∈ {`current`, `historical`}, mặc định `current`. Với `historical`, loader bỏ kiểm tra tuổi so với `now` (7 ngày công bố, 90 ngày tin) nhưng vẫn giữ: chronology `published_at <= price_observed_at <= source_snapshot_at`, timezone, schema, đơn vị, quarantine, grouping, split nhóm rời, registry, freeze, evaluate. Không sửa timestamp; khoảng thời gian báo cáo lấy từ dữ liệu thật.
+- **Không bao giờ phát hành snapshot lịch sử:** `ml.release` từ chối, API giữ `unavailable`, UI không demo giá từ nó. Báo cáo, slide và UI ghi rõ "đánh giá trên dữ liệu lịch sử" kèm khoảng `published_at`/`price_observed_at` thật. Evaluation report ghi `snapshot_kind`. Đã triển khai: `ml.evaluate` ghi `snapshot_kind` vào report (giá trị lạ bị từ chối trước khi đọc nhãn), `ml.release` từ chối mọi candidate `historical`.
+- `floor_level` thiếu toàn bộ: giữ trong API schema (optional, nhận `null`) để không đổi contract với TV4/TV5. Feature số thiếu toàn bộ ở train được giữ dạng cột hằng (không mang thông tin), train ghi tên nó vào `uninformative_features` của candidate/selection. Không suy từ `floor_count`.
+- Khu vực: TV1 map vào danh mục `hcm_current_v1`, ghi version/hash bảng mapping trong card; dòng không map được vào quarantine `unsupported_district`. Gộp đủ 10 shard và loại trùng xuyên shard trước khi chia split. Parquet/CSV thô không commit.
+- License NC chỉ cho mục đích học thuật; TV6-01 xác nhận với giảng viên trước khi nộp.
 
 </details>
 
@@ -518,7 +536,7 @@ Bản ghi không có chữ ký hay xác thực reviewer. Người có quyền s�
 
 Sau xác minh bản khóa và nạp candidate nội bộ đáng tin, evaluator yêu cầu `schema_version` và danh sách `features` đúng phiên bản/thứ tự trong `ml.schema` trước khi parse holdout hoặc chạy dự đoán. Thiếu trường, phiên bản không tương thích, thêm/bớt/đổi thứ tự đặc trưng đều bị từ chối và không tạo báo cáo. Đây là kiểm tra khai báo contract của gói, không kiểm tra được toàn bộ logic bên trong pipeline hay chứng minh không rò nhãn khi huấn luyện.
 
-`ml.prepare` và `ml.release` chưa được triển khai. Quy trình mục tiêu phải kiểm tra cổng nguồn, schema, chất lượng và freshness trước khi đóng gói approved; không tự chọn lại winner hay refit. Hash không thay thế kiểm soát người có quyền ghi artifact.
+`ml.prepare` chưa được triển khai (`ml.release` đã có, xem Quyết định 8). Quy trình mục tiêu phải kiểm tra cổng nguồn, schema, chất lượng và freshness trước khi đóng gói approved; không tự chọn lại winner hay refit. Hash không thay thế kiểm soát người có quyền ghi artifact.
 
 Khi refresh, dùng dataset/run/artifact mới và giữ lịch sử bất biến. Sổ `evaluation_registry` nội bộ phải ghi nhóm từng dùng fit, tune, phân tích nhãn hoặc đánh giá. Test phát hành mới chỉ lấy nhóm chưa tiếp xúc; không chuyển nhóm bị loại sang train trong cùng run để cứu cỡ mẫu. Chưa đủ test mới thì chưa phát hành, không sửa timestamp model cũ.
 
@@ -528,13 +546,13 @@ Registry là thư mục riêng dưới `artifacts/` hoặc kho nội bộ ngoài
 
 Kiểm tra lịch sử và ghi event dùng chung khóa `.write-lock` tạo độc quyền; tiến trình khác bị từ chối để thử lại. Sổ thiếu/hỏng/bận không được coi là lịch sử rỗng. Nếu process chết để lại khóa, dừng mọi writer và kiểm tra trạng thái/evidence trước khi người vận hành xử lý; không tự xóa khóa cũ. File ghi dở khiến các lần ghi tiếp bị chặn. Cần filesystem nội bộ đáng tin hỗ trợ tạo file độc quyền, quyền thư mục và sao lưu; người có quyền sửa/xóa sổ vẫn có thể thay lịch sử. Không tạo sổ mới mỗi lần refresh; không xóa bản ghi để cứu test. `init` chỉ tạo lần đầu cho lịch sử mới đã được người vận hành xác minh.
 
-Ví dụ CLI: `.venv/Scripts/python.exe -m ml.registry record --registry-dir artifacts/private-registry --groups-csv artifacts/run-001/train-groups.csv --run-id run-001 --actor TV2 --purpose fit`. Lệnh `reserve-test` chỉ dành các nhóm mới, không tự chia dữ liệu, không bảo đảm đủ 75 nhóm hoặc phê duyệt model. Training/freeze/release chưa tự ghi vào registry: lịch sử thực tế cần TV1–TV3 cung cấp và ghi đầy đủ; không tạo sổ rỗng để thay lịch sử cũ. CSV từ Windows PowerShell nên dùng UTF-8; CLI chấp nhận BOM UTF-8.
+Ví dụ CLI: `.venv/Scripts/python.exe -m ml.registry record --registry-dir artifacts/private-registry --groups-csv artifacts/run-001/train-groups.csv --run-id run-001 --actor TV2 --purpose fit`. Lệnh `reserve-test` chỉ dành các nhóm mới, không tự chia dữ liệu, không bảo đảm đủ 75 nhóm hoặc phê duyệt model. Train tự ghi fit/tune khi truyền registry; freeze/release và phân tích nhãn ngoài CLI chưa tự ghi, lịch sử thực tế trước đó cần TV1–TV3 cung cấp và ghi đầy đủ; không tạo sổ rỗng để thay lịch sử cũ. CSV từ Windows PowerShell nên dùng UTF-8; CLI chấp nhận BOM UTF-8.
 
 **Gate registry trong evaluator:** CLI `ml.evaluate` nhận bộ ba `--registry-dir --run-id --actor` cùng nhau; dữ liệu khai `real` bắt buộc có bộ ba này. Candidate phải khai data_kind là real hoặc synthetic. Với synthetic không truyền registry, báo cáo ghi `registry_status="not_checked_synthetic"`, không coi là bằng chứng độc lập. Có truyền registry thì áp dụng đầy đủ gate cho cả fixture.
 
 Sau xác minh freeze/hash/contract, evaluator đọc và kiểm tra split trước, lấy nhóm test từ split đã khóa. Registry yêu cầu đúng một sự kiện liên quan: `test_reserved` cùng run_id và khớp toàn bộ nhóm, không có sự kiện tiếp xúc/đánh giá nào khác giao với chúng. Khác run, thiếu/thừa nhóm, có tiếp xúc sau reservation, registry thiếu/hỏng/bận đều bị chặn trước khi parse holdout. Khóa được giữ suốt đánh giá để writer tuân thủ CLI không chen vào; không thay quyền filesystem hoặc kiểm soát lịch sử ngoài hệ thống.
 
-Trước đọc nhãn, registry append sự kiện `evaluation` và không gỡ lại kể cả đọc CSV, predict hoặc ghi report thất bại. Retry cần nhóm test mới theo protocol; không xóa event hoặc tạo sổ khác để chạy lại. Xóa riêng `evaluation.json` cũng không đặt lại quyền đọc nhãn. Báo cáo thành công lưu `registry_status="checked"`, `registry_run_id`, `registry_event_id`, `registry_event_sha256` cùng hash candidate/freeze hiện có; không lưu actor hoặc nhóm test vào báo cáo public. Sự kiện liên kết run/nhóm, chưa có chữ ký ràng buộc reservation với bytes candidate; hash trong báo cáo và kho bằng chứng đáng tin vẫn cần được kiểm định. Writer chết có thể giữ khóa; người vận hành phải kiểm tra, không tự xóa khóa hay bỏ dấu vết tiếp xúc. Gate này chưa xác minh lịch sử fit/tune đầy đủ, nguồn hợp lệ, model approval hoặc đủ cỡ mẫu thị trường.
+Trước đọc nhãn, registry append sự kiện `evaluation` và không gỡ lại kể cả đọc CSV, predict hoặc ghi report thất bại. Retry cần nhóm test mới theo protocol; không xóa event hoặc tạo sổ khác để chạy lại. Xóa riêng `evaluation.json` cũng không đặt lại quyền đọc nhãn. Báo cáo thành công lưu `registry_status="checked"`, `registry_run_id`, `registry_event_id`, `registry_event_sha256` cùng hash candidate/freeze hiện có; không lưu actor hoặc nhóm test vào báo cáo public. Sự kiện liên kết run/nhóm, chưa có chữ ký ràng buộc reservation với bytes candidate; hash trong báo cáo và kho bằng chứng đáng tin vẫn cần được kiểm định. Writer chết có thể giữ khóa; người vận hành phải kiểm tra, không tự xóa khóa hay bỏ dấu vết tiếp xúc. Gate này không xác minh lịch sử fit/tune ngoài CLI train, nguồn hợp lệ, model approval hoặc đủ cỡ mẫu thị trường.
 
 Demo: metadata/ngày dữ liệu → nhập căn hộ hỗ trợ → giá + cảnh báo → bảng ba mô hình → thử lỗi đầu vào và stale trong test. Rollback chỉ tới artifact còn hợp lệ; không dùng cache hay video cũ như kết quả live. Luôn có cách chạy local.
 
