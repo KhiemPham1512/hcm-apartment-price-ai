@@ -69,9 +69,9 @@ Nguồn: `docs/detai.docx` (file đề, giữ cục bộ). Đề **không có th
 | Yêu cầu của đề | Mã | Trạng thái |
 | --- | --- | --- |
 | Hồi quy dự đoán giá nhà/đất theo vị trí, diện tích | REQ-01 | Đã có đầu vào diện tích + khu vực và API. Dự án chọn **căn hộ** (README Quyết định 1), đề ghi "nhà/đất": cần giảng viên xác nhận phạm vi |
-| So sánh hồi quy tuyến tính, đa thức và Decision Tree Regressor | REQ-02 | Công cụ đã có (B0, M1, M2, M3 cùng split). Chưa chạy trên dữ liệu thật |
-| Đánh giá RMSE/R² trên tập test độc lập | REQ-03 | Cơ chế freeze, registry, evaluate đã có, kèm sai số theo nhóm và bootstrap. Chưa chạy trên dữ liệu thật |
-| Phân tích các đặc trưng ảnh hưởng nhiều nhất đến giá | REQ-04 | Công cụ đã có: `ml.importance` (#65), permutation importance + ablation trên validation. Chưa chạy trên dữ liệu thật; biểu đồ và diễn giải (TV3) chưa có |
+| So sánh hồi quy tuyến tính, đa thức và Decision Tree Regressor | REQ-02 | **Đã chạy (run-001, 24/11):** B0, M1, M2, M3 cùng split; M3 thắng ở validation và test. Kết quả ở README và `reports/run-001/` |
+| Đánh giá RMSE/R² trên tập test độc lập | REQ-03 | **Đã chạy (run-001):** test 5.576 nhóm mở một lần sau khóa candidate và dành trong sổ tiếp xúc; M3 RMSE 6,33 tỷ (95%: 5,82–6,94), R² 0,71; kèm sai số theo nhóm. Dữ liệu lịch sử, không phải giá hiện hành |
+| Phân tích các đặc trưng ảnh hưởng nhiều nhất đến giá | REQ-04 | **Số liệu đã có (run-001):** diện tích ảnh hưởng nhất, rồi khu vực; số phòng gần như không (`reports/run-001/importance.json`). Còn biểu đồ và diễn giải (TV3) |
 | Nguồn dữ liệu: tự thu thập công khai hoặc Kaggle | REQ-06 | Hai bộ Kaggle gợi ý trả 404; dùng TiniX (Hugging Face, CC BY-NC 4.0) làm dữ liệu lịch sử (README Quyết định 9). TV1 giao 23/11: 203.973 dòng sạch, 37.280 nhóm, 21 khu vực; TV6 kiểm hash và số liệu khớp. Còn giá bất thường cần cách ly. Chủ repo báo giảng viên chấp nhận, chưa có văn bản gốc |
 
 **Chưa có từ giảng viên, TV6 cần hỏi (TV6-01):** thang điểm/trọng số từng phần; hạn nộp và định dạng nộp (báo cáo, slide, video, mã nguồn); có bắt buộc demo chạy không; chấp nhận phạm vi căn hộ thay cho nhà/đất; chấp nhận kết quả đánh giá trên dữ liệu lịch sử thay cho giá hiện hành.

@@ -1,0 +1,181 @@
+{
+  "models": {
+    "linear": {
+      "validation_rmse_vnd": 8511252500.80634,
+      "permutation": [
+        {
+          "feature": "area_m2",
+          "importance_mean_vnd": 7033628268.302485,
+          "importance_std_vnd": 86898337.07039249,
+          "rank": 1
+        },
+        {
+          "feature": "district_code",
+          "importance_mean_vnd": 1212017768.9461682,
+          "importance_std_vnd": 42318431.780620284,
+          "rank": 2
+        },
+        {
+          "feature": "bedrooms",
+          "importance_mean_vnd": 66209788.23144607,
+          "importance_std_vnd": 6086142.56236102,
+          "rank": 3
+        },
+        {
+          "feature": "bathrooms",
+          "importance_mean_vnd": 15413008.870669078,
+          "importance_std_vnd": 5014238.187794784,
+          "rank": 4
+        },
+        {
+          "feature": "floor_level",
+          "importance_mean_vnd": 0.0,
+          "importance_std_vnd": 0.0,
+          "rank": 5
+        }
+      ],
+      "ablation": [
+        {
+          "removed": "area_m2",
+          "validation_rmse_vnd": 10892730109.705196,
+          "delta_vs_full_vnd": 2381477608.898856
+        },
+        {
+          "removed": "district_code",
+          "validation_rmse_vnd": 9188325585.115564,
+          "delta_vs_full_vnd": 677073084.3092241
+        },
+        {
+          "removed": "area_m2+district_code",
+          "validation_rmse_vnd": 11554129828.576315,
+          "delta_vs_full_vnd": 3042877327.7699747
+        }
+      ]
+    },
+    "polynomial": {
+      "validation_rmse_vnd": 8430820508.2074175,
+      "permutation": [
+        {
+          "feature": "area_m2",
+          "importance_mean_vnd": 7138259044.486218,
+          "importance_std_vnd": 96703702.2850084,
+          "rank": 1
+        },
+        {
+          "feature": "district_code",
+          "importance_mean_vnd": 1219508182.4970183,
+          "importance_std_vnd": 41923023.38193651,
+          "rank": 2
+        },
+        {
+          "feature": "bedrooms",
+          "importance_mean_vnd": 52101617.984137535,
+          "importance_std_vnd": 18740625.821863204,
+          "rank": 3
+        },
+        {
+          "feature": "bathrooms",
+          "importance_mean_vnd": 9096347.03542881,
+          "importance_std_vnd": 11128627.417174883,
+          "rank": 4
+        },
+        {
+          "feature": "floor_level",
+          "importance_mean_vnd": 0.0,
+          "importance_std_vnd": 0.0,
+          "rank": 5
+        }
+      ],
+      "ablation": [
+        {
+          "removed": "area_m2",
+          "validation_rmse_vnd": 10848687276.842192,
+          "delta_vs_full_vnd": 2417866768.634774
+        },
+        {
+          "removed": "district_code",
+          "validation_rmse_vnd": 9108484433.521757,
+          "delta_vs_full_vnd": 677663925.3143396
+        },
+        {
+          "removed": "area_m2+district_code",
+          "validation_rmse_vnd": 11502592577.05855,
+          "delta_vs_full_vnd": 3071772068.8511324
+        }
+      ]
+    },
+    "tree": {
+      "validation_rmse_vnd": 6900546830.795897,
+      "permutation": [
+        {
+          "feature": "area_m2",
+          "importance_mean_vnd": 8651361443.349117,
+          "importance_std_vnd": 247361917.79422155,
+          "rank": 1
+        },
+        {
+          "feature": "district_code",
+          "importance_mean_vnd": 3740990831.6721206,
+          "importance_std_vnd": 220275512.87570366,
+          "rank": 2
+        },
+        {
+          "feature": "bedrooms",
+          "importance_mean_vnd": 309568050.5015804,
+          "importance_std_vnd": 104057479.24821572,
+          "rank": 3
+        },
+        {
+          "feature": "bathrooms",
+          "importance_mean_vnd": 4648379.702391339,
+          "importance_std_vnd": 20511113.99647762,
+          "rank": 4
+        },
+        {
+          "feature": "floor_level",
+          "importance_mean_vnd": 0.0,
+          "importance_std_vnd": 0.0,
+          "rank": 5
+        }
+      ],
+      "ablation": [
+        {
+          "removed": "area_m2",
+          "validation_rmse_vnd": 10315491654.414059,
+          "delta_vs_full_vnd": 3414944823.618162
+        },
+        {
+          "removed": "district_code",
+          "validation_rmse_vnd": 8865954430.681414,
+          "delta_vs_full_vnd": 1965407599.8855171
+        },
+        {
+          "removed": "area_m2+district_code",
+          "validation_rmse_vnd": 11437014157.669151,
+          "delta_vs_full_vnd": 4536467326.873255
+        }
+      ]
+    }
+  },
+  "n_train": 26020,
+  "n_validation": 5576,
+  "analysis": "validation_permutation_importance_and_ablation",
+  "scoring": "rmse_vnd",
+  "repeats": 10,
+  "seed": 42,
+  "snapshot_kind": "historical",
+  "data_kind": "real",
+  "winner_selected_by_validation": "tree",
+  "uninformative_features": [
+    "floor_level"
+  ],
+  "candidate_sha256": "91d53acaa20662bdc5f674e4abc1992075b76c3c97259f60c8dedaac16e4f705",
+  "dataset_sha256": "a57468f0449ad311bcc3bfaae4c227a361a9b38d7322ff161498c2bf31baec67",
+  "splits_sha256": "551d291b34fda6f17c8f63692d8d15f2aa9d9e908dbecd6108942e8faa43dfde",
+  "limits": [
+    "Permutation importance is not causal and says nothing about law or fairness.",
+    "Correlated features share importance; read it together with the ablation.",
+    "Ablation neutralises a column in train and validation and refits with the candidate's fixed hyperparameters; it is not re-tuned.",
+    "Everything is measured on validation; the frozen test set is untouched."
+  ]
+}

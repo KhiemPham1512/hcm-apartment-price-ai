@@ -13,7 +13,7 @@ PURPOSES = ("fit", "tune", "label_analysis", "evaluation")
 
 
 def initialize(directory: Path) -> None:
-    directory.mkdir()
+    directory.mkdir(parents=True)  # still refuses an existing registry
     (directory / "events").mkdir()
     with (directory / "registry.json").open("x", encoding="utf-8") as output:
         json.dump({"version": 1}, output)

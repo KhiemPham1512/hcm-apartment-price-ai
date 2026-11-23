@@ -15,7 +15,20 @@ Người dùng nhập diện tích, khu vực và một số thuộc tính căn 
 | Phát hành và API: `ml.release` chỉ đóng gói khi đủ cổng và từ chối dữ liệu lịch sử; FastAPI có giới hạn tần suất/đồng thời, CORS, proxy tin cậy | Gói approved từ dữ liệu hiện hành (chưa có) |
 | Giao diện React + E2E; pytest, Ruff, CI | Nhãn "dữ liệu lịch sử" trên trang báo cáo; demo cuối |
 
-**Chưa có model được duyệt.** Dữ liệu TiniX lịch sử TV1 giao ngày 23/11 nằm ngoài repo (không commit). Test dùng dữ liệu giả để kiểm tra kỹ thuật. Chạy API ngay được; `/health/ready` và dự đoán trả **503** khi thiếu model là hành vi đúng. Kết quả test không phải độ chính xác thị trường.
+**Chưa có model được duyệt để phục vụ giá.** Đã có kết quả đánh giá chính thức trên dữ liệu lịch sử (bên dưới); dữ liệu nằm ngoài repo, không commit. Test tự động dùng dữ liệu giả để kiểm tra kỹ thuật. Chạy API ngay được; `/health/ready` và dự đoán trả **503** khi thiếu model là hành vi đúng. Kết quả test không phải độ chính xác thị trường.
+
+### Kết quả đánh giá chính thức run-001 (24/11/2026, dữ liệu lịch sử)
+
+Dữ liệu: TiniX lịch sử (2025–03/2026) TV1 giao 23/11, lọc đơn giá 10–500 triệu/m²: 203.537 dòng, 37.172 nhóm; split theo nhóm 26.020 / 5.576 / 5.576. Mô hình chọn bằng validation **trước** khi mở test; test mở một lần, có sổ tiếp xúc. Đây là **đánh giá trên dữ liệu lịch sử, không phải giá hiện hành**, và không có gói phát hành (`ml.release` từ chối).
+
+| Mô hình | RMSE test (tỷ) | Khoảng 95% bootstrap | MAE (tỷ) | R² | Dự đoán ≤ 0 |
+| --- | --- | --- | --- | --- | --- |
+| B0 baseline trung vị | 12,35 | 11,32–13,51 | 5,36 | −0,09 | 0 |
+| M1 Linear | 7,89 | 7,21–8,65 | 4,13 | 0,56 | 280 |
+| M2 Polynomial bậc 2 | 7,87 | 7,23–8,61 | 4,07 | 0,56 | 242 |
+| **M3 Decision Tree** (thắng, độ sâu 12, lá ≥ 10) | **6,33** | 5,82–6,94 | **2,95** | **0,71** | 0 |
+
+Sai số của M3 tăng theo cỡ và giá căn: MAE 0,46 tỷ ở nhóm < 40 m² nhưng 6,30 tỷ ở nhóm ≥ 100 m²; quartile giá cao nhất 7,21 tỷ; cao nhất ở Quận 1 (7,47) và Thủ Đức (5,16). Đặc trưng ảnh hưởng nhất (permutation importance trên validation): diện tích, rồi khu vực; số phòng gần như không; `floor_level` thiếu toàn bộ nên bằng 0. Số liệu đầy đủ (theo khu vực/diện tích/giá, bootstrap, importance, ablation): [`reports/run-001/`](reports/run-001/).
 
 ## Công nghệ đang dùng
 
@@ -57,6 +70,7 @@ tests/          toàn bộ test chính thức và fixture kỹ thuật
 docs/           SPEC.md: yêu cầu; TEAM.md: phân công và mốc
 .gitignore      chặn môi trường, cache, dữ liệu riêng và artifact
 GLOSSARY.md     thuật ngữ của dự án (nguồn duy nhất cho nghĩa từ)
+reports/        kết quả tổng hợp đã đánh giá (không có dữ liệu thô, nhãn từng căn hay ID)
 CLAUDE.md       hướng dẫn ngắn cho AI agent
 README.md       hướng dẫn, hợp đồng và quyết định kỹ thuật
 pyproject.toml  package Python và cấu hình pytest/Ruff
