@@ -133,7 +133,8 @@ def test_released_package_serves_offline_prices_over_http(workspace, monkeypatch
     assert release(workspace, "TV6", "TV4").returncode == 0
     approved = workspace / "approved"
     monkeypatch.setenv("MODEL_DIR", str(approved))
-    client = TestClient(configured_app())
+    configured = configured_app()
+    client = TestClient(configured)
     assert client.get("/health/ready").status_code == 200
     metadata = client.get("/api/v1/metadata").json()
     manifest = json.loads((approved / "manifest.json").read_text(encoding="utf-8"))
@@ -149,8 +150,10 @@ def test_released_package_serves_offline_prices_over_http(workspace, monkeypatch
     offline = joblib.load(approved / "pipeline.joblib").predict(
         pd.DataFrame(rows, columns=FEATURES)
     )
+    # Same MODEL_DIR model with a high limit: the default 5-request burst would throttle a batch.
+    batch = TestClient(create_app(configured.state.model, rate_limit_capacity=1000))
     for row, expected in zip(rows, offline, strict=True):
-        response = client.post("/api/v1/predictions", json=row)
+        response = batch.post("/api/v1/predictions", json=row)
         assert response.status_code == 200, response.text
         assert response.json()["predicted_price_vnd"] == pytest.approx(float(expected), rel=1e-12)
     assert client.get("/api/v1/report").json() == json.loads(
