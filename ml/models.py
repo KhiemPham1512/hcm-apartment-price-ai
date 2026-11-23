@@ -14,26 +14,18 @@ from ml.schema import CATEGORICAL_FEATURES, NUMERIC_FEATURES
 
 
 def build_shared_preprocessor() -> ColumnTransformer:
-    """Tạo ColumnTransformer dùng chung cho Linear và Polynomial."""
+    """Tạo ColumnTransformer dùng chung cho cả Linear và Polynomial để chống rò rỉ dữ liệu."""
     num_pipeline = Pipeline(
         [
-            (
-                "impute",
-                SimpleImputer(
-                    strategy="median",
-                    keep_empty_features=True,
-                ),
-            ),
+            ("impute", SimpleImputer(strategy="median", keep_empty_features=True)),
             ("scale", StandardScaler()),
         ]
     )
-
     cat_pipeline = Pipeline(
         [
             ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
         ]
     )
-
     return ColumnTransformer(
         transformers=[
             ("numeric", num_pipeline, NUMERIC_FEATURES),
@@ -51,8 +43,7 @@ def make_model(
     degree: int = 2,
     **kwargs,
 ) -> Pipeline:
-    """Factory tạo Baseline, Linear, Polynomial và Tree."""
-
+    """Factory tổng hợp hỗ trợ baseline, linear, polynomial và tree theo chuẩn hợp đồng."""
     if kind == "baseline":
         return Pipeline([("model", DummyRegressor(strategy="median"))])
 
@@ -67,24 +58,16 @@ def make_model(
     if kind == "polynomial":
         num_pipeline = Pipeline(
             [
-                (
-                    "impute",
-                    SimpleImputer(
-                        strategy="median",
-                        keep_empty_features=True,
-                    ),
-                ),
+                ("impute", SimpleImputer(strategy="median", keep_empty_features=True)),
                 ("poly", PolynomialFeatures(degree=degree, include_bias=False)),
                 ("scale", StandardScaler()),
             ]
         )
-
         cat_pipeline = Pipeline(
             [
                 ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
             ]
         )
-
         preprocessor = ColumnTransformer(
             transformers=[
                 ("numeric", num_pipeline, NUMERIC_FEATURES),
@@ -92,7 +75,6 @@ def make_model(
             ],
             remainder="drop",
         )
-
         return Pipeline(
             [
                 ("preprocess", preprocessor),
@@ -105,10 +87,7 @@ def make_model(
             transformers=[
                 (
                     "numeric",
-                    SimpleImputer(
-                        strategy="median",
-                        keep_empty_features=True,
-                    ),
+                    SimpleImputer(strategy="median", keep_empty_features=True),
                     NUMERIC_FEATURES,
                 ),
                 (
@@ -119,7 +98,6 @@ def make_model(
             ],
             remainder="drop",
         )
-
         return Pipeline(
             [
                 ("preprocess", preprocess),
