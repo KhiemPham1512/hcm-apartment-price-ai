@@ -723,7 +723,7 @@ def build_refresh_report(
         for v in refreshed_clean["availability_evidence_id"]
         if not _is_missing(v) and not _contains_phone_pii(str(v))
     ]
-    evidence_ids = sorted(set(evidence_vals))
+    unique_evidence_count = len(set(evidence_vals))
     active_rate = round(active_count / len(refreshed_clean), 4)
     evidence_rate = round(len(evidence_vals) / len(refreshed_clean), 4)
 
@@ -772,8 +772,7 @@ def build_refresh_report(
             "active_rate": active_rate,
             "evidence_present_count": len(evidence_vals),
             "evidence_coverage_rate": evidence_rate,
-            "unique_evidence_count": len(evidence_ids),
-            "evidence_ids": evidence_ids,
+            "unique_evidence_count": unique_evidence_count,
         },
         "group_turnover": {
             "previous_n_groups": len(prev_groups),

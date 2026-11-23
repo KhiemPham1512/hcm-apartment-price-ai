@@ -73,7 +73,8 @@ def test_tv1_07_refresh_report_tracks_turnover_shift_and_active_evidence(listing
     assert report["group_turnover"]["new_groups_count"] == 100
     assert report["group_turnover"]["dropped_groups_count"] == 100
     assert report["active_evidence"]["active_rate"] == 1.0
-    assert report["active_evidence"]["evidence_ids"] == ["export_active_2026_11_11"]
+    assert report["active_evidence"]["unique_evidence_count"] == 1
+    assert "evidence_ids" not in report["active_evidence"]
     assert report["coverage"]["district_share_tvd"] > 0
     assert report["feature_shift"]["missingness_shift"]["floor_level"]["delta"] > 0
     # Không làm lộ property_group_id vào báo cáo public
