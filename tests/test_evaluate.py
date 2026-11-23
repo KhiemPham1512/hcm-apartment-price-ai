@@ -488,3 +488,53 @@ def test_unknown_snapshot_kind_is_refused_before_any_report(candidate_run):
     result = evaluate_cli(candidate_run)
     assert result.returncode != 0 and "snapshot kind" in result.stderr
     assert not (candidate_run / "evaluation.json").exists()
+
+
+def _reported_and_recomputed(candidate_run):
+    assert evaluate_cli(candidate_run).returncode == 0
+    report = json.loads((candidate_run / "evaluation.json").read_text(encoding="utf-8"))
+    holdout = pd.read_csv(candidate_run / "holdout.csv")
+    models = joblib.load(candidate_run / "candidates.joblib")["models"]
+    return report, holdout, models
+
+
+def test_report_breaks_errors_down_with_counts_and_small_groups_flagged(candidate_run):
+    report, holdout, models = _reported_and_recomputed(candidate_run)
+    rows = len(holdout)
+    area_labels = {"lt_40", "40_70", "70_100", "ge_100"}
+    for name in ("baseline", "linear", "polynomial", "tree"):
+        parts = report["breakdowns"][name]
+        assert set(parts) == {"district", "area_band", "price_band"}
+        for groups in parts.values():
+            assert sum(g["n"] for g in groups) == rows
+            # n < 20 is descriptive only: never ranked or generalised.
+            assert all(g["descriptive_only"] == (g["n"] < 20) for g in groups)
+        assert {g["group"] for g in parts["area_band"]} <= area_labels
+        assert 1 <= len(parts["price_band"]) <= 4
+    assert any(g["descriptive_only"] for g in report["breakdowns"]["linear"]["area_band"])
+    # The reported figure is the real error of that model on that slice of the frozen holdout.
+    predictions = models["tree"].predict(
+        holdout[["area_m2", "bedrooms", "bathrooms", "floor_level", "district_code"]]
+    )
+    errors = (holdout["asking_price_vnd"] - predictions) ** 2
+    for group in report["breakdowns"]["tree"]["district"]:
+        mask = holdout["district_code"] == group["group"]
+        assert group["n"] == int(mask.sum())
+        assert group["rmse_vnd"] == pytest.approx(float(errors[mask].mean() ** 0.5))
+    bands = report["breakdowns"]["tree"]["area_band"]
+    small = holdout["area_m2"] < 40
+    assert next(g for g in bands if g["group"] == "lt_40")["n"] == int(small.sum())
+
+
+def test_report_has_reproducible_group_bootstrap_intervals_for_metrics(candidate_run):
+    report, holdout, _ = _reported_and_recomputed(candidate_run)
+    boot = report["bootstrap"]
+    assert boot["unit"] == "property_group" and boot["seed"] == 42
+    assert boot["n_resamples"] >= 1000
+    for name, point in report["test"].items():
+        low, high = boot["models"][name]["rmse_vnd_ci95"]
+        assert low < high
+        assert low <= point["rmse_vnd"] <= high
+        mae_low, mae_high = boot["models"][name]["mae_vnd_ci95"]
+        assert mae_low <= point["mae_vnd"] <= mae_high
+    assert holdout["property_group_id"].is_unique  # one row per group, so rows are groups
