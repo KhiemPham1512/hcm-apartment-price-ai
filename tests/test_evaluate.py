@@ -462,3 +462,29 @@ def test_evaluation_accepts_reordered_holdout_and_preserves_string_ids(candidate
         report["freeze_sha256"]
         == hashlib.sha256((candidate_run / "freeze.json").read_bytes()).hexdigest()
     )
+
+
+@pytest.mark.parametrize(
+    ("card_kind", "expected"), [(None, "current"), ("historical", "historical")]
+)
+def test_report_records_snapshot_kind_so_history_is_never_read_as_current(
+    candidate_run, card_kind, expected
+):
+    if card_kind:
+        path = candidate_run / "candidates.joblib"
+        bundle = joblib.load(path)
+        bundle["dataset_card"]["snapshot_kind"] = card_kind
+        joblib.dump(bundle, path)
+    assert evaluate_cli(candidate_run).returncode == 0
+    report = json.loads((candidate_run / "evaluation.json").read_text(encoding="utf-8"))
+    assert report["snapshot_kind"] == expected
+
+
+def test_unknown_snapshot_kind_is_refused_before_any_report(candidate_run):
+    path = candidate_run / "candidates.joblib"
+    bundle = joblib.load(path)
+    bundle["dataset_card"]["snapshot_kind"] = "bogus"
+    joblib.dump(bundle, path)
+    result = evaluate_cli(candidate_run)
+    assert result.returncode != 0 and "snapshot kind" in result.stderr
+    assert not (candidate_run / "evaluation.json").exists()

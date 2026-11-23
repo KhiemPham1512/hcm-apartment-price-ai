@@ -26,14 +26,19 @@ def run_module(*args):
     )
 
 
-@pytest.fixture(scope="module")
-def evaluated(tmp_path_factory):
-    base = tmp_path_factory.mktemp("release")
+def build_evaluated(base, snapshot_kind=None):
     registry = base / "registry"
     assert cli("init", "--registry-dir", registry).returncode == 0
     listings = synthetic_listings(datetime.now(timezone.utc))
     trained = train_cli(
-        base, listings, "real", "--registry-dir", registry, *REGISTRY, source_verified=True
+        base,
+        listings,
+        "real",
+        "--registry-dir",
+        registry,
+        *REGISTRY,
+        source_verified=True,
+        snapshot_kind=snapshot_kind,
     )
     assert trained.returncode == 0, trained.stderr
     run = base / "run"
@@ -52,6 +57,16 @@ def evaluated(tmp_path_factory):
         result = run_module(*step, *(REGISTRY if step[1] == "reserve-test" else []))
         assert result.returncode == 0, result.stderr
     return base
+
+
+@pytest.fixture(scope="module")
+def evaluated(tmp_path_factory):
+    return build_evaluated(tmp_path_factory.mktemp("release"))
+
+
+@pytest.fixture(scope="module")
+def evaluated_historical(tmp_path_factory):
+    return build_evaluated(tmp_path_factory.mktemp("historical"), "historical")
 
 
 @pytest.fixture
@@ -169,3 +184,14 @@ def test_released_package_serves_offline_prices_over_http(workspace, monkeypatch
     unavailable = TestClient(configured_app())
     assert unavailable.get("/api/v1/metadata").json()["serving_status"] == "unavailable"
     assert unavailable.post("/api/v1/predictions", json=rows[0]).status_code == 503
+
+
+def test_historical_snapshot_is_never_released_for_serving(evaluated_historical, tmp_path):
+    for name in ("run", "input.csv"):
+        source = evaluated_historical / name
+        (shutil.copytree if source.is_dir() else shutil.copy)(source, tmp_path / name)
+    report = json.loads((tmp_path / "run" / "evaluation.json").read_text(encoding="utf-8"))
+    assert report["snapshot_kind"] == "historical"
+    result = release(tmp_path, "TV6", "TV4")
+    assert result.returncode != 0 and "Historical snapshot" in result.stderr, result.stderr
+    assert not (tmp_path / "approved").exists()
