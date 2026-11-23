@@ -8,14 +8,14 @@ Người dùng nhập diện tích, khu vực và một số thuộc tính căn 
 
 ## Hiện dự án làm được gì?
 
-| Đã có trong code | Còn phải hoàn thiện |
+| Đã có trong code (cập nhật 24/11/2026) | Còn phải hoàn thiện |
 | --- | --- |
-| Schema dữ liệu/đầu vào chung, tải CSV chuẩn hóa, chọn đại diện và chia nhóm | Nguồn dữ liệu thị trường được phép dùng, audit và nhóm trùng từ dữ liệu thô |
-| Baseline + ba mô hình, chọn bằng validation, đánh giá holdout riêng | Importance/ablation, báo cáo thực nghiệm từ dữ liệu thật |
-| FastAPI: metadata, dự đoán, report, health; chặn model thiếu/quá hạn | Quy trình phê duyệt/phát hành đầy đủ, UI và giới hạn khi public |
-| pytest, Ruff và workflow GitHub Actions | Demo có model thật đã duyệt và dữ liệu còn hạn |
+| Dữ liệu: schema chung, nạp CSV (cột ID là chuỗi), cách ly dòng lỗi, gộp nhóm trùng, chia nhóm; test mới chỉ lấy nhóm chưa tiếp xúc | Cách ly giá bất thường trong dữ liệu TiniX mà TV1 đã giao; nguồn dữ liệu **hiện hành** nếu muốn hiển thị giá |
+| Mô hình và kiểm định: baseline + ba mô hình, huấn luyện trên snapshot lịch sử, khóa candidate, sổ tiếp xúc, đánh giá test độc lập (sai số theo nhóm + bootstrap), phân tích đặc trưng (`ml.importance`) | Chạy toàn chuỗi trên dữ liệu thật; biểu đồ và diễn giải importance; báo cáo, slide |
+| Phát hành và API: `ml.release` chỉ đóng gói khi đủ cổng và từ chối dữ liệu lịch sử; FastAPI có giới hạn tần suất/đồng thời, CORS, proxy tin cậy | Gói approved từ dữ liệu hiện hành (chưa có) |
+| Giao diện React + E2E; pytest, Ruff, CI | Nhãn "dữ liệu lịch sử" trên trang báo cáo; demo cuối |
 
-**Chưa có dataset thị trường hay model được duyệt kèm repo.** Test dùng dữ liệu giả để kiểm tra kỹ thuật. Chạy API ngay được; `/health/ready` và dự đoán trả **503** khi thiếu model là hành vi đúng. Kết quả test không phải độ chính xác thị trường.
+**Chưa có model được duyệt.** Dữ liệu TiniX lịch sử TV1 giao ngày 23/11 nằm ngoài repo (không commit). Test dùng dữ liệu giả để kiểm tra kỹ thuật. Chạy API ngay được; `/health/ready` và dự đoán trả **503** khi thiếu model là hành vi đúng. Kết quả test không phải độ chính xác thị trường.
 
 ## Công nghệ đang dùng
 
@@ -504,7 +504,7 @@ Nghĩa của thuật ngữ nằm ở [GLOSSARY.md](GLOSSARY.md), nguồn duy nh�
 
 **Quyết định 8 — release dùng chính contract serving:** `ml.release --run-dir --csv --output --reviewer A --reviewer B` chỉ đóng gói khi đủ các điều kiện sau. (1) Bản khóa hợp lệ. (2) `evaluation.json` khớp hash candidate/freeze hiện tại và có `registry_status="checked"`. (3) CSV khớp `dataset_sha256` của candidate và còn hạn công bố tại lúc release. (4) Split tái lập khớp nhóm train trong `splits.csv`. Phần còn lại giao cho `Manifest` của `backend/service.py` kiểm: real, nguồn đã xác minh, winner thắng B0, R²>0, không có output không hợp lệ, ≥500 nhóm, ≥75 test, ≥2 reviewer khác nhau. Như vậy offline và HTTP dùng đúng một contract. Gói gồm pipeline của winner chọn bằng validation, manifest (data window/age tính từ CSV, khu vực có ≥20 nhóm train, khoảng train của feature số) và `report.json` = evaluation + validation. Lỗi bất kỳ thì không tạo thư mục output; thư mục đã tồn tại thì không ghi đè. Sau khi ghi, release tự nạp lại bằng `load_approved`. Reviewer là tên vai trò, không xác thực danh tính; release chưa ghi registry và chưa có trạng thái `rejected`.
 
-**Quyết định 9 — đánh giá trên snapshot lịch sử (phương án B, 22/11/2026):** TV1 báo NO-GO cho giá hiện hành: hai bộ Kaggle trả 404, TiniX là dữ liệu 2025 và không có bằng chứng tin còn bán. Nhóm dùng snapshot lịch sử có quyền dùng phi thương mại (TiniX, revision `c3f4dc`, CC BY-NC 4.0) để chạy hết pipeline, so sánh B0/M1/M2/M3 và viết báo cáo. Tính năng giá hiện tại **vẫn NO-GO** cho tới khi có nguồn hiện hành (phương án A).
+**Quyết định 9 — đánh giá trên snapshot lịch sử (phương án B, 22/11/2026):** TV1 báo NO-GO cho giá hiện hành: hai bộ Kaggle trả 404, TiniX là dữ liệu 2025 và không có bằng chứng tin còn bán. Nhóm dùng snapshot lịch sử có quyền dùng phi thương mại (TiniX, revision `ca3fedcbb089…` theo card TV1 giao 23/11 (tên file ghi `c3f4dc`, chờ TV1 xác nhận), CC BY-NC 4.0) để chạy hết pipeline, so sánh B0/M1/M2/M3 và viết báo cáo. Tính năng giá hiện tại **vẫn NO-GO** cho tới khi có nguồn hiện hành (phương án A).
 
 - `DatasetCard` thêm `snapshot_kind` ∈ {`current`, `historical`}, mặc định `current`. Với `historical`, loader bỏ kiểm tra tuổi so với `now` (7 ngày công bố, 90 ngày tin) nhưng vẫn giữ: chronology `published_at <= price_observed_at <= source_snapshot_at`, timezone, schema, đơn vị, quarantine, grouping, split nhóm rời, registry, freeze, evaluate. Không sửa timestamp; khoảng thời gian báo cáo lấy từ dữ liệu thật.
 - **Không bao giờ phát hành snapshot lịch sử:** `ml.release` từ chối, API giữ `unavailable`, UI không demo giá từ nó. Báo cáo, slide và UI ghi rõ "đánh giá trên dữ liệu lịch sử" kèm khoảng `published_at`/`price_observed_at` thật. Evaluation report ghi `snapshot_kind`. Đã triển khai: `ml.evaluate` ghi `snapshot_kind` vào report (giá trị lạ bị từ chối trước khi đọc nhãn), `ml.release` từ chối mọi candidate `historical`.
