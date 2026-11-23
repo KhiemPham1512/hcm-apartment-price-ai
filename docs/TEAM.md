@@ -20,7 +20,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv1"></a>
 ### TV1 — Dữ liệu và nguồn
 
-**Bước tiếp / Chặn (cập nhật 24/11):** Dữ liệu chính thức là bản TV6 lọc từ file bạn giao 23/11 bằng quy tắc 10–500 triệu/m² trong code (bỏ 436 dòng; còn 203.537 dòng, 37.172 nhóm) — **không cần giao lại**. Việc của bạn, đủ đầu vào: (1) trả lời revision TiniX đúng là `ca3fedcbb089…` hay `c3f4dc`; (2) viết phần **Dữ liệu** của báo cáo (TV1-10) từ `audit.json`/`HANDOFF_SHA256.txt` của bạn và README: nguồn + license CC BY-NC, 279.948 → 203.973 → 203.537 dòng kèm lý do cách ly, 37.172 nhóm, 21 khu vực (Củ Chi thiếu), giới hạn: ngày quan sát giá = ngày đăng, bằng chứng còn bán chỉ một giá trị, khu vực theo quận cũ.
+**Bước tiếp / Chặn (cập nhật 24/11):** Đã xong phần dữ liệu: bản giao lại 24/11 (revision `ca3fedc` đã xác nhận, ghi đủ 3 giới hạn trong audit) trùng từng byte với bộ dữ liệu run-001 (203.537 dòng, 37.172 nhóm, 21 khu vực). Việc còn lại: viết phần **Dữ liệu** của báo cáo (TV1-10) từ `audit.json`/`HANDOFF_SHA256.txt` của bạn: nguồn + license CC BY-NC, 279.948 → 203.537 dòng kèm lý do cách ly (76.410 dòng, trong đó 438 vì đơn giá ngoài 10–500 triệu/m²), 37.172 nhóm, 21 khu vực (Củ Chi chỉ 1 nhóm), 3 giới hạn: ngày quan sát giá = ngày đăng, bằng chứng còn bán chỉ một giá trị, `floor_level` trống; khu vực theo quận cũ. Tick các mục TV1 đã đạt kèm bằng chứng.
 
 #### Tuần 1
 
