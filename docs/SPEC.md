@@ -39,7 +39,7 @@ Pipeline có thể tái lập từ snapshot giá hiện hành được phép dù
 
 ## Implementation Decisions
 
-Python 3.12 cho data/ML/API; scikit-learn, FastAPI/Pydantic; React/TS là phần UI tiếp theo. Một package feature/model dùng chung. File snapshots và artifact versioned, chưa thêm DB/auth/queue. Training/release offline, HTTP chỉ inference/aggregate.
+Python 3.12 cho data/ML/API; scikit-learn, FastAPI/Pydantic; React/TS cho UI ở `frontend/`. Một package feature/model dùng chung. File snapshots và artifact versioned, chưa thêm DB/auth/queue. Training/release offline, HTTP chỉ inference/aggregate.
 
 Contract/đơn vị/bounds/freshness và quyền chỉ ở README/schema thực thi, không sao chép vào spec. Snapshot grouped holdout là chính; temporal chỉ khi có archive giá thật theo thời điểm quan sát. Không gọi ngày đăng cũ của tin đã sửa giá là lịch sử giá. Tách training-selection khỏi final evaluation, không refit âm thầm sau đo.
 
@@ -69,6 +69,6 @@ Môi giới/thanh toán, tài khoản/admin web, crawler liên tục, dự báo 
 ## Further Notes — trạng thái thật
 
 - Đã có nền: schema chung, CSV đã chuẩn hóa, đại diện nhóm/split, baseline + ba pipeline, chọn validation, CLI final evaluation riêng (kiểm tra đủ mô hình, winner và split/holdout nhất quán), HTTP schema/readiness/freshness/output guards; kiểm tra kỹ thuật bằng dữ liệu giả.
-- Chưa có: dataset thị trường được duyệt, grouping từ raw/crawler, importance/ablation, lịch sử registry thực tế đầy đủ, UI, rate/concurrency/timeout public hoặc cloud deploy.
+- Chưa có: dataset thị trường được duyệt, grouping từ raw/crawler, importance/ablation, lịch sử registry thực tế đầy đủ, UI chạy với model thật được duyệt hoặc cloud deploy.
 - CI Python đã chạy thành công trên PR #2; trạng thái mới nhất xem GitHub Actions, không suy từ lần chạy cũ. Quy tắc review cần được tuân thủ; branch protection chưa được xác minh. Test kỹ thuật không phải kết quả định giá thị trường.
 - Spec chỉ giữ tại đây; GitHub Issue dẫn về yêu cầu tương ứng và giữ tiến độ/trao đổi, không duy trì bản spec thứ hai.

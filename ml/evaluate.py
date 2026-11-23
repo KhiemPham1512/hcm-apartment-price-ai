@@ -7,6 +7,7 @@ from contextlib import nullcontext
 from pathlib import Path
 
 import joblib
+import numpy as np
 import pandas as pd
 
 from ml.data import feature_frame
@@ -45,20 +46,83 @@ def _validate_holdout(expected: pd.DataFrame, holdout: pd.DataFrame) -> None:
         raise ValueError("Holdout does not match frozen test membership")
 
 
+AREA_EDGES = [-np.inf, 40, 70, 100, np.inf]  # m2, lower bound inclusive
+AREA_LABELS = ["lt_40", "40_70", "70_100", "ge_100"]
+SMALL_GROUP = 20  # README: n < 20 is described, never ranked or generalised
+BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED = 1000, 42
+
+
+def _slices(y, predictions, keys, price_bounds=False) -> list[dict]:
+    keys = pd.Series(keys).reset_index(drop=True)
+    labels = keys.cat.categories if hasattr(keys, "cat") else sorted(keys.unique(), key=str)
+    groups = []
+    for label in labels:
+        mask = (keys == label).to_numpy()
+        if not mask.any():
+            continue
+        group = {"group": str(label), **metrics(y[mask], predictions[mask])}
+        group["descriptive_only"] = group["n"] < SMALL_GROUP
+        if price_bounds:
+            group["price_min_vnd"], group["price_max_vnd"] = (
+                float(y[mask].min()),
+                float(y[mask].max()),
+            )
+        groups.append(group)
+    return groups
+
+
+def _bootstrap(y, predictions: dict) -> dict:
+    """Percentile intervals for the metrics, resampling test rows (one row per property group)."""
+    draws = np.random.default_rng(BOOTSTRAP_SEED).integers(
+        0, len(y), size=(BOOTSTRAP_RESAMPLES, len(y))
+    )
+    models = {}
+    for name, predicted in predictions.items():
+        errors = (y - predicted)[draws]
+        interval = [2.5, 97.5]
+        models[name] = {
+            "rmse_vnd_ci95": np.percentile(np.sqrt((errors**2).mean(axis=1)), interval).tolist(),
+            "mae_vnd_ci95": np.percentile(np.abs(errors).mean(axis=1), interval).tolist(),
+        }
+    return {
+        "unit": "property_group",
+        "method": "percentile",
+        "seed": BOOTSTRAP_SEED,
+        "n_resamples": BOOTSTRAP_RESAMPLES,
+        "models": models,
+    }
+
+
 def evaluate(bundle: dict, holdout: pd.DataFrame) -> dict:
     if set(bundle["models"]) != {"baseline", "linear", "polynomial", "tree"}:
         raise ValueError("Evaluation requires baseline, linear, polynomial and tree")
     if bundle.get("winner") not in ("linear", "polynomial", "tree"):
         raise ValueError("Validation winner must be linear, polynomial or tree")
     x_test = feature_frame(holdout)
+    y = holdout["asking_price_vnd"].to_numpy(dtype=float)
+    predictions = {
+        name: np.asarray(model.predict(x_test), dtype=float)
+        for name, model in bundle["models"].items()
+    }
+    test = {name: metrics(y, predicted) for name, predicted in predictions.items()}
+    area = pd.cut(holdout["area_m2"], AREA_EDGES, labels=AREA_LABELS, right=False)
+    quartile = pd.qcut(holdout["asking_price_vnd"], 4, labels=False, duplicates="drop")
+    price = "q" + (quartile + 1).astype(str)
     return {
         "evaluation_kind": "current_snapshot_grouped",
         "winner_selected_by_validation": bundle["winner"],
-        "test": {
-            name: metrics(holdout["asking_price_vnd"], model.predict(x_test))
-            for name, model in bundle["models"].items()
+        "test": test,
+        "breakdowns": {
+            name: {
+                "district": _slices(y, predicted, holdout["district_code"]),
+                "area_band": _slices(y, predicted, area),
+                "price_band": _slices(y, predicted, price, price_bounds=True),
+            }
+            for name, predicted in predictions.items()
         },
+        "bootstrap": _bootstrap(y, predictions),
         "data_kind": bundle["dataset_card"]["data_kind"],
+        "snapshot_kind": bundle["dataset_card"].get("snapshot_kind", "current"),
         "release_status": "candidate",
     }
 
@@ -88,6 +152,8 @@ def main():
         parser.error("Candidate feature contract mismatch")
     if bundle["dataset_card"].get("data_kind") not in ("real", "synthetic"):
         parser.error("Invalid candidate data kind")
+    if bundle["dataset_card"].get("snapshot_kind", "current") not in ("current", "historical"):
+        parser.error("Invalid candidate snapshot kind")
     if bundle["dataset_card"]["data_kind"] == "real" and args.registry_dir is None:
         parser.error("Real evaluation requires registry")
     for name in ("holdout", "splits"):

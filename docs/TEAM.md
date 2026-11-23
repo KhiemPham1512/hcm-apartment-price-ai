@@ -165,7 +165,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn:** Công cụ freeze, registry, evaluate, train ghi fit/tune, release và test parity serving đã merge (#19–#42). 22/11 TV1 báo NO-GO giá hiện hành; nhóm chọn **phương án B** (README Quyết định 9): đánh giá trên snapshot lịch sử TiniX, không phát hành. Chờ: TV1 thêm `snapshot_kind` vào card/loader và bàn giao CSV + card lịch sử (đủ 10 shard, mapping `hcm_current_v1`); TV2 cho train nhận card lịch sử và xử lý `floor_level` thiếu toàn bộ; sau đó TV6 chặn release lịch sử, chạy freeze/evaluate. TV6-01 (rubric, giảng viên xác nhận dùng dữ liệu CC BY-NC) chưa xong. Chưa tick TV6-04..10.
+**Bước tiếp / Chặn:** Công cụ freeze, registry, evaluate, train ghi fit/tune, release và test parity serving đã merge (#19–#42). 22/11 TV1 báo NO-GO giá hiện hành; nhóm chọn **phương án B** (README Quyết định 9): đánh giá trên snapshot lịch sử TiniX, không phát hành. Chờ: TV1 thêm `snapshot_kind` vào card/loader và bàn giao CSV + card lịch sử (đủ 10 shard, mapping `hcm_current_v1`); TV2 cho train nhận card lịch sử và xử lý `floor_level` thiếu toàn bộ; TV6 đã chặn release lịch sử và ghi `snapshot_kind` vào report (PR `feat/tv6-historical-guards`); còn chạy freeze/evaluate khi có CSV. TV6-01 (rubric, giảng viên xác nhận dùng dữ liệu CC BY-NC) chưa xong. Chưa tick TV6-04..10.
 
 #### Tuần 1
 
@@ -181,7 +181,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 #### Tuần 3
 
-- [ ] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10).
+- [ ] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10). Công cụ đã có: `ml.evaluate` xuất sai số theo khu vực, nhóm diện tích, nhóm giá (kèm n, cờ n<20) và khoảng bootstrap (README mục Metric); chưa chạy trên candidate thật.
 - [ ] **TV6-08** Cùng TV4 kiểm tra parity offline/HTTP, model thiếu/chưa duyệt/quá hạn và security/release gates (P11). Kiểm tra kỹ thuật: gói do `ml.release` tạo, nạp qua `MODEL_DIR`, cho giá HTTP khớp pipeline offline; quá hạn trả `stale_model`, gói bị sửa trả `unavailable` (`tests/test_release.py`, dữ liệu synthetic). Chưa có gói thị trường thật; TV4 review.
 - [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry đã merge qua [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22): init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check và CI đạt. Gate evaluator đã merge qua [PR #23](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/23). Train tự ghi fit/tune đã merge qua [PR #35](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/35) (5 ca TDD qua CLI). `ml.release` đã merge qua [PR #36](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/36): đóng gói approved chỉ khi đủ gate, dùng chung `Manifest` của serving (7 ca TDD qua CLI; toàn bộ local 132 pass). Còn thiếu lịch sử và candidate thực tế; chưa duyệt model thị trường nào. Chủ repo duyệt mỗi PR, không cần reviewer khác; không thay gate model.
 
