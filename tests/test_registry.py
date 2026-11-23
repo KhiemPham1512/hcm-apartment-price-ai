@@ -370,3 +370,12 @@ def test_training_registry_gate_fails_before_fit_without_output_or_history(
         assert not list((registry / "events").iterdir())
     if problem == "busy":
         assert (registry / ".write-lock").read_text(encoding="utf-8") == "another writer"
+
+
+def test_init_creates_missing_parent_folders_but_never_reuses_a_registry(tmp_path):
+    """README tells operators to run init on artifacts/private-registry before artifacts/ exists."""
+    registry = tmp_path / "artifacts" / "private-registry"
+    assert cli("init", "--registry-dir", registry).returncode == 0
+    assert (registry / "registry.json").exists()
+    again = cli("init", "--registry-dir", registry)
+    assert again.returncode != 0
