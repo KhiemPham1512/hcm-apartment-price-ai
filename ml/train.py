@@ -1,6 +1,7 @@
 """Fit và lựa chọn mô hình chỉ dùng validation; không bao giờ đánh giá nhãn test."""
 
 import argparse
+import csv
 import hashlib
 import importlib.metadata
 import json
@@ -81,6 +82,11 @@ def main():
     parser.add_argument("--registry-dir", type=Path)
     parser.add_argument("--run-id")
     parser.add_argument("--actor")
+    parser.add_argument(
+        "--test-pool-csv",
+        type=Path,
+        help="CSV with property_group_id: the holdout is drawn only from these groups",
+    )
     args = parser.parse_args()
     if args.output.exists():
         parser.error("Output already exists; use a new run directory")
@@ -96,7 +102,22 @@ def main():
         parser.error("District labels missing from dataset card")
     if card.data_kind == "real" and args.registry_dir is None:
         parser.error("Real training requires registry")
-    splits = split_groups(frame)
+    test_pool = None
+    if args.test_pool_csv is not None:
+        # Same reading and rules as ml.registry, so a pool accepted here can be reserved later.
+        with args.test_pool_csv.open(encoding="utf-8-sig", newline="") as source:
+            reader = csv.DictReader(source)
+            if not reader.fieldnames or "property_group_id" not in reader.fieldnames:
+                parser.error("Test pool CSV needs a property_group_id column")
+            test_pool = [row["property_group_id"] or "" for row in reader]
+        if any(not g.strip() or g != g.strip() for g in test_pool) or len(set(test_pool)) != len(
+            test_pool
+        ):
+            parser.error("Test pool has invalid (blank, padded or duplicate) group IDs")
+    try:
+        splits = split_groups(frame, test_pool=test_pool)
+    except ValueError as exc:
+        parser.error(str(exc))
     if args.registry_dir is not None:
         # Record before fitting so a failed attempt still leaves its exposure history.
         exposures = {
@@ -111,6 +132,9 @@ def main():
     bundle["dataset_card"] = card.model_dump()
     bundle["created_at"] = now.isoformat()
     bundle["dataset_sha256"] = hashlib.sha256(args.csv.read_bytes()).hexdigest()
+    bundle["test_pool_sha256"] = (
+        hashlib.sha256(args.test_pool_csv.read_bytes()).hexdigest() if test_pool else None
+    )
     bundle["package_versions"] = {
         name: importlib.metadata.version(name)
         for name in ("scikit-learn", "pandas", "numpy", "joblib", "pydantic")
@@ -138,6 +162,8 @@ def main():
         key: bundle[key]
         for key in ("winner", "validation", "configs", "created_at", "uninformative_features")
     }
+    public["snapshot_kind"] = card.snapshot_kind
+    public["test_pool_sha256"] = bundle["test_pool_sha256"]
     public["counts"] = {name: len(part) for name, part in splits.items()}
     public["release_status"] = "candidate"
     (args.output / "selection.json").write_text(

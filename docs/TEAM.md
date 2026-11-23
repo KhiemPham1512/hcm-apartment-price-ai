@@ -165,7 +165,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn:** Công cụ freeze, registry, evaluate, train ghi fit/tune, release và test parity serving đã merge (#19–#42). 22/11 TV1 báo NO-GO giá hiện hành; nhóm chọn **phương án B** (README Quyết định 9): đánh giá trên snapshot lịch sử TiniX, không phát hành. Chờ: TV1 thêm `snapshot_kind` vào card/loader và bàn giao CSV + card lịch sử (đủ 10 shard, mapping `hcm_current_v1`); TV2 cho train nhận card lịch sử và xử lý `floor_level` thiếu toàn bộ; TV6 đã chặn release lịch sử và ghi `snapshot_kind` vào report (PR `feat/tv6-historical-guards`); còn chạy freeze/evaluate khi có CSV. TV6-01 (rubric, giảng viên xác nhận dùng dữ liệu CC BY-NC) chưa xong. Chưa tick TV6-04..10.
+**Bước tiếp / Chặn:** Công cụ freeze, registry, evaluate, train ghi fit/tune, release và test parity serving đã merge (#19–#42). 22/11 TV1 báo NO-GO giá hiện hành; nhóm chọn **phương án B** (README Quyết định 9): đánh giá trên snapshot lịch sử TiniX, không phát hành. Chờ: TV1 thêm `snapshot_kind` vào card/loader và bàn giao CSV + card lịch sử (đủ 10 shard, mapping `hcm_current_v1`); TV2 cho train nhận card lịch sử và xử lý `floor_level` thiếu toàn bộ; TV6 đã chặn release lịch sử và ghi `snapshot_kind` vào report (#52); huấn luyện trên card lịch sử và `--test-pool-csv` đã có (PR `feat/tv2-historical-training-v2`, nhận lại commit của TV2); còn chạy freeze/evaluate khi có CSV TiniX. TV6-01 (rubric, giảng viên xác nhận dùng dữ liệu CC BY-NC) chưa xong. Chưa tick TV6-04..10.
 
 #### Tuần 1
 
