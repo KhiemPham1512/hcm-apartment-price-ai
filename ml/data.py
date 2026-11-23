@@ -1109,6 +1109,23 @@ def build_release_dataset_card(
         raise ValueError("Reviewer must be distinct from preparer")
     if not _validate_mapping_metadata(mapping_metadata):
         raise ValueError("Invalid mapping metadata")
+    if card.snapshot_kind != "current":
+        raise ValueError("Release dataset card requires snapshot_kind='current'")
+    go_no_go = audit.get("go_no_go") if isinstance(audit, dict) else None
+    if not isinstance(go_no_go, dict) or go_no_go.get("status") != "GO":
+        raise ValueError("Release dataset card requires GO audit status")
+    if (
+        not isinstance(exposure_summary, dict)
+        or exposure_summary.get("ready_for_new_release_test") is not True
+        or bool(exposure_summary.get("blockers"))
+    ):
+        raise ValueError("Release dataset card requires passing exposure_summary")
+    if (
+        not isinstance(pre_demo_check, dict)
+        or pre_demo_check.get("status") != "PASS"
+        or bool(pre_demo_check.get("blockers"))
+    ):
+        raise ValueError("Release dataset card requires PASS pre_demo_check")
 
     return {
         "schema_version": SCHEMA_VERSION,
