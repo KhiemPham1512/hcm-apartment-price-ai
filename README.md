@@ -8,14 +8,27 @@ Người dùng nhập diện tích, khu vực và một số thuộc tính căn 
 
 ## Hiện dự án làm được gì?
 
-| Đã có trong code | Còn phải hoàn thiện |
+| Đã có trong code (cập nhật 24/11/2026) | Còn phải hoàn thiện |
 | --- | --- |
-| Schema dữ liệu/đầu vào chung, tải CSV chuẩn hóa, chọn đại diện và chia nhóm | Nguồn dữ liệu thị trường được phép dùng, audit và nhóm trùng từ dữ liệu thô |
-| Baseline + ba mô hình, chọn bằng validation, đánh giá holdout riêng | Importance/ablation, báo cáo thực nghiệm từ dữ liệu thật |
-| FastAPI: metadata, dự đoán, report, health; chặn model thiếu/quá hạn | Quy trình phê duyệt/phát hành đầy đủ, UI và giới hạn khi public |
-| pytest, Ruff và workflow GitHub Actions | Demo có model thật đã duyệt và dữ liệu còn hạn |
+| Dữ liệu: schema chung, nạp CSV (cột ID là chuỗi), cách ly dòng lỗi, gộp nhóm trùng, chia nhóm; test mới chỉ lấy nhóm chưa tiếp xúc | Cách ly giá bất thường trong dữ liệu TiniX mà TV1 đã giao; nguồn dữ liệu **hiện hành** nếu muốn hiển thị giá |
+| Mô hình và kiểm định: baseline + ba mô hình, huấn luyện trên snapshot lịch sử, khóa candidate, sổ tiếp xúc, đánh giá test độc lập (sai số theo nhóm + bootstrap), phân tích đặc trưng (`ml.importance`) | Chạy toàn chuỗi trên dữ liệu thật; biểu đồ và diễn giải importance; báo cáo, slide |
+| Phát hành và API: `ml.release` chỉ đóng gói khi đủ cổng và từ chối dữ liệu lịch sử; FastAPI có giới hạn tần suất/đồng thời, CORS, proxy tin cậy | Gói approved từ dữ liệu hiện hành (chưa có) |
+| Giao diện React + E2E; pytest, Ruff, CI | Nhãn "dữ liệu lịch sử" trên trang báo cáo; demo cuối |
 
-**Chưa có dataset thị trường hay model được duyệt kèm repo.** Test dùng dữ liệu giả để kiểm tra kỹ thuật. Chạy API ngay được; `/health/ready` và dự đoán trả **503** khi thiếu model là hành vi đúng. Kết quả test không phải độ chính xác thị trường.
+**Chưa có model được duyệt để phục vụ giá.** Đã có kết quả đánh giá chính thức trên dữ liệu lịch sử (bên dưới); dữ liệu nằm ngoài repo, không commit. Test tự động dùng dữ liệu giả để kiểm tra kỹ thuật. Chạy API ngay được; `/health/ready` và dự đoán trả **503** khi thiếu model là hành vi đúng. Kết quả test không phải độ chính xác thị trường.
+
+### Kết quả đánh giá chính thức run-001 (24/11/2026, dữ liệu lịch sử)
+
+Dữ liệu: TiniX lịch sử (2025–03/2026, revision `ca3fedc`), lọc đơn giá 10–500 triệu/m²; bản TV1 giao lại 24/11 từ dữ liệu thô 10 shard trùng từng byte với bộ dữ liệu của run-001 (sha256 `a57468f0…`): 203.537 dòng, 37.172 nhóm; split theo nhóm 26.020 / 5.576 / 5.576. Mô hình chọn bằng validation **trước** khi mở test; test mở một lần, có sổ tiếp xúc. Đây là **đánh giá trên dữ liệu lịch sử, không phải giá hiện hành**, và không có gói phát hành (`ml.release` từ chối).
+
+| Mô hình | RMSE test (tỷ) | Khoảng 95% bootstrap | MAE (tỷ) | R² | Dự đoán ≤ 0 |
+| --- | --- | --- | --- | --- | --- |
+| B0 baseline trung vị | 12,35 | 11,32–13,51 | 5,36 | −0,09 | 0 |
+| M1 Linear | 7,89 | 7,21–8,65 | 4,13 | 0,56 | 280 |
+| M2 Polynomial bậc 2 | 7,87 | 7,23–8,61 | 4,07 | 0,56 | 242 |
+| **M3 Decision Tree** (thắng, độ sâu 12, lá ≥ 10) | **6,33** | 5,82–6,94 | **2,95** | **0,71** | 0 |
+
+Sai số của M3 tăng theo cỡ và giá căn: MAE 0,46 tỷ ở nhóm < 40 m² nhưng 6,30 tỷ ở nhóm ≥ 100 m²; quartile giá cao nhất 7,21 tỷ; cao nhất ở Quận 1 (7,47) và Thủ Đức (5,16). Đặc trưng ảnh hưởng nhất (permutation importance trên validation): diện tích, rồi khu vực; số phòng gần như không; `floor_level` thiếu toàn bộ nên bằng 0. Số liệu đầy đủ (theo khu vực/diện tích/giá, bootstrap, importance, ablation): [`reports/run-001/`](reports/run-001/).
 
 ## Công nghệ đang dùng
 
@@ -57,6 +70,7 @@ tests/          toàn bộ test chính thức và fixture kỹ thuật
 docs/           SPEC.md: yêu cầu; TEAM.md: phân công và mốc
 .gitignore      chặn môi trường, cache, dữ liệu riêng và artifact
 GLOSSARY.md     thuật ngữ của dự án (nguồn duy nhất cho nghĩa từ)
+reports/        kết quả tổng hợp đã đánh giá (không có dữ liệu thô, nhãn từng căn hay ID)
 CLAUDE.md       hướng dẫn ngắn cho AI agent
 README.md       hướng dẫn, hợp đồng và quyết định kỹ thuật
 pyproject.toml  package Python và cấu hình pytest/Ruff
@@ -120,6 +134,7 @@ Kỳ vọng khi chưa có model: live trả `status=live`, metadata trả `servi
 .venv/Scripts/python.exe -m ml.train --help
 .venv/Scripts/python.exe -m ml.freeze --help
 .venv/Scripts/python.exe -m ml.evaluate --help
+.venv/Scripts/python.exe -m ml.importance --help
 # Chỉ init một lần khi bắt đầu sổ lịch sử mới đã được xác minh, không lặp khi refresh.
 .venv/Scripts/python.exe -m ml.registry init --registry-dir artifacts/private-registry
 .venv/Scripts/python.exe -m ml.train --csv data/processed/current.csv --dataset-card data/processed/card.json --output artifacts/run-001 --registry-dir artifacts/private-registry --run-id run-001 --actor TV2
@@ -189,6 +204,7 @@ Owner: TV1. Reviewer: TV2 và TV6. Đây là nguồn chuẩn cho đơn vị, tê
 ## Nhãn và phạm vi
 
 - Nhãn duy nhất: `asking_price_vnd`, tổng giá rao **bán** toàn bộ căn hộ; tiền VND. Thuê, trả góp theo tháng, giá mỗi m² chưa quy đổi, giá “thỏa thuận”, giao dịch không rõ loại đều bị loại hoặc cách ly để xác minh.
+- **Đơn giá hợp lệ: 10–500 triệu VND/m²** (`asking_price_vnd / area_m2`, tính cả hai biên; quyết định của chủ repo 24/11/2026, chốt trước khi chạy mô hình, không chỉnh theo kết quả test). Ngoài khoảng này `prepare_raw_listings` cách ly với lý do `implausible_unit_price`, và `load_current_csv` từ chối CSV còn dòng như vậy. Với dữ liệu TiniX TV1 giao 23/11, quy tắc bỏ 436 dòng (108 nhóm) và đưa giá cao nhất từ 26.500 tỷ xuống 185 tỷ.
 - `property_type = apartment`, `listing_type = sale` là trường kiểm tra phạm vi, không phải đặc trưng cho mô hình trong MVP một loại.
 - MVP ưu tiên một nguồn chính qua gate, không ghép thêm nguồn để tăng số mẫu trước khi kiểm tra quyền, đơn vị và trùng liên nguồn. `source_id` vẫn lưu để truy vết và hỗ trợ adapter mở rộng về sau.
 - Phạm vi là TP.HCM theo địa giới hiện hành tại thời điểm snapshot. `geography_version="hcm_current_v1"` là phiên bản danh mục khu vực được chốt cho đợt dữ liệu này; TV1 bàn giao mapping có nguồn, ngày hiệu lực và checksum. Nếu địa giới hoặc đơn vị thay đổi, tạo phiên bản mapping/contract mới qua PR, không sửa ngầm danh mục đã khóa. Chưa có mapping thực tế kèm repo.
@@ -217,6 +233,8 @@ Owner: TV1. Reviewer: TV2 và TV6. Đây là nguồn chuẩn cho đơn vị, tê
 | `listing_type` | literal `sale` | Có | Không | Không trộn tin thuê |
 | `area_basis` | enum theo dataset card | Có | Không | Một quy ước diện tích nhất quán cho mỗi phiên bản |
 | `project_name_normalized` | string hoặc null | Không | Không | Chỉ hỗ trợ gộp trùng và phân tích tập trung dự án |
+
+**Cột định danh là chuỗi:** `source_id`, `listing_id`, `property_group_id`, `availability_evidence_id` và `district_code` được đọc từ CSV dưới dạng chuỗi, nên ID giống số như `00123` giữ nguyên số 0 đầu; ép kiểu số ở bước xuất CSV sẽ làm mất thông tin này.
 
 Phạm vi số ở trên là giới hạn MVP do nhóm chọn, không phải phát biểu về toàn bộ thị trường. Căn hộ ngoài phạm vi không nên ép về giá trị biên. Phải đếm và báo tỷ lệ bị loại; không thay giới hạn sau khi xem lỗi test. Nếu một cột tùy chọn thiếu toàn bộ trong train, bỏ khỏi feature set bằng một phiên bản hợp đồng mới trước khi freeze, không âm thầm đổi pipeline.
 
@@ -335,6 +353,8 @@ Lưu run ID, phiên bản dữ liệu và split, SHA code, seed, cỡ mẫu và 
 Permutation importance trên **validation** sau chọn ứng viên, gọi pipeline trên cột gốc và dùng scorer RMSE nhất quán; 10 lần lặp, seed 42, nêu trung bình và độ lệch chuẩn. Như vậy district là một feature, tránh đếm mỗi one-hot như một khái niệm độc lập. Nếu feature tương quan, importance có thể bị chia sẻ; cần đối chiếu EDA/ablation trên validation.
 
 Đối chiếu coefficients của M1 với đơn vị/scale; cây có thể xuất hình giới hạn độ sâu. `feature_importances_` của cây không được dùng làm bằng chứng duy nhất. Không gọi importance là quan hệ nhân quả, không suy ra pháp lý căn hộ từ giá. MVP không trả “độ tin cậy 95%” cho một căn; muốn thêm prediction interval cần protocol calibration riêng.
+
+**Công cụ `ml.importance` (đã triển khai):** `python -m ml.importance --run-dir artifacts/run-001 --csv data/processed/current.csv --dataset-card data/processed/card.json` ghi `importance.json` (không ghi đè). Chỉ dùng dòng **train và validation** theo `splits.csv`; dòng test bị loại ngay khi ghép và không bao giờ đi vào phép tính, có test kiểm bằng cách đổi nhãn test mà báo cáo không đổi. CSV, card và `splits.csv` phải khớp hash của candidate, nếu không thì từ chối. Với mỗi mô hình M1–M3: permutation importance trên cột gốc (RMSE VND, 10 lần, seed 42, trung bình và độ lệch chuẩn, khu vực là một feature) và ablation bỏ diện tích, bỏ khu vực, bỏ cả hai (vô hiệu hóa cột ở train và validation rồi huấn luyện lại với siêu tham số của candidate, không tune lại). Báo cáo ghi hash candidate/dữ liệu/split, `snapshot_kind`, các giới hạn diễn giải. Chưa có hình; TV3 vẽ biểu đồ và viết diễn giải từ file này.
 
 ## Artifact và báo cáo
 
@@ -512,11 +532,11 @@ Nghĩa của thuật ngữ nằm ở [GLOSSARY.md](GLOSSARY.md), nguồn duy nh�
 
 **Quyết định 8 — release dùng chính contract serving:** `ml.release --run-dir --csv --output --reviewer A --reviewer B` chỉ đóng gói khi đủ các điều kiện sau. (1) Bản khóa hợp lệ. (2) `evaluation.json` khớp hash candidate/freeze hiện tại và có `registry_status="checked"`. (3) CSV khớp `dataset_sha256` của candidate và còn hạn công bố tại lúc release. (4) Split tái lập khớp nhóm train trong `splits.csv`. Phần còn lại giao cho `Manifest` của `backend/service.py` kiểm: real, nguồn đã xác minh, winner thắng B0, R²>0, không có output không hợp lệ, ≥500 nhóm, ≥75 test, ≥2 reviewer khác nhau. Như vậy offline và HTTP dùng đúng một contract. Gói gồm pipeline của winner chọn bằng validation, manifest (data window/age tính từ CSV, khu vực có ≥20 nhóm train, khoảng train của feature số) và `report.json` = evaluation + validation. Lỗi bất kỳ thì không tạo thư mục output; thư mục đã tồn tại thì không ghi đè. Sau khi ghi, release tự nạp lại bằng `load_approved`. Reviewer là tên vai trò, không xác thực danh tính; release chưa ghi registry và chưa có trạng thái `rejected`.
 
-**Quyết định 9 — đánh giá trên snapshot lịch sử (phương án B, 22/11/2026):** TV1 báo NO-GO cho giá hiện hành: hai bộ Kaggle trả 404, TiniX là dữ liệu 2025 và không có bằng chứng tin còn bán. Nhóm dùng snapshot lịch sử có quyền dùng phi thương mại (TiniX, revision `c3f4dc`, CC BY-NC 4.0) để chạy hết pipeline, so sánh B0/M1/M2/M3 và viết báo cáo. Tính năng giá hiện tại **vẫn NO-GO** cho tới khi có nguồn hiện hành (phương án A).
+**Quyết định 9 — đánh giá trên snapshot lịch sử (phương án B, 22/11/2026):** TV1 báo NO-GO cho giá hiện hành: hai bộ Kaggle trả 404, TiniX là dữ liệu 2025 và không có bằng chứng tin còn bán. Nhóm dùng snapshot lịch sử có quyền dùng phi thương mại (TiniX, revision `ca3fedcbb089bf65f7e4cfb03316cce4bd0d779f` (TV1 xác nhận 24/11; `c3f4dc` trước đây là gõ nhầm), CC BY-NC 4.0) để chạy hết pipeline, so sánh B0/M1/M2/M3 và viết báo cáo. Tính năng giá hiện tại **vẫn NO-GO** cho tới khi có nguồn hiện hành (phương án A).
 
 - `DatasetCard` thêm `snapshot_kind` ∈ {`current`, `historical`}, mặc định `current`. Với `historical`, loader bỏ kiểm tra tuổi so với `now` (7 ngày công bố, 90 ngày tin) nhưng vẫn giữ: chronology `published_at <= price_observed_at <= source_snapshot_at`, timezone, schema, đơn vị, quarantine, grouping, split nhóm rời, registry, freeze, evaluate. Không sửa timestamp; khoảng thời gian báo cáo lấy từ dữ liệu thật.
 - **Không bao giờ phát hành snapshot lịch sử:** `ml.release` từ chối, API giữ `unavailable`, UI không demo giá từ nó. Báo cáo, slide và UI ghi rõ "đánh giá trên dữ liệu lịch sử" kèm khoảng `published_at`/`price_observed_at` thật. Evaluation report ghi `snapshot_kind`. Đã triển khai: `ml.evaluate` ghi `snapshot_kind` vào report (giá trị lạ bị từ chối trước khi đọc nhãn), `ml.release` từ chối mọi candidate `historical`.
-- `floor_level` thiếu toàn bộ: giữ trong API schema (optional, nhận `null`) để không đổi contract với TV4/TV5. Feature số thiếu toàn bộ ở train được giữ dạng cột hằng (không mang thông tin), train ghi tên nó vào `uninformative_features` của candidate/selection. Không suy từ `floor_count`.
+- `floor_level` thiếu toàn bộ: giữ trong API schema (optional, nhận `null`) để không đổi contract với TV4/TV5. Feature số thiếu toàn bộ ở train được giữ dạng cột hằng (không mang thông tin), train ghi tên nó vào `uninformative_features` của candidate/selection. Không suy từ `floor_count`. Đã triển khai trong `ml.train`: feature số thiếu toàn bộ không còn làm train dừng, tên nằm trong `uninformative_features` của candidate và `selection.json`; `selection.json` cũng ghi `snapshot_kind` của card.
 - Khu vực: TV1 map vào danh mục `hcm_current_v1`, ghi version/hash bảng mapping trong card; dòng không map được vào quarantine `unsupported_district`. Gộp đủ 10 shard và loại trùng xuyên shard trước khi chia split. Parquet/CSV thô không commit.
 - License NC chỉ cho mục đích học thuật; TV6-01 xác nhận với giảng viên trước khi nộp.
 
@@ -540,7 +560,7 @@ Sau xác minh bản khóa và nạp candidate nội bộ đáng tin, evaluator y
 
 `ml.prepare` chưa được triển khai (`ml.release` đã có, xem Quyết định 8). Quy trình mục tiêu phải kiểm tra cổng nguồn, schema, chất lượng và freshness trước khi đóng gói approved; không tự chọn lại winner hay refit. Hash không thay thế kiểm soát người có quyền ghi artifact.
 
-Khi refresh, dùng dataset/run/artifact mới và giữ lịch sử bất biến. Sổ `evaluation_registry` nội bộ phải ghi nhóm từng dùng fit, tune, phân tích nhãn hoặc đánh giá. Test phát hành mới chỉ lấy nhóm chưa tiếp xúc; không chuyển nhóm bị loại sang train trong cùng run để cứu cỡ mẫu. Chưa đủ test mới thì chưa phát hành, không sửa timestamp model cũ.
+Khi refresh, dùng dataset/run/artifact mới và giữ lịch sử bất biến. Sổ `evaluation_registry` nội bộ phải ghi nhóm từng dùng fit, tune, phân tích nhãn hoặc đánh giá. Test phát hành mới chỉ lấy nhóm chưa tiếp xúc. Nhóm đã tiếp xúc ở lần trước **vẫn được dùng để học** (train/validation) trong run mới; chỉ tập test phải là nhóm mới (quyết định của chủ repo, 24/11/2026). Chưa đủ nhóm mới cho test thì chưa phát hành, không hạ cỡ test, không sửa timestamp model cũ. Cơ chế trong code: `split_groups(frame, test_pool=...)` chỉ chọn nhóm test trong `test_pool` (thường là danh sách nhóm chưa tiếp xúc từ `audit_registry_exposure`), giữ cỡ test mặc định 15%; pool thiếu nhóm thì lỗi, không hạ cỡ test. Nhóm ngoài pool vẫn có thể vào train/validation; muốn loại hẳn thì lọc khỏi `frame` trước khi chia. `ml.train --test-pool-csv <file>` truyền pool (CSV có cột `property_group_id`, đọc và kiểm giống `ml.registry`: không rỗng, không trùng, không có khoảng trắng thừa; BOM được chấp nhận); pool sai hoặc thiếu nhóm thì dừng trước khi tạo run. `selection.json` ghi `test_pool_sha256` (null nếu không dùng pool). **Pool chỉ đúng tại thời điểm lập:** mỗi lần `ml.train` có registry đều ghi `fit`/`tune` cho nhóm train/validation của nó, kể cả lần chạy thử hoặc thất bại sau đó, nên các nhóm này không còn là test mới và pool lập trước đó có thể chứa nhóm đã bị tiêu thụ. Lập pool ngay trước run phát hành; chạy thử nghiệm trên dữ liệu thật bằng bản sao registry (sao chép thư mục registry, không dùng registry chính).
 
 **Registry v1 — thao tác nội bộ:** `ml.registry init --registry-dir` tạo sổ mới; `record --registry-dir --groups-csv --run-id --actor --purpose` ghi nhóm đã dùng với purpose `fit`, `tune`, `label_analysis` hoặc `evaluation`. `reserve-test` nhận cùng tham số nhưng không có purpose, từ chối toàn bộ yêu cầu nếu bất kỳ nhóm nào đã có lịch sử hoặc được dành cho test. CSV bắt buộc có `property_group_id` không rỗng/trùng; ID là chuỗi, giữ số 0 đầu. Cột khác không ghi vào sổ; nên cấp CSV chỉ chứa ID, không cần nhãn.
 

@@ -73,7 +73,8 @@ def test_tv1_07_refresh_report_tracks_turnover_shift_and_active_evidence(listing
     assert report["group_turnover"]["new_groups_count"] == 100
     assert report["group_turnover"]["dropped_groups_count"] == 100
     assert report["active_evidence"]["active_rate"] == 1.0
-    assert report["active_evidence"]["evidence_ids"] == ["export_active_2026_11_11"]
+    assert report["active_evidence"]["unique_evidence_count"] == 1
+    assert "evidence_ids" not in report["active_evidence"]
     assert report["coverage"]["district_share_tvd"] > 0
     assert report["feature_shift"]["missingness_shift"]["floor_level"]["delta"] > 0
     # Không làm lộ property_group_id vào báo cáo public
@@ -210,8 +211,13 @@ def test_tv1_09_pre_demo_readiness_catches_license_mapping_freshness_and_active_
     assert "stale_for_serving" in result["blockers"]
 
 
-def test_tv1_10_release_dataset_card_contains_required_manifest_fields(listings, now):
+def test_tv1_10_release_dataset_card_contains_required_manifest_fields(
+    tmp_path, listings, now
+):
     card = _make_card()
+    registry = tmp_path / "registry"
+    init_registry(registry)
+    exposure_summary, _ = audit_registry_exposure(listings, registry)
     audit = build_dataset_audit(
         raw_count=len(listings) + 5,
         clean_frame=listings,
@@ -235,6 +241,7 @@ def test_tv1_10_release_dataset_card_contains_required_manifest_fields(listings,
         prepared_by="TV1",
         reviewed_by="TV6",
         area_basis="source_reported_unknown",
+        exposure_summary=exposure_summary,
         pre_demo_check=pre_demo,
     )
     serialized = json.dumps(release_card, allow_nan=False)
@@ -325,3 +332,69 @@ def test_historical_loader_bypasses_7d_90d_freshness_but_keeps_chronology_quaran
     bad_df.to_csv(bad_csv, index=False)
     with pytest.raises(ValidationError, match="published_at <= price_observed_at"):
         load_current_csv(bad_csv, now=now, card=hist_card)
+
+def test_tv1_10_release_dataset_card_rejects_non_go_historical_or_missing_gates(
+    tmp_path, listings, now
+):
+    card = _make_card()
+    registry = tmp_path / "registry"
+    init_registry(registry)
+    exposure_summary, _ = audit_registry_exposure(listings, registry)
+    audit = build_dataset_audit(
+        raw_count=len(listings),
+        clean_frame=listings,
+        quarantine_frame=pd.DataFrame(columns=["row_index", "reason_code"]),
+        exact_duplicates_removed=0,
+        now=now,
+    )
+    pre_demo = verify_pre_demo_readiness(
+        listings, card=card, now=now, mapping_metadata=VALID_MAPPING
+    )
+    valid_kwargs = {
+        "raw_sha256": "1" * 64,
+        "clean_sha256": "2" * 64,
+        "source_owner": "Chu du lieu da xac minh",
+        "source_revision": "rev-2026-11-22",
+        "mapping_metadata": VALID_MAPPING,
+        "audit_method": "Rule-based quarantine",
+        "prepared_by": "TV1",
+        "reviewed_by": "TV6",
+        "area_basis": "source_reported_unknown",
+        "exposure_summary": exposure_summary,
+        "pre_demo_check": pre_demo,
+    }
+
+    # 1. Audit kh?ng ph?i GO ho?c thi?u h?n kh?a go_no_go
+    nogo_audit = {**audit, "go_no_go": {"status": "NO-GO", "reasons": ["insufficient_groups"]}}
+    with pytest.raises(ValueError, match="GO audit"):
+        build_release_dataset_card(card, nogo_audit, **valid_kwargs)
+    missing_key_audit = {k: v for k, v in audit.items() if k != "go_no_go"}
+    with pytest.raises(ValueError, match="GO audit"):
+        build_release_dataset_card(card, missing_key_audit, **valid_kwargs)
+
+    # 2. snapshot_kind kh?ng ph?i current
+    hist_card = card.model_copy(update={"snapshot_kind": "historical"})
+    with pytest.raises(ValueError, match="snapshot_kind='current'"):
+        build_release_dataset_card(hist_card, audit, **valid_kwargs)
+
+    # 3. Thi?u ho?c kh?ng ??t exposure_summary
+    with pytest.raises(ValueError, match="exposure_summary"):
+        build_release_dataset_card(
+            card, audit, **{**valid_kwargs, "exposure_summary": None}
+        )
+    with pytest.raises(ValueError, match="exposure_summary"):
+        build_release_dataset_card(
+            card,
+            audit,
+            **{**valid_kwargs, "exposure_summary": {"ready_for_new_release_test": False}},
+        )
+
+    # 4. Thi?u ho?c kh?ng ??t pre_demo_check PASS
+    with pytest.raises(ValueError, match="pre_demo_check"):
+        build_release_dataset_card(
+            card, audit, **{**valid_kwargs, "pre_demo_check": None}
+        )
+    with pytest.raises(ValueError, match="pre_demo_check"):
+        build_release_dataset_card(
+            card, audit, **{**valid_kwargs, "pre_demo_check": {"status": "FAIL"}}
+        )

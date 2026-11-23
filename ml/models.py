@@ -17,7 +17,7 @@ def build_shared_preprocessor() -> ColumnTransformer:
     """Tạo ColumnTransformer dùng chung cho cả Linear và Polynomial để chống rò rỉ dữ liệu."""
     num_pipeline = Pipeline(
         [
-            ("impute", SimpleImputer(strategy="median")),
+            ("impute", SimpleImputer(strategy="median", keep_empty_features=True)),
             ("scale", StandardScaler()),
         ]
     )
@@ -58,7 +58,7 @@ def make_model(
     if kind == "polynomial":
         num_pipeline = Pipeline(
             [
-                ("impute", SimpleImputer(strategy="median")),
+                ("impute", SimpleImputer(strategy="median", keep_empty_features=True)),
                 ("poly", PolynomialFeatures(degree=degree, include_bias=False)),
                 ("scale", StandardScaler()),
             ]
@@ -85,7 +85,11 @@ def make_model(
     if kind == "tree":
         preprocess = ColumnTransformer(
             transformers=[
-                ("numeric", SimpleImputer(strategy="median"), NUMERIC_FEATURES),
+                (
+                    "numeric",
+                    SimpleImputer(strategy="median", keep_empty_features=True),
+                    NUMERIC_FEATURES,
+                ),
                 (
                     "district",
                     OneHotEncoder(handle_unknown="ignore", sparse_output=False),

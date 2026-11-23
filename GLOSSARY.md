@@ -36,6 +36,8 @@ Nguồn duy nhất cho nghĩa của thuật ngữ trong dự án. Hợp đồng 
 | B0 / M1 / M2 / M3 | B0: baseline median. M1: Linear Regression. M2: Polynomial bậc 2. M3: Decision Tree |
 | Winner | Mô hình trong M1–M3 có validation RMSE thấp nhất; chênh dưới 1% thì chọn mô hình đơn giản hơn theo thứ tự M1 → M2 → M3. Không đổi theo kết quả test |
 | RMSE / MAE / R² | Sai số bình phương trung bình căn và sai số tuyệt đối trung bình, đều tính bằng VND; R² không có đơn vị, có thể âm, không phải phần trăm dự đoán đúng |
+| Permutation importance | Mức tăng RMSE (VND) trên validation khi xáo trộn ngẫu nhiên một cột gốc của model đã train; càng lớn thì model càng dựa vào cột đó. Không phải quan hệ nhân quả |
+| Ablation | Bỏ thông tin của một cột (vô hiệu hóa ở train và validation) rồi huấn luyện lại với siêu tham số cố định của candidate, so RMSE validation với bản đầy đủ |
 | Nhóm chỉ mô tả (`descriptive_only`) | Nhóm sai số có n < 20: chỉ mô tả, không xếp hạng hay suy rộng |
 | Khoảng bootstrap | Độ biến thiên của metric khi lấy mẫu lại theo nhóm tài sản trong test. Không phải khoảng dự đoán cho từng căn |
 
@@ -45,6 +47,7 @@ Nguồn duy nhất cho nghĩa của thuật ngữ trong dự án. Hợp đồng 
 | --- | --- |
 | Candidate / approved | Ứng viên chưa được phục vụ / artifact qua kiểm định và review nội bộ |
 | Bản khóa candidate (freeze record) | Bằng chứng phiên bản candidate và dữ liệu được người kiểm định ghi nhận trước đánh giá; không đồng nghĩa đã đánh giá hoặc được duyệt phát hành |
+| Pool test (`test_pool`) | Tập nhóm chưa từng tiếp xúc được phép làm test mới; `split_groups` chỉ chọn nhóm test trong pool này |
 | Registry lịch sử tiếp xúc / dành test mới | Sổ nhóm đã dùng cho fit, tune, phân tích nhãn hoặc đánh giá qua nhiều run / ghi nhận nhóm mới được dành cho test; việc dành không tự chứng minh test còn độc lập khi thực sự đánh giá |
 | Gói phát hành | Thư mục `ml.release` tạo ra (`pipeline.joblib`, `manifest.json`, `report.json`) cho model winner đã đánh giá. API chỉ nạp gói `approved` |
 | Trạng thái phục vụ (`serving_status`) | `ready`: có gói approved còn hạn. `stale`: dữ liệu quá 14 ngày. `unavailable`: chưa có gói hợp lệ. Hai trạng thái sau thì API không trả giá |

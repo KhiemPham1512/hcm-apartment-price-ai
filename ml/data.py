@@ -4,6 +4,7 @@ import csv
 import hashlib
 import json
 import re
+from collections.abc import Collection
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Literal
@@ -39,6 +40,16 @@ _AREA_RANGE_RE = re.compile(r"\d+\s*[-~–]\s*\d+")
 _AREA_RE = re.compile(r"^\s*([+-]?\d+(?:[.,]\d+)?)\s*(?:m2|m²|sqm)?\s*$", re.IGNORECASE)
 _PHONE_RE = re.compile(r"(?<!\d)(?:0|\+?84)\d{9,10}(?!\d)")
 
+# Read as text: numeric-looking IDs such as "00123" must not become ints and lose their zeros.
+ID_COLUMNS = (
+    "source_id",
+    "listing_id",
+    "property_group_id",
+    "availability_evidence_id",
+    "district_code",
+)
+# Owner decision 24/11/2026: an asking unit price outside this range is a parsing/data error.
+UNIT_PRICE_BOUNDS_VND_PER_M2 = (10_000_000, 500_000_000)
 MARKET_MIN_TOTAL_GROUPS = 500
 MARKET_MIN_TEST_GROUPS = 75
 
@@ -224,6 +235,16 @@ def assign_property_group_id(frame: pd.DataFrame) -> pd.Series:
     return pd.Series(group_ids, index=frame.index, dtype="object")
 
 
+def _implausible_unit_price(price_vnd: float, area_m2: float) -> bool:
+    low, high = UNIT_PRICE_BOUNDS_VND_PER_M2
+    return not low <= price_vnd / area_m2 <= high
+
+
+def _quarantined(idx: int, reason: str | None) -> dict[str, Any]:
+    """Quarantine rows keep only the raw row number and the reason, never raw fields (PII)."""
+    return {"row_index": idx, "reason_code": reason}
+
+
 def prepare_raw_listings(
     raw_frame: pd.DataFrame,
     now: datetime,
@@ -239,84 +260,91 @@ def prepare_raw_listings(
     quarantine_rows: list[dict[str, Any]] = []
 
     for idx, record in enumerate(raw_frame.to_dict("records")):
-        row_copy = dict(record)
-        row_copy["_raw_row_index"] = idx
-
         prop_type = str(record.get("property_type") or "").strip().lower()
         if prop_type != "apartment":
-            quarantine_rows.append({**row_copy, "reason_code": "unsupported_property_type"})
+            quarantine_rows.append(_quarantined(idx, "unsupported_property_type"))
             continue
 
         list_type = str(record.get("listing_type") or "").strip().lower()
         if list_type != "sale":
-            quarantine_rows.append({**row_copy, "reason_code": "non_sale_listing"})
+            quarantine_rows.append(_quarantined(idx, "non_sale_listing"))
             continue
 
         active = record.get("active_at_snapshot")
         evidence_raw = record.get("availability_evidence_id")
         if active is not True or _is_missing(evidence_raw):
-            quarantine_rows.append({**row_copy, "reason_code": "missing_active_evidence"})
+            quarantine_rows.append(_quarantined(idx, "missing_active_evidence"))
             continue
 
         listing_id_raw = record.get("listing_id")
         source_id_raw = record.get("source_id")
         if _is_missing(listing_id_raw) or _is_missing(source_id_raw):
-            quarantine_rows.append({**row_copy, "reason_code": "invalid_identifier_or_pii"})
+            quarantine_rows.append(_quarantined(idx, "invalid_identifier_or_pii"))
             continue
 
         listing_id = str(listing_id_raw).strip()
         source_id = str(source_id_raw).strip()
         evidence_id = str(evidence_raw).strip()
+
         if _contains_phone_pii(listing_id) or _contains_phone_pii(evidence_id):
-            quarantine_rows.append({**row_copy, "reason_code": "invalid_identifier_or_pii"})
+            quarantine_rows.append(_quarantined(idx, "invalid_identifier_or_pii"))
             continue
 
         raw_district = str(record.get("district_code") or "").strip()
         if not raw_district:
-            quarantine_rows.append({**row_copy, "reason_code": "unsupported_district"})
+            quarantine_rows.append(_quarantined(idx, "unsupported_district"))
             continue
+
         if district_mapping is not None:
             if raw_district not in district_mapping:
-                quarantine_rows.append({**row_copy, "reason_code": "unsupported_district"})
+                quarantine_rows.append(_quarantined(idx, "unsupported_district"))
                 continue
+
             district_code = district_mapping[raw_district]
         else:
             district_code = raw_district
 
         area_m2, area_reason = parse_area_m2(record.get("area_m2"))
         if area_reason is not None or area_m2 is None:
-            quarantine_rows.append({**row_copy, "reason_code": area_reason})
+            quarantine_rows.append(_quarantined(idx, area_reason))
             continue
 
         price_vnd, price_reason = parse_asking_price_vnd(record.get("asking_price_vnd"))
         if price_reason is not None or price_vnd is None:
-            quarantine_rows.append({**row_copy, "reason_code": price_reason})
+            quarantine_rows.append(_quarantined(idx, price_reason))
+            continue
+        if _implausible_unit_price(price_vnd, area_m2):
+            quarantine_rows.append(_quarantined(idx, "implausible_unit_price"))
             continue
 
         bedrooms, ok_bed = _parse_optional_int(record.get("bedrooms"), 0, 10)
         bathrooms, ok_bath = _parse_optional_int(record.get("bathrooms"), 0, 10)
         floor_level, ok_floor = _parse_optional_int(record.get("floor_level"), 0, 100)
+
         if not (ok_bed and ok_bath and ok_floor):
-            quarantine_rows.append({**row_copy, "reason_code": "invalid_optional_feature"})
+            quarantine_rows.append(_quarantined(idx, "invalid_optional_feature"))
             continue
 
         area_basis_raw = record.get("area_basis")
         if _is_missing(area_basis_raw):
-            quarantine_rows.append({**row_copy, "reason_code": "inconsistent_area_basis"})
+            quarantine_rows.append(_quarantined(idx, "inconsistent_area_basis"))
             continue
+
         area_basis = str(area_basis_raw).strip()
         if expected_area_basis is not None and area_basis != expected_area_basis:
-            quarantine_rows.append({**row_copy, "reason_code": "inconsistent_area_basis"})
+            quarantine_rows.append(_quarantined(idx, "inconsistent_area_basis"))
             continue
 
         pub_at = _parse_utc_datetime(record.get("published_at"))
         obs_at = _parse_utc_datetime(record.get("price_observed_at"))
         snap_at = _parse_utc_datetime(record.get("source_snapshot_at"))
+
         if pub_at is None or obs_at is None or snap_at is None:
-            quarantine_rows.append({**row_copy, "reason_code": "invalid_timestamp"})
+            quarantine_rows.append(_quarantined(idx, "invalid_timestamp"))
             continue
+
         if not (pub_at <= obs_at <= snap_at):
-            quarantine_rows.append({**row_copy, "reason_code": "invalid_timestamp_order"})
+            quarantine_rows.append(_quarantined(idx, "invalid_timestamp_order"))
             continue
 
         project_norm = (
@@ -324,6 +352,7 @@ def prepare_raw_listings(
             if _is_missing(record.get("project_name_normalized"))
             else str(record.get("project_name_normalized")).strip()
         )
+
         existing_group = (
             None
             if _is_missing(record.get("property_group_id"))
@@ -349,14 +378,18 @@ def prepare_raw_listings(
             "listing_type": "sale",
             "area_basis": area_basis,
         }
+
         try:
             validated = Listing.model_validate(candidate)
+
             if resolved_kind == "current":
                 validated.check_current(now)
             elif validated.source_snapshot_at > now:
                 raise ValueError("Future snapshot")
+
         except (ValidationError, ValueError) as exc:
             msg = str(exc)
+
             if "Future snapshot" in msg:
                 reason = "future_timestamp"
             elif "too old for publication" in msg:
@@ -365,17 +398,26 @@ def prepare_raw_listings(
                 reason = "exceeds_recent_window"
             else:
                 reason = "schema_validation_failed"
-            quarantine_rows.append({**row_copy, "reason_code": reason})
+
+            quarantine_rows.append(_quarantined(idx, reason))
             continue
 
         dumped = validated.model_dump()
         dumped["property_group_id"] = existing_group
         dumped["project_name_normalized"] = project_norm
+        dumped["_raw_row_index"] = idx
+
         clean_candidates.append(dumped)
 
-    quarantine_df = pd.DataFrame(quarantine_rows)
+    # Quarantine chỉ chứa row_index và reason_code.
+    quarantine_df = pd.DataFrame(
+        quarantine_rows,
+        columns=["row_index", "reason_code"],
+    )
+
     if not clean_candidates:
         empty_clean = pd.DataFrame(columns=list(Listing.model_fields.keys()))
+
         audit = build_dataset_audit(
             raw_count=len(raw_frame),
             clean_frame=empty_clean,
@@ -383,31 +425,51 @@ def prepare_raw_listings(
             exact_duplicates_removed=0,
             now=now,
         )
+
         return empty_clean, quarantine_df, audit
 
     clean_df = pd.DataFrame(clean_candidates)
+
+    # Xử lý các dòng có area_basis không đồng nhất.
     if clean_df["area_basis"].nunique() > 1:
         dominant_basis = expected_area_basis or str(clean_df["area_basis"].mode().iloc[0])
+
         mismatch_mask = clean_df["area_basis"] != dominant_basis
+
         if mismatch_mask.any():
-            mismatched = clean_df.loc[mismatch_mask].copy()
-            mismatched["reason_code"] = "inconsistent_area_basis"
-            quarantine_df = pd.concat([quarantine_df, mismatched], ignore_index=True)
+            mismatched = pd.DataFrame(
+                {
+                    "row_index": clean_df.loc[mismatch_mask, "_raw_row_index"].astype(int),
+                    "reason_code": "inconsistent_area_basis",
+                }
+            )
+
+            quarantine_df = pd.concat(
+                [quarantine_df, mismatched],
+                ignore_index=True,
+            )
+
             clean_df = clean_df.loc[~mismatch_mask].reset_index(drop=True)
 
     before_dedup = len(clean_df)
+
     clean_df = (
         clean_df.sort_values(
             ["price_observed_at", "published_at", "source_snapshot_at"],
             ascending=[False, False, False],
             kind="stable",
         )
-        .drop_duplicates(["source_id", "listing_id"], keep="first")
+        .drop_duplicates(
+            ["source_id", "listing_id"],
+            keep="first",
+        )
         .reset_index(drop=True)
     )
+
     exact_duplicates_removed = before_dedup - len(clean_df)
 
     clean_df["property_group_id"] = assign_property_group_id(clean_df)
+
     audit = build_dataset_audit(
         raw_count=len(raw_frame),
         clean_frame=clean_df,
@@ -417,7 +479,12 @@ def prepare_raw_listings(
     )
 
     contract_columns = list(Listing.model_fields.keys())
-    return clean_df.loc[:, contract_columns].copy(), quarantine_df, audit
+
+    return (
+        clean_df.loc[:, contract_columns].copy(),
+        quarantine_df,
+        audit,
+    )
 
 
 def build_dataset_audit(
@@ -523,11 +590,16 @@ def load_current_csv(
     card: DatasetCard | None = None,
 ) -> pd.DataFrame:
     resolved_kind = _resolve_snapshot_kind(snapshot_kind, card)
-    frame = pd.read_csv(path)
+    frame = pd.read_csv(path, dtype=dict.fromkeys(ID_COLUMNS, str))
     rows = []
-    for record in frame.to_dict("records"):
+    for row, record in enumerate(frame.to_dict("records")):
         record = _clean_listing_record(record)
         listing = Listing.model_validate(record)
+        if _implausible_unit_price(listing.asking_price_vnd, listing.area_m2):
+            raise ValueError(
+                f"Implausible unit price at CSV row {row}: outside 10-500 million VND/m2; "
+                "quarantine it in prepare_raw_listings before training"
+            )
         if resolved_kind == "current":
             listing.check_current(now)
         elif listing.source_snapshot_at > now:
@@ -558,12 +630,29 @@ def representatives(frame: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def split_groups(frame: pd.DataFrame) -> dict[str, pd.DataFrame]:
+def split_groups(
+    frame: pd.DataFrame, test_pool: Collection[str] | None = None
+) -> dict[str, pd.DataFrame]:
+    """Group split. With `test_pool`, test groups come only from it (never-exposed groups).
+
+    Groups outside the pool stay in train/validation; drop them from `frame` first if a
+    run must not use them at all. A pool too small for the usual 15% test is refused.
+    """
     frame = representatives(frame)
     if frame["property_group_id"].nunique() < 20:
         raise ValueError("At least 20 groups required for a technical split")
-    first = GroupShuffleSplit(n_splits=1, test_size=0.15, random_state=42)
-    dev_idx, test_idx = next(first.split(frame, groups=frame["property_group_id"]))
+    if test_pool is None:
+        first = GroupShuffleSplit(n_splits=1, test_size=0.15, random_state=42)
+        dev_idx, test_idx = next(first.split(frame, groups=frame["property_group_id"]))
+    else:
+        eligible = np.flatnonzero(
+            frame["property_group_id"].astype(str).isin({str(g) for g in test_pool})
+        )
+        needed = int(np.ceil(0.15 * len(frame)))  # same size GroupShuffleSplit would pick
+        if len(eligible) < needed:
+            raise ValueError(f"test pool has {len(eligible)} usable groups, {needed} required")
+        test_idx = np.sort(np.random.RandomState(42).choice(eligible, needed, replace=False))
+        dev_idx = np.setdiff1d(np.arange(len(frame)), test_idx)
     dev = frame.iloc[dev_idx]
     second = GroupShuffleSplit(n_splits=1, test_size=15 / 85, random_state=42)
     train_idx, val_idx = next(second.split(dev, groups=dev["property_group_id"]))
@@ -723,7 +812,7 @@ def build_refresh_report(
         for v in refreshed_clean["availability_evidence_id"]
         if not _is_missing(v) and not _contains_phone_pii(str(v))
     ]
-    evidence_ids = sorted(set(evidence_vals))
+    unique_evidence_count = len(set(evidence_vals))
     active_rate = round(active_count / len(refreshed_clean), 4)
     evidence_rate = round(len(evidence_vals) / len(refreshed_clean), 4)
 
@@ -772,8 +861,7 @@ def build_refresh_report(
             "active_rate": active_rate,
             "evidence_present_count": len(evidence_vals),
             "evidence_coverage_rate": evidence_rate,
-            "unique_evidence_count": len(evidence_ids),
-            "evidence_ids": evidence_ids,
+            "unique_evidence_count": unique_evidence_count,
         },
         "group_turnover": {
             "previous_n_groups": len(prev_groups),
@@ -1110,6 +1198,23 @@ def build_release_dataset_card(
         raise ValueError("Reviewer must be distinct from preparer")
     if not _validate_mapping_metadata(mapping_metadata):
         raise ValueError("Invalid mapping metadata")
+    if card.snapshot_kind != "current":
+        raise ValueError("Release dataset card requires snapshot_kind='current'")
+    go_no_go = audit.get("go_no_go") if isinstance(audit, dict) else None
+    if not isinstance(go_no_go, dict) or go_no_go.get("status") != "GO":
+        raise ValueError("Release dataset card requires GO audit status")
+    if (
+        not isinstance(exposure_summary, dict)
+        or exposure_summary.get("ready_for_new_release_test") is not True
+        or bool(exposure_summary.get("blockers"))
+    ):
+        raise ValueError("Release dataset card requires passing exposure_summary")
+    if (
+        not isinstance(pre_demo_check, dict)
+        or pre_demo_check.get("status") != "PASS"
+        or bool(pre_demo_check.get("blockers"))
+    ):
+        raise ValueError("Release dataset card requires PASS pre_demo_check")
 
     return {
         "schema_version": SCHEMA_VERSION,

@@ -51,6 +51,7 @@ holdout.csv
 splits.csv
 reports/**/predictions*.csv
 docs/detai.docx
+*.zip
 
 # Reserved for a future frontend; no Node tooling at the root
 node_modules/
