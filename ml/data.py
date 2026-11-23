@@ -4,6 +4,7 @@ import csv
 import hashlib
 import json
 import re
+from collections.abc import Collection
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Literal
@@ -558,12 +559,29 @@ def representatives(frame: pd.DataFrame) -> pd.DataFrame:
     )
 
 
-def split_groups(frame: pd.DataFrame) -> dict[str, pd.DataFrame]:
+def split_groups(
+    frame: pd.DataFrame, test_pool: Collection[str] | None = None
+) -> dict[str, pd.DataFrame]:
+    """Group split. With `test_pool`, test groups come only from it (never-exposed groups).
+
+    Groups outside the pool stay in train/validation; drop them from `frame` first if a
+    run must not use them at all. A pool too small for the usual 15% test is refused.
+    """
     frame = representatives(frame)
     if frame["property_group_id"].nunique() < 20:
         raise ValueError("At least 20 groups required for a technical split")
-    first = GroupShuffleSplit(n_splits=1, test_size=0.15, random_state=42)
-    dev_idx, test_idx = next(first.split(frame, groups=frame["property_group_id"]))
+    if test_pool is None:
+        first = GroupShuffleSplit(n_splits=1, test_size=0.15, random_state=42)
+        dev_idx, test_idx = next(first.split(frame, groups=frame["property_group_id"]))
+    else:
+        eligible = np.flatnonzero(
+            frame["property_group_id"].astype(str).isin({str(g) for g in test_pool})
+        )
+        needed = int(np.ceil(0.15 * len(frame)))  # same size GroupShuffleSplit would pick
+        if len(eligible) < needed:
+            raise ValueError(f"test pool has {len(eligible)} usable groups, {needed} required")
+        test_idx = np.sort(np.random.RandomState(42).choice(eligible, needed, replace=False))
+        dev_idx = np.setdiff1d(np.arange(len(frame)), test_idx)
     dev = frame.iloc[dev_idx]
     second = GroupShuffleSplit(n_splits=1, test_size=15 / 85, random_state=42)
     train_idx, val_idx = next(second.split(dev, groups=dev["property_group_id"]))
