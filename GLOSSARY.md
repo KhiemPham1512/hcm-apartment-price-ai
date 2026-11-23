@@ -36,6 +36,8 @@ Nguồn duy nhất cho nghĩa của thuật ngữ trong dự án. Hợp đồng 
 | B0 / M1 / M2 / M3 | B0: baseline median. M1: Linear Regression. M2: Polynomial bậc 2. M3: Decision Tree |
 | Winner | Mô hình trong M1–M3 có validation RMSE thấp nhất; chênh dưới 1% thì chọn mô hình đơn giản hơn theo thứ tự M1 → M2 → M3. Không đổi theo kết quả test |
 | RMSE / MAE / R² | Sai số bình phương trung bình căn và sai số tuyệt đối trung bình, đều tính bằng VND; R² không có đơn vị, có thể âm, không phải phần trăm dự đoán đúng |
+| Permutation importance | Mức tăng RMSE (VND) trên validation khi xáo trộn ngẫu nhiên một cột gốc của model đã train; càng lớn thì model càng dựa vào cột đó. Không phải quan hệ nhân quả |
+| Ablation | Bỏ thông tin của một cột (vô hiệu hóa ở train và validation) rồi huấn luyện lại với siêu tham số cố định của candidate, so RMSE validation với bản đầy đủ |
 | Nhóm chỉ mô tả (`descriptive_only`) | Nhóm sai số có n < 20: chỉ mô tả, không xếp hạng hay suy rộng |
 | Khoảng bootstrap | Độ biến thiên của metric khi lấy mẫu lại theo nhóm tài sản trong test. Không phải khoảng dự đoán cho từng căn |
 

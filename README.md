@@ -120,6 +120,7 @@ Kỳ vọng khi chưa có model: live trả `status=live`, metadata trả `servi
 .venv/Scripts/python.exe -m ml.train --help
 .venv/Scripts/python.exe -m ml.freeze --help
 .venv/Scripts/python.exe -m ml.evaluate --help
+.venv/Scripts/python.exe -m ml.importance --help
 # Chỉ init một lần khi bắt đầu sổ lịch sử mới đã được xác minh, không lặp khi refresh.
 .venv/Scripts/python.exe -m ml.registry init --registry-dir artifacts/private-registry
 .venv/Scripts/python.exe -m ml.train --csv data/processed/current.csv --dataset-card data/processed/card.json --output artifacts/run-001 --registry-dir artifacts/private-registry --run-id run-001 --actor TV2
@@ -322,6 +323,8 @@ Bảng chính giữ toàn bộ test hợp lệ đã khóa, kể cả district í
 Permutation importance trên **validation** sau chọn ứng viên, gọi pipeline trên cột gốc và dùng scorer RMSE nhất quán; 10 lần lặp, seed 42, nêu trung bình và độ lệch chuẩn. Như vậy district là một feature, tránh đếm mỗi one-hot như một khái niệm độc lập. Nếu feature tương quan, importance có thể bị chia sẻ; cần đối chiếu EDA/ablation trên validation.
 
 Đối chiếu coefficients của M1 với đơn vị/scale; cây có thể xuất hình giới hạn độ sâu. `feature_importances_` của cây không được dùng làm bằng chứng duy nhất. Không gọi importance là quan hệ nhân quả, không suy ra pháp lý căn hộ từ giá. MVP không trả “độ tin cậy 95%” cho một căn; muốn thêm prediction interval cần protocol calibration riêng.
+
+**Công cụ `ml.importance` (đã triển khai):** `python -m ml.importance --run-dir artifacts/run-001 --csv data/processed/current.csv --dataset-card data/processed/card.json` ghi `importance.json` (không ghi đè). Chỉ dùng dòng **train và validation** theo `splits.csv`; dòng test bị loại ngay khi ghép và không bao giờ đi vào phép tính, có test kiểm bằng cách đổi nhãn test mà báo cáo không đổi. CSV, card và `splits.csv` phải khớp hash của candidate, nếu không thì từ chối. Với mỗi mô hình M1–M3: permutation importance trên cột gốc (RMSE VND, 10 lần, seed 42, trung bình và độ lệch chuẩn, khu vực là một feature) và ablation bỏ diện tích, bỏ khu vực, bỏ cả hai (vô hiệu hóa cột ở train và validation rồi huấn luyện lại với siêu tham số của candidate, không tune lại). Báo cáo ghi hash candidate/dữ liệu/split, `snapshot_kind`, các giới hạn diễn giải. Chưa có hình; TV3 vẽ biểu đồ và viết diễn giải từ file này.
 
 ## Artifact và báo cáo
 
