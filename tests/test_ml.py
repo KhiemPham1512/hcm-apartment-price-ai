@@ -3,6 +3,7 @@ import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
@@ -19,7 +20,8 @@ from ml.data import (
 )
 from ml.evaluate import evaluate
 from ml.models import make_model
-from ml.schema import FEATURES, ApartmentFeatures
+from ml.registry import initialize
+from ml.schema import FEATURES, ApartmentFeatures, DatasetCard
 from ml.train import fit_candidates, metrics
 
 
@@ -301,3 +303,135 @@ def test_prepare_raw_listings_quarantine_excludes_raw_columns_and_pii(listings, 
     serialized = quarantine_df.to_json()
     assert "0909123456" not in serialized
     assert "owner@example.com" not in serialized
+
+
+@pytest.mark.parametrize("kind", ["linear", "polynomial", "tree"])
+def test_tv2_keeps_entirely_missing_numeric_feature(listings, kind):
+    data = listings.assign(floor_level=np.nan)
+    splits = split_groups(data)
+
+    train = splits["train"]
+    validation = splits["validation"]
+
+    x_train = feature_frame(train)
+    x_val = feature_frame(validation)
+
+    model = make_model(kind)
+    model.fit(x_train, train["asking_price_vnd"])
+
+    assert "floor_level" in FEATURES
+    assert "floor_level" in x_train.columns
+
+    numeric = model.named_steps["preprocess"].named_transformers_["numeric"]
+
+    imputer = numeric if kind == "tree" else numeric.named_steps["impute"]
+
+    transformed = imputer.transform(x_train[imputer.feature_names_in_])
+
+    floor_index = list(imputer.feature_names_in_).index("floor_level")
+
+    assert transformed.shape[1] == len(imputer.feature_names_in_)
+    assert np.all(transformed[:, floor_index] == 0)
+    assert np.isfinite(model.predict(x_val)).all()
+
+
+def test_tv2_records_uninformative_features(listings):
+    splits = split_groups(listings)
+
+    train = splits["train"].assign(floor_level=np.nan)
+    validation = splits["validation"]
+
+    bundle = fit_candidates(train, validation)
+
+    assert bundle["uninformative_features"] == ["floor_level"]
+    assert "floor_level" in bundle["features"]
+
+    assert set(bundle["models"]) == {
+        "baseline",
+        "linear",
+        "polynomial",
+        "tree",
+    }
+
+    assert bundle["winner"] in {
+        "linear",
+        "polynomial",
+        "tree",
+    }
+
+
+def test_tv2_historical_training_cli(tmp_path, listings, now):
+    historical = listings.assign(
+        published_at=now - timedelta(days=300),
+        price_observed_at=now - timedelta(days=120),
+        source_snapshot_at=now - timedelta(days=60),
+        floor_level=np.nan,
+    )
+
+    csv_path = tmp_path / "historical.csv"
+    card_path = tmp_path / "dataset_card.json"
+    output_dir = tmp_path / "candidate"
+    registry_dir = tmp_path / "registry"
+
+    initialize(registry_dir)
+
+    historical.to_csv(csv_path, index=False)
+
+    card = DatasetCard(
+        dataset_version="tv2-historical-test",
+        data_kind="synthetic",
+        snapshot_kind="historical",
+        license_reference="Synthetic test fixture",
+        source_verified=False,
+        geography_version="hcm_current_v1",
+        grouping_version="tv1-group-v1",
+        district_labels={f"fixture_{i}": f"Fixture {i}" for i in range(3)},
+    )
+
+    card_path.write_text(
+        card.model_dump_json(),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "ml.train",
+            "--csv",
+            str(csv_path),
+            "--dataset-card",
+            str(card_path),
+            "--output",
+            str(output_dir),
+            "--registry-dir",
+            str(registry_dir),
+            "--run-id",
+            "tv2-historical-test",
+            "--actor",
+            "TV2",
+        ],
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+    bundle = joblib.load(output_dir / "candidates.joblib")
+
+    selection = json.loads((output_dir / "selection.json").read_text(encoding="utf-8"))
+
+    assert bundle["uninformative_features"] == ["floor_level"]
+    assert selection["uninformative_features"] == ["floor_level"]
+
+    assert bundle["dataset_card"]["snapshot_kind"] == "historical"
+    assert "floor_level" in bundle["features"]
+
+    assert selection["release_status"] == "candidate"
+    assert selection["winner"] == bundle["winner"]
+
+    assert (output_dir / "holdout.csv").exists()
+    assert (output_dir / "splits.csv").exists()
+
+    assert registry_dir.exists()
+    assert any(registry_dir.rglob("*"))
