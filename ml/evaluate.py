@@ -59,6 +59,7 @@ def evaluate(bundle: dict, holdout: pd.DataFrame) -> dict:
             for name, model in bundle["models"].items()
         },
         "data_kind": bundle["dataset_card"]["data_kind"],
+        "snapshot_kind": bundle["dataset_card"].get("snapshot_kind", "current"),
         "release_status": "candidate",
     }
 
@@ -88,6 +89,8 @@ def main():
         parser.error("Candidate feature contract mismatch")
     if bundle["dataset_card"].get("data_kind") not in ("real", "synthetic"):
         parser.error("Invalid candidate data kind")
+    if bundle["dataset_card"].get("snapshot_kind", "current") not in ("current", "historical"):
+        parser.error("Invalid candidate snapshot kind")
     if bundle["dataset_card"]["data_kind"] == "real" and args.registry_dir is None:
         parser.error("Real evaluation requires registry")
     for name in ("holdout", "splits"):

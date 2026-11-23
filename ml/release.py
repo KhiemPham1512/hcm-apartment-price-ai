@@ -33,6 +33,8 @@ def build(run_dir: Path, csv: Path, reviewers: list[str], now: datetime):
         raise ValueError("Release requires a registry-checked evaluation")
     # Local trusted artifacts only, same as the evaluator.
     bundle = joblib.load(io.BytesIO(candidate))
+    if bundle["dataset_card"].get("snapshot_kind", "current") != "current":
+        raise ValueError("Historical snapshot cannot be released for current-price serving")
     if _sha256(csv.read_bytes()) != bundle["dataset_sha256"]:
         raise ValueError("Dataset does not match the candidate")
     frame = load_current_csv(csv, now)  # enforces publication freshness at release time
