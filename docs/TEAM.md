@@ -20,7 +20,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv1"></a>
 ### TV1 — Dữ liệu và nguồn
 
-**Bước tiếp / Chặn:** Xác minh nguồn/quyền dùng và quyết định GO/NO-GO cùng TV6. Chưa có dataset/mapping thị trường được duyệt trong repo.
+**Bước tiếp / Chặn (cập nhật 24/11, TV6 kiểm):** Đã giao dữ liệu TiniX lịch sử (203.973 dòng sạch, 37.280 nhóm, 21 khu vực đủ chuẩn); hash và mọi con số khớp khi TV6 nạp lại. Cần làm tiếp: (1) **cách ly giá bất thường** theo ngưỡng chốt cùng TV6 trước khi chạy mô hình (8 nhóm giá trên 1.000 tỷ, 19 nhóm đơn giá trên 1 tỷ/m²; 50 nhóm chiếm 99,4% tổng bình phương sai lệch), rồi giao lại CSV + hash; (2) xác nhận revision TiniX (card ghi `ca3fedc…`, tên file ghi `c3f4dc`); (3) ghi vào card/audit hai giới hạn: `price_observed_at` bằng ngày đăng ở 100% dòng, bằng chứng còn bán chỉ có 1 giá trị chung; (4) nếu nhóm muốn hiển thị giá thật: tìm nguồn dữ liệu **hiện hành** (không quá 7 ngày, có quyền dùng). Không commit dữ liệu.
 
 #### Tuần 1
 
@@ -47,7 +47,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv2"></a>
 ### TV2 — Shared features, Linear và Polynomial
 
-**Bước tiếp / Chặn:** Rà soát code nền và nhận snapshot/card/split đã duyệt; fixture chỉ dùng kiểm thử kỹ thuật.
+**Bước tiếp / Chặn (cập nhật 24/11):** Huấn luyện trên snapshot lịch sử, feature số thiếu toàn bộ (`uninformative_features`) và `--test-pool-csv` đã merge qua #60 (TV6 nhận lại commit của bạn khi bạn bận; đừng mở PR trùng từ nhánh cũ). Cần: xem lại #60; khi TV1 giao CSV đã cách ly giá bất thường thì cùng TV6 chạy train và khóa cấu hình (TV2-06, TV2-07).
 
 #### Tuần 1
 
@@ -74,7 +74,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv3"></a>
 ### TV3 — Decision Tree và giải thích
 
-**Bước tiếp / Chặn:** Chốt interface và kế hoạch importance với TV2; số liệu thị trường chờ dữ liệu được duyệt. Công cụ `ml.importance` (permutation importance + ablation trên validation, README mục Giải thích) đã có do TV6 làm giúp; TV3 chạy trên candidate thật, vẽ biểu đồ, viết diễn giải và đối chiếu coefficients của M1.
+**Bước tiếp / Chặn (cập nhật 24/11):** Công cụ `ml.importance` (#65) đã có: permutation importance và ablation diện tích/khu vực trên validation, ghi `importance.json`. Đây là yêu cầu của đề (REQ-04). Cần: viết kế hoạch TV3-03 vào repo (PR #50 dẫn tới #33 nhưng #33 không đổi file nào); sửa #49 (license, làm cùng TV1, script tái lập); khi có candidate thật thì chạy `ml.importance`, vẽ biểu đồ, viết diễn giải, đối chiếu hệ số M1 (TV3-04..10).
 
 #### Tuần 1
 
@@ -102,7 +102,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv4"></a>
 ### TV4 — Backend và serving
 
-**Bước tiếp / Chặn:** Rà soát contract với TV5; test kỹ thuật đã có, serving thị trường chờ artifact approved.
+**Bước tiếp / Chặn (cập nhật 24/11):** API đã có giới hạn tần suất/đồng thời, CORS, proxy tin cậy và ngân sách 5 giây theo runbook của bạn (#51, TV6 làm khi main đỏ). Cần: review #51; tick các mục TV4 đã xong (hiện 0/10); không trỏ `MODEL_DIR` vào gói dữ liệu lịch sử (bị `ml.release` từ chối). Hiển thị giá vẫn chờ gói approved từ dữ liệu hiện hành.
 
 #### Tuần 1
 
@@ -129,7 +129,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv5"></a>
 ### TV5 — Frontend và demo
 
-**Bước tiếp / Chặn:** Frontend TV5 đã có form metadata-driven, xử lý lỗi, responsive và bộ E2E 11/11 đạt trên nhánh `feat/web-tv5-demo` (commit `d09d622`). Còn chờ xác minh request API thật/model được TV6 phê duyệt, báo cáo chính thức và demo cuối. Không xem fixture E2E là bằng chứng dự đoán giá thị trường.
+**Bước tiếp / Chặn (cập nhật 24/11):** Giao diện đã merge (#40), E2E 11/11 bằng fixture. Cần trước demo: (1) trang báo cáo hiển thị `snapshot_kind` của report và nhãn "Đánh giá trên dữ liệu lịch sử, không phải giá hiện hành" khi là `historical`; (2) hiển thị `breakdowns` và `bootstrap` nếu kịp (README mục Metric; nhóm n<20 chỉ mô tả); (3) xử lý 429 theo `Retry-After` vì API đã có giới hạn tần suất; (4) thêm test Playwright cho report lịch sử. Giá thật chỉ có khi có gói approved từ dữ liệu hiện hành.
 
 #### Tuần 1
 
@@ -165,7 +165,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn:** Công cụ freeze, registry, evaluate, train ghi fit/tune, release và test parity serving đã merge (#19–#42). 22/11 TV1 báo NO-GO giá hiện hành; nhóm chọn **phương án B** (README Quyết định 9): đánh giá trên snapshot lịch sử TiniX, không phát hành. Chờ: TV1 thêm `snapshot_kind` vào card/loader và bàn giao CSV + card lịch sử (đủ 10 shard, mapping `hcm_current_v1`); TV2 cho train nhận card lịch sử và xử lý `floor_level` thiếu toàn bộ; TV6 đã chặn release lịch sử và ghi `snapshot_kind` vào report (#52); huấn luyện trên card lịch sử và `--test-pool-csv` đã có (PR `feat/tv2-historical-training-v2`, nhận lại commit của TV2); còn chạy freeze/evaluate khi có CSV TiniX. TV6-01 (rubric, giảng viên xác nhận dùng dữ liệu CC BY-NC) chưa xong. Chưa tick TV6-04..10.
+**Bước tiếp / Chặn (cập nhật 24/11):** Đã xong công cụ: khóa candidate, sổ tiếp xúc, đánh giá (theo nhóm + bootstrap + `snapshot_kind`), train ghi fit/tune và pool test, release chặn dữ liệu lịch sử, parity serving, `ml.importance`, rubric từ đề (SPEC). Diễn tập quy mô TiniX giả lập chạy thông (khoảng 25 giây). 23/11 nhận dữ liệu TiniX: hash và số liệu khớp; **chưa chạy chuỗi thật** vì giá bất thường sẽ chi phối RMSE và train sẽ ghi sổ tiếp xúc vĩnh viễn. Tiếp: chốt ngưỡng cách ly giá cùng TV1, nhận CSV sạch, chạy train → importance → freeze → reserve-test → evaluate (TV6-05/06/07); hỏi giảng viên các câu ở SPEC (TV6-01). Hạn: tuần 4 (25/11–01/12).
 
 #### Tuần 1
 
