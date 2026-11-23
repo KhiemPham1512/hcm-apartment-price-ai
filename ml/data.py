@@ -239,84 +239,158 @@ def prepare_raw_listings(
     quarantine_rows: list[dict[str, Any]] = []
 
     for idx, record in enumerate(raw_frame.to_dict("records")):
-        row_copy = dict(record)
-        row_copy["_raw_row_index"] = idx
-
         prop_type = str(record.get("property_type") or "").strip().lower()
         if prop_type != "apartment":
-            quarantine_rows.append({**row_copy, "reason_code": "unsupported_property_type"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "unsupported_property_type",
+                }
+            )
             continue
 
         list_type = str(record.get("listing_type") or "").strip().lower()
         if list_type != "sale":
-            quarantine_rows.append({**row_copy, "reason_code": "non_sale_listing"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "non_sale_listing",
+                }
+            )
             continue
 
         active = record.get("active_at_snapshot")
         evidence_raw = record.get("availability_evidence_id")
         if active is not True or _is_missing(evidence_raw):
-            quarantine_rows.append({**row_copy, "reason_code": "missing_active_evidence"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "missing_active_evidence",
+                }
+            )
             continue
 
         listing_id_raw = record.get("listing_id")
         source_id_raw = record.get("source_id")
         if _is_missing(listing_id_raw) or _is_missing(source_id_raw):
-            quarantine_rows.append({**row_copy, "reason_code": "invalid_identifier_or_pii"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "invalid_identifier_or_pii",
+                }
+            )
             continue
 
         listing_id = str(listing_id_raw).strip()
         source_id = str(source_id_raw).strip()
         evidence_id = str(evidence_raw).strip()
+
         if _contains_phone_pii(listing_id) or _contains_phone_pii(evidence_id):
-            quarantine_rows.append({**row_copy, "reason_code": "invalid_identifier_or_pii"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "invalid_identifier_or_pii",
+                }
+            )
             continue
 
         raw_district = str(record.get("district_code") or "").strip()
         if not raw_district:
-            quarantine_rows.append({**row_copy, "reason_code": "unsupported_district"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "unsupported_district",
+                }
+            )
             continue
+
         if district_mapping is not None:
             if raw_district not in district_mapping:
-                quarantine_rows.append({**row_copy, "reason_code": "unsupported_district"})
+                quarantine_rows.append(
+                    {
+                        "row_index": idx,
+                        "reason_code": "unsupported_district",
+                    }
+                )
                 continue
+
             district_code = district_mapping[raw_district]
         else:
             district_code = raw_district
 
         area_m2, area_reason = parse_area_m2(record.get("area_m2"))
         if area_reason is not None or area_m2 is None:
-            quarantine_rows.append({**row_copy, "reason_code": area_reason})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": area_reason,
+                }
+            )
             continue
 
         price_vnd, price_reason = parse_asking_price_vnd(record.get("asking_price_vnd"))
         if price_reason is not None or price_vnd is None:
-            quarantine_rows.append({**row_copy, "reason_code": price_reason})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": price_reason,
+                }
+            )
             continue
 
         bedrooms, ok_bed = _parse_optional_int(record.get("bedrooms"), 0, 10)
         bathrooms, ok_bath = _parse_optional_int(record.get("bathrooms"), 0, 10)
         floor_level, ok_floor = _parse_optional_int(record.get("floor_level"), 0, 100)
+
         if not (ok_bed and ok_bath and ok_floor):
-            quarantine_rows.append({**row_copy, "reason_code": "invalid_optional_feature"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "invalid_optional_feature",
+                }
+            )
             continue
 
         area_basis_raw = record.get("area_basis")
         if _is_missing(area_basis_raw):
-            quarantine_rows.append({**row_copy, "reason_code": "inconsistent_area_basis"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "inconsistent_area_basis",
+                }
+            )
             continue
+
         area_basis = str(area_basis_raw).strip()
         if expected_area_basis is not None and area_basis != expected_area_basis:
-            quarantine_rows.append({**row_copy, "reason_code": "inconsistent_area_basis"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "inconsistent_area_basis",
+                }
+            )
             continue
 
         pub_at = _parse_utc_datetime(record.get("published_at"))
         obs_at = _parse_utc_datetime(record.get("price_observed_at"))
         snap_at = _parse_utc_datetime(record.get("source_snapshot_at"))
+
         if pub_at is None or obs_at is None or snap_at is None:
-            quarantine_rows.append({**row_copy, "reason_code": "invalid_timestamp"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "invalid_timestamp",
+                }
+            )
             continue
+
         if not (pub_at <= obs_at <= snap_at):
-            quarantine_rows.append({**row_copy, "reason_code": "invalid_timestamp_order"})
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": "invalid_timestamp_order",
+                }
+            )
             continue
 
         project_norm = (
@@ -324,6 +398,7 @@ def prepare_raw_listings(
             if _is_missing(record.get("project_name_normalized"))
             else str(record.get("project_name_normalized")).strip()
         )
+
         existing_group = (
             None
             if _is_missing(record.get("property_group_id"))
@@ -349,14 +424,18 @@ def prepare_raw_listings(
             "listing_type": "sale",
             "area_basis": area_basis,
         }
+
         try:
             validated = Listing.model_validate(candidate)
+
             if resolved_kind == "current":
                 validated.check_current(now)
             elif validated.source_snapshot_at > now:
                 raise ValueError("Future snapshot")
+
         except (ValidationError, ValueError) as exc:
             msg = str(exc)
+
             if "Future snapshot" in msg:
                 reason = "future_timestamp"
             elif "too old for publication" in msg:
@@ -365,17 +444,31 @@ def prepare_raw_listings(
                 reason = "exceeds_recent_window"
             else:
                 reason = "schema_validation_failed"
-            quarantine_rows.append({**row_copy, "reason_code": reason})
+
+            quarantine_rows.append(
+                {
+                    "row_index": idx,
+                    "reason_code": reason,
+                }
+            )
             continue
 
         dumped = validated.model_dump()
         dumped["property_group_id"] = existing_group
         dumped["project_name_normalized"] = project_norm
+        dumped["_raw_row_index"] = idx
+
         clean_candidates.append(dumped)
 
-    quarantine_df = pd.DataFrame(quarantine_rows)
+    # Quarantine chỉ chứa row_index và reason_code.
+    quarantine_df = pd.DataFrame(
+        quarantine_rows,
+        columns=["row_index", "reason_code"],
+    )
+
     if not clean_candidates:
         empty_clean = pd.DataFrame(columns=list(Listing.model_fields.keys()))
+
         audit = build_dataset_audit(
             raw_count=len(raw_frame),
             clean_frame=empty_clean,
@@ -383,31 +476,51 @@ def prepare_raw_listings(
             exact_duplicates_removed=0,
             now=now,
         )
+
         return empty_clean, quarantine_df, audit
 
     clean_df = pd.DataFrame(clean_candidates)
+
+    # Xử lý các dòng có area_basis không đồng nhất.
     if clean_df["area_basis"].nunique() > 1:
         dominant_basis = expected_area_basis or str(clean_df["area_basis"].mode().iloc[0])
+
         mismatch_mask = clean_df["area_basis"] != dominant_basis
+
         if mismatch_mask.any():
-            mismatched = clean_df.loc[mismatch_mask].copy()
-            mismatched["reason_code"] = "inconsistent_area_basis"
-            quarantine_df = pd.concat([quarantine_df, mismatched], ignore_index=True)
+            mismatched = pd.DataFrame(
+                {
+                    "row_index": clean_df.loc[mismatch_mask, "_raw_row_index"].astype(int),
+                    "reason_code": "inconsistent_area_basis",
+                }
+            )
+
+            quarantine_df = pd.concat(
+                [quarantine_df, mismatched],
+                ignore_index=True,
+            )
+
             clean_df = clean_df.loc[~mismatch_mask].reset_index(drop=True)
 
     before_dedup = len(clean_df)
+
     clean_df = (
         clean_df.sort_values(
             ["price_observed_at", "published_at", "source_snapshot_at"],
             ascending=[False, False, False],
             kind="stable",
         )
-        .drop_duplicates(["source_id", "listing_id"], keep="first")
+        .drop_duplicates(
+            ["source_id", "listing_id"],
+            keep="first",
+        )
         .reset_index(drop=True)
     )
+
     exact_duplicates_removed = before_dedup - len(clean_df)
 
     clean_df["property_group_id"] = assign_property_group_id(clean_df)
+
     audit = build_dataset_audit(
         raw_count=len(raw_frame),
         clean_frame=clean_df,
@@ -417,7 +530,12 @@ def prepare_raw_listings(
     )
 
     contract_columns = list(Listing.model_fields.keys())
-    return clean_df.loc[:, contract_columns].copy(), quarantine_df, audit
+
+    return (
+        clean_df.loc[:, contract_columns].copy(),
+        quarantine_df,
+        audit,
+    )
 
 
 def build_dataset_audit(
