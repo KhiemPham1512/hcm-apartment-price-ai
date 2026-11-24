@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, getMetadata, getReport, postPrediction } from "./api";
+import HistoricalResults from "./HistoricalResults";
 import type { Metadata, Prediction, PredictionForm } from "./types";
 
 const emptyForm: PredictionForm = {
@@ -230,7 +231,7 @@ function App() {
                 );
                 return (
                   <label className={`field${field.wide ? " field-wide" : ""}`} key={key}>
-                    <span>{schemaField?.title ?? field.label}{isRequired && <> <b>*</b></>}</span>
+                    <span>{field.label}{isRequired && <> <b>*</b></>}</span>
                     {key === "area_m2" ? <div className="input-unit">{input}<span>m²</span></div> : input}
                     <small>{description ?? (isRequired
                       ? `Bắt buộc · Trong khoảng ${bounds.min}–${bounds.max}`
@@ -240,7 +241,7 @@ function App() {
               })}
               {metadata?.feature_schema?.properties?.district_code && (
                 <label className="field field-wide">
-                  <span>{metadata.feature_schema.properties.district_code.title ?? "Khu vực được hỗ trợ"}{requiredFields.includes("district_code") && <> <b>*</b></>}</span>
+                  <span>Khu vực được hỗ trợ{requiredFields.includes("district_code") && <> <b>*</b></>}</span>
                   <select aria-label="Khu vực được hỗ trợ" required={requiredFields.includes("district_code")} value={form.district_code} onChange={(event) => update("district_code", event.target.value)} disabled={!canPredict || submitting}>
                     <option value="">Chọn khu vực</option>
                     {metadata?.supported_districts?.map((district) => <option key={district.code} value={district.code}>{district.label}</option>)}
@@ -336,6 +337,8 @@ function App() {
         )}
         <p className="data-note">Thông tin được đọc từ metadata API. Khi chưa có model, các giá trị có thể chưa được cung cấp. Metric chỉ được hiển thị theo báo cáo API, không được frontend tự tính lại.</p>
       </section>
+
+      <HistoricalResults />
 
       <footer className="footer">
         <span>HCM APARTMENT PRICE AI</span>

@@ -129,7 +129,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv5"></a>
 ### TV5 — Frontend và demo
 
-**Bước tiếp / Chặn (cập nhật 24/11):** API chỉ trả `/api/v1/report` khi có gói approved, nên kết quả run-001 không đi qua API. Việc của bạn, đủ đầu vào: (1) thêm trang **Kết quả đánh giá** đọc file tĩnh `reports/run-001/evaluation.json` (chép vào `frontend/public/` hoặc import lúc build), hiện rõ nhãn "Đánh giá trên dữ liệu lịch sử, không phải giá hiện hành" khi `snapshot_kind=historical`, bảng B0–M3 (RMSE/MAE/R², khoảng 95% từ `bootstrap`), sai số theo `breakdowns` (nhóm `descriptive_only` không xếp hạng); (2) xử lý 429 theo `Retry-After`; (3) test Playwright cho trang này; (4) phần **Giao diện** trong báo cáo.
+**Bước tiếp / Chặn (cập nhật 24/11):** Form theo metadata, xử lý lỗi, responsive và E2E đã có (#75). Trang **Kết quả đánh giá** đọc bản tĩnh `frontend/public/evaluation.json` (chép từ `reports/run-001/evaluation.json`), ghi rõ "Đánh giá trên dữ liệu lịch sử, không phải giá hiện hành", bảng B0–M3 kèm khoảng 95% và sai số theo nhóm (TV6 làm thay trong #75). Còn lại: xử lý 429 theo `Retry-After`. API chỉ trả `/api/v1/report` khi có gói approved; fixture E2E không phải bằng chứng giá thị trường.
 
 #### Tuần 1
 
