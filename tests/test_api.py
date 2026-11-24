@@ -228,3 +228,10 @@ def test_configured_cors_origin_is_allowed(serving_model, now, monkeypatch):
         "/api/v1/predictions", headers={"Origin": "https://other.example", **headers}
     )
     assert "access-control-allow-origin" not in other.headers
+
+
+def test_current_manifest_defaults_to_current_snapshot_and_ready(serving_model, now):
+    assert serving_model.manifest.snapshot_kind == "current"
+    meta = TestClient(create_app(serving_model, lambda: now)).get("/api/v1/metadata").json()
+    assert meta["serving_status"] == "ready"
+    assert meta["snapshot_kind"] == "current"

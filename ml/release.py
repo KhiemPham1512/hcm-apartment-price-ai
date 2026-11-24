@@ -21,7 +21,9 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def build(run_dir: Path, csv: Path, reviewers: list[str], now: datetime):
+def build(
+    run_dir: Path, csv: Path, reviewers: list[str], now: datetime, historical_demo: bool = False
+):
     frozen = verify_freeze(run_dir)
     report = json.loads((run_dir / "evaluation.json").read_text(encoding="utf-8"))
     candidate = (run_dir / "candidates.joblib").read_bytes()
@@ -33,11 +35,13 @@ def build(run_dir: Path, csv: Path, reviewers: list[str], now: datetime):
         raise ValueError("Release requires a registry-checked evaluation")
     # Local trusted artifacts only, same as the evaluator.
     bundle = joblib.load(io.BytesIO(candidate))
-    if bundle["dataset_card"].get("snapshot_kind", "current") != "current":
+    snapshot_kind = bundle["dataset_card"].get("snapshot_kind", "current")
+    if snapshot_kind != "current" and not historical_demo:
         raise ValueError("Historical snapshot cannot be released for current-price serving")
     if _sha256(csv.read_bytes()) != bundle["dataset_sha256"]:
         raise ValueError("Dataset does not match the candidate")
-    frame = load_current_csv(csv, now)  # enforces publication freshness at release time
+    # Current data must be fresh at release time; a historical demo keeps every other check.
+    frame = load_current_csv(csv, now, snapshot_kind=snapshot_kind)
     train = split_groups(frame)["train"]
     splits = pd.read_csv(run_dir / "splits.csv", dtype=str)
     if set(train["property_group_id"]) != set(
@@ -55,6 +59,7 @@ def build(run_dir: Path, csv: Path, reviewers: list[str], now: datetime):
     run_id, test = report["registry_run_id"], report["test"][winner]
     manifest = Manifest(
         release_status="approved",
+        snapshot_kind=snapshot_kind,
         data_kind=card["data_kind"],
         source_verified=card["source_verified"],
         schema_version=bundle["schema_version"],
@@ -110,12 +115,17 @@ def main():
     parser.add_argument("--csv", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--reviewer", action="append", required=True)
+    parser.add_argument(
+        "--historical-demo",
+        action="store_true",
+        help="allow a historical snapshot; the API labels it historical_demo, never ready",
+    )
     args = parser.parse_args()
     if args.output.exists():
         parser.error("Output already exists; release into a new directory")
     try:
         manifest, pipeline, report = build(
-            args.run_dir, args.csv, args.reviewer, datetime.now(timezone.utc)
+            args.run_dir, args.csv, args.reviewer, datetime.now(timezone.utc), args.historical_demo
         )
     except (OSError, ValueError, TypeError, KeyError) as exc:
         parser.error(f"Release refused: {exc}")

@@ -1,4 +1,4 @@
-export type ServingStatus = "ready" | "stale" | "unavailable";
+export type ServingStatus = "ready" | "historical_demo" | "stale" | "unavailable";
 
 export interface District {
   code: string;

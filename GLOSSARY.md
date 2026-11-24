@@ -22,7 +22,7 @@ Nguồn duy nhất cho nghĩa của thuật ngữ trong dự án. Hợp đồng 
 | Thuật ngữ | Ý nghĩa trong dự án |
 | --- | --- |
 | Snapshot hiện hành (`snapshot_kind=current`) | Dữ liệu còn trong hạn công bố so với hôm nay (giá quan sát và snapshot không quá 7 ngày). Chỉ loại này được phát hành để phục vụ giá |
-| Snapshot lịch sử (`snapshot_kind=historical`) | Dữ liệu cũ, được dùng để chạy pipeline và đánh giá. Bỏ kiểm tra tuổi nhưng giữ mọi kiểm tra khác. **Không bao giờ được phát hành**; báo cáo ghi rõ "đánh giá trên dữ liệu lịch sử" |
+| Snapshot lịch sử (`snapshot_kind=historical`) | Dữ liệu cũ, được dùng để chạy pipeline và đánh giá. Bỏ kiểm tra tuổi nhưng giữ mọi kiểm tra khác. **Không bao giờ được phát hành làm giá hiện hành**; chỉ được đóng gói demo bằng `ml.release --historical-demo` (API báo `historical_demo`); báo cáo ghi rõ "đánh giá trên dữ liệu lịch sử" |
 | Cổng GO / NO-GO | Quyết định của TV6 cùng TV1 về việc nguồn dữ liệu đủ điều kiện (quyền dùng, độ mới, số nhóm). NO-GO cho giá hiện hành nghĩa là chưa có giá để hiển thị |
 | Phương án A / B | A: CSV hiện hành có quyền dùng và xác nhận tin còn bán. B (đang chọn): dùng snapshot lịch sử để đánh giá, giá hiện tại vẫn NO-GO |
 | Đặc trưng không mang thông tin (`uninformative_features`) | Đặc trưng số thiếu toàn bộ ở tập train (ví dụ `floor_level` của TiniX). Giữ trong schema nhưng model coi là cột hằng; ghi tên trong candidate |
@@ -50,5 +50,5 @@ Nguồn duy nhất cho nghĩa của thuật ngữ trong dự án. Hợp đồng 
 | Pool test (`test_pool`) | Tập nhóm chưa từng tiếp xúc được phép làm test mới; `split_groups` chỉ chọn nhóm test trong pool này |
 | Registry lịch sử tiếp xúc / dành test mới | Sổ nhóm đã dùng cho fit, tune, phân tích nhãn hoặc đánh giá qua nhiều run / ghi nhận nhóm mới được dành cho test; việc dành không tự chứng minh test còn độc lập khi thực sự đánh giá |
 | Gói phát hành | Thư mục `ml.release` tạo ra (`pipeline.joblib`, `manifest.json`, `report.json`) cho model winner đã đánh giá. API chỉ nạp gói `approved` |
-| Trạng thái phục vụ (`serving_status`) | `ready`: có gói approved còn hạn. `stale`: dữ liệu quá 14 ngày. `unavailable`: chưa có gói hợp lệ. Hai trạng thái sau thì API không trả giá |
+| Trạng thái phục vụ (`serving_status`) | `ready`: có gói approved còn hạn. `historical_demo`: gói demo từ snapshot lịch sử, trả giá kèm nhãn lịch sử, không phải giá hiện hành. `stale`: dữ liệu quá 14 ngày. `unavailable`: chưa có gói hợp lệ. Hai trạng thái cuối thì API không trả giá |
 | Parity offline/HTTP | Giá API trả về bằng đúng giá pipeline chạy offline trên cùng gói và cùng đầu vào |

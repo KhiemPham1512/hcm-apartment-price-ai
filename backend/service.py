@@ -19,6 +19,8 @@ class Manifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     release_status: Literal["approved"]
+    # historical = demo only: answers are labelled, never reported as ready current prices.
+    snapshot_kind: Literal["current", "historical"] = "current"
     data_kind: Literal["real"]
     source_verified: Literal[True]
     schema_version: Literal["1"]
@@ -92,20 +94,35 @@ class ServingModel:
     manifest: Manifest
     report: dict | None = None
 
-    def require_ready(self, now: datetime):
+    @property
+    def historical(self) -> bool:
+        return self.manifest.snapshot_kind == "historical"
+
+    def require_servable(self, now: datetime):
         if self.manifest.source_snapshot_at > now:
             raise ServingError("model_unavailable", "Metadata thời gian không hợp lệ.")
-        if now - self.manifest.data_as_of > timedelta(days=SERVING_MAX_AGE_DAYS):
+        if not self.historical and (
+            now - self.manifest.data_as_of > timedelta(days=SERVING_MAX_AGE_DAYS)
+        ):
             raise ServingError(
                 "stale_model",
                 "Dữ liệu của mô hình đã quá hạn cập nhật.",
                 details={"data_as_of": self.manifest.data_as_of.isoformat()},
             )
 
+    def require_ready(self, now: datetime):
+        """Ready means current prices; a historical demo is never ready."""
+        self.require_servable(now)
+        if self.historical:
+            raise ServingError(
+                "historical_demo",
+                "Chỉ có mô hình demo trên dữ liệu lịch sử, không phải giá hiện hành.",
+            )
+
     def metadata(self, now: datetime) -> dict:
         try:
-            self.require_ready(now)
-            status = "ready"
+            self.require_servable(now)
+            status = "historical_demo" if self.historical else "ready"
         except ServingError as exc:
             status = "stale" if exc.code == "stale_model" else "unavailable"
         data = self.manifest.model_dump(mode="json")
@@ -126,6 +143,7 @@ class ServingModel:
                 "listing_window_start",
                 "listing_window_end",
                 "age_summary",
+                "snapshot_kind",
                 "area_basis",
                 "training_ranges",
             }
@@ -139,11 +157,11 @@ class ServingModel:
         return public
 
     def predict(self, features: ApartmentFeatures, now: datetime) -> dict:
-        self.require_ready(now)
+        self.require_servable(now)
         if features.district_code not in self.manifest.supported_districts:
             raise ServingError("unsupported_district", "Khu vực chưa được hỗ trợ.", 422)
         row = features.model_dump()
-        warnings = []
+        warnings = ["historical_snapshot"] if self.historical else []
         if any(value is None for value in row.values()):
             warnings.append("optional_features_missing")
         for key, limits in self.manifest.training_ranges.items():
