@@ -99,8 +99,10 @@ def ablation(report):
     deltas = ["mốc"] + [
         number(row["delta_vs_full_vnd"] / BILLION, 3) for row in rows
     ]
-    ax.bar_label(bars, labels=[f"{number(v, 3)} ({d})" for v, d in zip(values, deltas, strict=True)],
-                 padding=5)
+     bar_labels = [
+     f"{number(value, 3)} ({delta})" for value, delta in zip(values, deltas, strict=True)
+ ]
+ ax.bar_label(bars, labels=bar_labels, padding=5)
     ax.set_xlim(0, max(values) * 1.23)
     ax.set_xlabel("RMSE (tỷ VND) · trong ngoặc là chênh lệch so với đủ đặc trưng")
     save(fig, "tree-ablation")
