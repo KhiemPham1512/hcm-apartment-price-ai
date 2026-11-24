@@ -26,13 +26,23 @@ DISTRICTS = dict(
     zip(
         "binh_chanh binh_tan binh_thanh can_gio go_vap hoc_mon nha_be phu_nhuan "
         "tan_binh tan_phu thu_duc".split(),
-        ["Bình Chánh", "Bình Tân", "Bình Thạnh", "Cần Giờ", "Gò Vấp",
-         "Hóc Môn", "Nhà Bè", "Phú Nhuận", "Tân Bình", "Tân Phú", "Thủ Đức"],
+        [
+            "Bình Chánh",
+            "Bình Tân",
+            "Bình Thạnh",
+            "Cần Giờ",
+            "Gò Vấp",
+            "Hóc Môn",
+            "Nhà Bè",
+            "Phú Nhuận",
+            "Tân Bình",
+            "Tân Phú",
+            "Thủ Đức",
+        ],
         strict=True,
     )
 )
-AREA = {"lt_40": "< 40 m²", "40_70": "40–<70 m²",
-        "70_100": "70–<100 m²", "ge_100": "≥ 100 m²"}
+AREA = {"lt_40": "< 40 m²", "40_70": "40–<70 m²", "70_100": "70–<100 m²", "ge_100": "≥ 100 m²"}
 
 
 def number(value, digits=2):
@@ -96,9 +106,7 @@ def ablation(report):
         for row in rows
     ]
     bars = ax.barh(labels, values, color=[GRAY] + [BLUE] * len(rows))
-    deltas = ["mốc"] + [
-        number(row["delta_vs_full_vnd"] / BILLION, 3) for row in rows
-    ]
+    deltas = ["mốc"] + [number(row["delta_vs_full_vnd"] / BILLION, 3) for row in rows]
     bar_labels = [
         f"{number(value, 3)} ({delta})" for value, delta in zip(values, deltas, strict=True)
     ]
@@ -121,8 +129,11 @@ def group_label(kind, row):
 
 
 def breakdown(kind, rows, total):
-    title = {"district": "khu vực", "area_band": "nhóm diện tích",
-             "price_band": "nhóm giá rao thực tế"}[kind]
+    title = {
+        "district": "khu vực",
+        "area_band": "nhóm diện tích",
+        "price_band": "nhóm giá rao thực tế",
+    }[kind]
     comparable = [row for row in rows if not row["descriptive_only"]]
     descriptive = [row for row in rows if row["descriptive_only"]]
     if kind == "district":
@@ -138,8 +149,9 @@ def breakdown(kind, rows, total):
     labels = [f"{group_label(kind, row)}  (n={number(row['n'], 0)})" for row in comparable]
     for metric, offset, color in [("rmse", -0.18, BLUE), ("mae", 0.18, TEAL)]:
         values = [row[f"{metric}_vnd"] / BILLION for row in comparable]
-        bars = ax.barh([i + offset for i in positions], values, height=0.33,
-                       color=color, label=metric.upper())
+        bars = ax.barh(
+            [i + offset for i in positions], values, height=0.33, color=color, label=metric.upper()
+        )
         ax.bar_label(bars, labels=[number(v) for v in values], padding=4, fontsize=8)
     ax.set_yticks(list(positions), labels)
     ax.legend(loc="upper right", frameon=False)

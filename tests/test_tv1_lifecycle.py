@@ -97,9 +97,7 @@ def test_tv1_07_refresh_report_flags_non_newer_and_stale_snapshot(listings, now)
     assert "stale_for_publication" in report["blockers"]
 
 
-def test_tv1_08_exposure_audit_and_export_integrate_with_registry_reserve(
-    tmp_path, listings
-):
+def test_tv1_08_exposure_audit_and_export_integrate_with_registry_reserve(tmp_path, listings):
     registry = tmp_path / "registry"
     init_registry(registry)
 
@@ -181,9 +179,7 @@ def test_tv1_08_exposure_audit_fails_closed_on_invalid_registry(tmp_path, listin
 
 def test_tv1_09_pre_demo_readiness_passes_on_valid_fresh_snapshot(listings, now):
     card = _make_card()
-    result = verify_pre_demo_readiness(
-        listings, card=card, now=now, mapping_metadata=VALID_MAPPING
-    )
+    result = verify_pre_demo_readiness(listings, card=card, now=now, mapping_metadata=VALID_MAPPING)
     assert result["status"] == "PASS"
     assert all(result["checks"].values())
     assert result["freshness"]["remaining_serving_days"] == 13.0
@@ -211,9 +207,7 @@ def test_tv1_09_pre_demo_readiness_catches_license_mapping_freshness_and_active_
     assert "stale_for_serving" in result["blockers"]
 
 
-def test_tv1_10_release_dataset_card_contains_required_manifest_fields(
-    tmp_path, listings, now
-):
+def test_tv1_10_release_dataset_card_contains_required_manifest_fields(tmp_path, listings, now):
     card = _make_card()
     registry = tmp_path / "registry"
     init_registry(registry)
@@ -264,6 +258,7 @@ def test_tv1_10_release_dataset_card_contains_required_manifest_fields(
             reviewed_by="TV1",
             area_basis="source_reported_unknown",
         )
+
 
 def test_historical_loader_bypasses_7d_90d_freshness_but_keeps_chronology_quarantine_and_grouping(
     tmp_path, listings, now
@@ -333,6 +328,7 @@ def test_historical_loader_bypasses_7d_90d_freshness_but_keeps_chronology_quaran
     with pytest.raises(ValidationError, match="published_at <= price_observed_at"):
         load_current_csv(bad_csv, now=now, card=hist_card)
 
+
 def test_tv1_10_release_dataset_card_rejects_non_go_historical_or_missing_gates(
     tmp_path, listings, now
 ):
@@ -379,9 +375,7 @@ def test_tv1_10_release_dataset_card_rejects_non_go_historical_or_missing_gates(
 
     # 3. Thi?u ho?c kh?ng ??t exposure_summary
     with pytest.raises(ValueError, match="exposure_summary"):
-        build_release_dataset_card(
-            card, audit, **{**valid_kwargs, "exposure_summary": None}
-        )
+        build_release_dataset_card(card, audit, **{**valid_kwargs, "exposure_summary": None})
     with pytest.raises(ValueError, match="exposure_summary"):
         build_release_dataset_card(
             card,
@@ -391,9 +385,7 @@ def test_tv1_10_release_dataset_card_rejects_non_go_historical_or_missing_gates(
 
     # 4. Thi?u ho?c kh?ng ??t pre_demo_check PASS
     with pytest.raises(ValueError, match="pre_demo_check"):
-        build_release_dataset_card(
-            card, audit, **{**valid_kwargs, "pre_demo_check": None}
-        )
+        build_release_dataset_card(card, audit, **{**valid_kwargs, "pre_demo_check": None})
     with pytest.raises(ValueError, match="pre_demo_check"):
         build_release_dataset_card(
             card, audit, **{**valid_kwargs, "pre_demo_check": {"status": "FAIL"}}
