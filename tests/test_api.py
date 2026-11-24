@@ -123,3 +123,108 @@ def test_no_public_management_endpoints():
     client = TestClient(create_app())
     for path in ("/upload", "/api/v1/retrain", "/api/v1/models", "/data/raw", "/artifacts"):
         assert client.get(path).status_code == 404
+
+
+def test_rate_limit_returns_retry_after(serving_model, now):
+    client = TestClient(
+        create_app(serving_model, lambda: now, rate_limit_capacity=2, rate_limit_per_minute=30)
+    )
+    assert client.post("/api/v1/predictions", json=VALID).status_code == 200
+    assert client.post("/api/v1/predictions", json=VALID).status_code == 200
+    limited = client.post("/api/v1/predictions", json=VALID)
+    assert limited.status_code == 429
+    assert limited.json()["error"]["code"] == "rate_limited"
+    assert int(limited.headers["retry-after"]) >= 1
+    assert limited.json()["error"]["request_id"]
+
+
+def test_prediction_capacity_returns_429(serving_model, now):
+    client = TestClient(create_app(serving_model, lambda: now, max_concurrent_predictions=0))
+    response = client.post("/api/v1/predictions", json=VALID)
+    assert response.status_code == 429
+    assert response.json()["error"]["code"] == "prediction_capacity_exceeded"
+
+
+def test_cors_does_not_allow_unknown_origin(serving_model, now):
+    client = TestClient(create_app(serving_model, lambda: now))
+    response = client.options(
+        "/api/v1/predictions",
+        headers={
+            "Origin": "https://untrusted.example",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+    assert "access-control-allow-origin" not in response.headers
+
+
+def test_wildcard_cors_is_rejected(monkeypatch):
+    monkeypatch.setenv("CORS_ORIGINS", "*")
+    with pytest.raises(ValueError, match="Wildcard"):
+        create_app()
+
+
+def test_report_is_read_only_and_served_when_attached(serving_model, now):
+    serving_model.report = {"run_id": "approved-run", "models": []}
+    client = TestClient(create_app(serving_model, lambda: now))
+    response = client.get("/api/v1/report")
+    assert response.status_code == 200
+    assert response.json()["run_id"] == "approved-run"
+
+
+def test_openapi_exposes_expected_routes():
+    schema = TestClient(create_app()).get("/openapi.json").json()
+    paths = schema["paths"]
+    assert set(paths) >= {
+        "/health/live",
+        "/health/ready",
+        "/api/v1/metadata",
+        "/api/v1/predictions",
+        "/api/v1/report",
+    }
+
+
+def test_forwarded_for_is_trusted_only_from_declared_proxy(serving_model, now, monkeypatch):
+    monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "10.0.0.0/24")
+    app = create_app(serving_model, lambda: now, rate_limit_capacity=1, rate_limit_per_minute=1)
+
+    def post(peer, forwarded):
+        client = TestClient(app, client=(peer, 5000))
+        return client.post(
+            "/api/v1/predictions", json=VALID, headers={"X-Forwarded-For": forwarded}
+        ).status_code
+
+    # An untrusted peer cannot dodge its bucket by spoofing the header.
+    assert post("203.0.113.9", "198.51.100.1") == 200
+    assert post("203.0.113.9", "198.51.100.2") == 429
+    # A declared proxy: the forwarded client decides the bucket.
+    assert post("10.0.0.5", "198.51.100.3") == 200
+    assert post("10.0.0.5", "198.51.100.4") == 200
+    assert post("10.0.0.5", "198.51.100.3") == 429
+
+
+def test_invalid_proxy_cidr_is_rejected(monkeypatch):
+    monkeypatch.setenv("TRUSTED_PROXY_CIDRS", "not-a-cidr")
+    with pytest.raises(ValueError):
+        create_app()
+
+
+def test_over_budget_prediction_returns_503_without_a_price(serving_model, now):
+    client = TestClient(create_app(serving_model, lambda: now, prediction_timeout_seconds=0))
+    response = client.post("/api/v1/predictions", json=VALID)
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "prediction_timeout"
+    assert "predicted_price_vnd" not in response.json()
+
+
+def test_configured_cors_origin_is_allowed(serving_model, now, monkeypatch):
+    monkeypatch.setenv("CORS_ORIGINS", "https://demo.example, http://localhost:5173")
+    client = TestClient(create_app(serving_model, lambda: now))
+    headers = {"Access-Control-Request-Method": "POST"}
+    allowed = client.options(
+        "/api/v1/predictions", headers={"Origin": "https://demo.example", **headers}
+    )
+    assert allowed.headers["access-control-allow-origin"] == "https://demo.example"
+    other = client.options(
+        "/api/v1/predictions", headers={"Origin": "https://other.example", **headers}
+    )
+    assert "access-control-allow-origin" not in other.headers

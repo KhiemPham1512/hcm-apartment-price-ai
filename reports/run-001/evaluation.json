@@ -1,0 +1,1333 @@
+{
+  "evaluation_kind": "current_snapshot_grouped",
+  "winner_selected_by_validation": "tree",
+  "test": {
+    "baseline": {
+      "rmse_vnd": 12348444937.672009,
+      "mae_vnd": 5363833478.99713,
+      "r2": -0.08721611742005941,
+      "r2_reason": null,
+      "n": 5576,
+      "invalid_output_count": 0
+    },
+    "linear": {
+      "rmse_vnd": 7889345589.841965,
+      "mae_vnd": 4131970379.1318316,
+      "r2": 0.5562142998943179,
+      "r2_reason": null,
+      "n": 5576,
+      "invalid_output_count": 280
+    },
+    "polynomial": {
+      "rmse_vnd": 7870568046.510713,
+      "mae_vnd": 4071312852.363993,
+      "r2": 0.5583243071512654,
+      "r2_reason": null,
+      "n": 5576,
+      "invalid_output_count": 242
+    },
+    "tree": {
+      "rmse_vnd": 6331526510.1210375,
+      "mae_vnd": 2946904483.3805027,
+      "r2": 0.7141697414834374,
+      "r2_reason": null,
+      "n": 5576,
+      "invalid_output_count": 0
+    }
+  },
+  "breakdowns": {
+    "baseline": {
+      "district": [
+        {
+          "group": "hcm_binh_chanh",
+          "rmse_vnd": 2413520334.01729,
+          "mae_vnd": 2115307692.3076923,
+          "r2": -1.4683168814784078,
+          "r2_reason": null,
+          "n": 221,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_binh_tan",
+          "rmse_vnd": 2392237059.7436385,
+          "mae_vnd": 2183927777.7833333,
+          "r2": -2.93017541686755,
+          "r2_reason": null,
+          "n": 180,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_binh_thanh",
+          "rmse_vnd": 11163405067.086067,
+          "mae_vnd": 6407549848.942598,
+          "r2": -0.2365478420753926,
+          "r2_reason": null,
+          "n": 331,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_can_gio",
+          "rmse_vnd": 2151614380.981045,
+          "mae_vnd": 1955555555.5555556,
+          "r2": -1.3172253978062725,
+          "r2_reason": null,
+          "n": 9,
+          "invalid_output_count": 0,
+          "descriptive_only": true
+        },
+        {
+          "group": "hcm_go_vap",
+          "rmse_vnd": 2190337568.414265,
+          "mae_vnd": 1975280373.8411214,
+          "r2": -1.0506240270946274,
+          "r2_reason": null,
+          "n": 107,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_hoc_mon",
+          "rmse_vnd": 3851298482.330343,
+          "mae_vnd": 3850000000.0,
+          "r2": -1482.25,
+          "r2_reason": null,
+          "n": 2,
+          "invalid_output_count": 0,
+          "descriptive_only": true
+        },
+        {
+          "group": "hcm_nha_be",
+          "rmse_vnd": 1722538009.650372,
+          "mae_vnd": 1423000000.0,
+          "r2": -0.05426156549915584,
+          "r2_reason": null,
+          "n": 226,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_phu_nhuan",
+          "rmse_vnd": 2856179789.953236,
+          "mae_vnd": 2233425373.1343284,
+          "r2": -0.08209618377161698,
+          "r2_reason": null,
+          "n": 134,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_1",
+          "rmse_vnd": 25040181234.718285,
+          "mae_vnd": 16261058430.493273,
+          "r2": -0.6499058097050552,
+          "r2_reason": null,
+          "n": 223,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_10",
+          "rmse_vnd": 3483995953.4881163,
+          "mae_vnd": 2698294117.647059,
+          "r2": -0.031870591638153645,
+          "r2_reason": null,
+          "n": 102,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_11",
+          "rmse_vnd": 3892121645.1943145,
+          "mae_vnd": 2426841584.158416,
+          "r2": -0.014308150558917765,
+          "r2_reason": null,
+          "n": 101,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_12",
+          "rmse_vnd": 2595219107.7309413,
+          "mae_vnd": 2463923255.8139534,
+          "r2": -4.947901255865606,
+          "r2_reason": null,
+          "n": 129,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_3",
+          "rmse_vnd": 6472969884.870065,
+          "mae_vnd": 3719565217.3913045,
+          "r2": -0.05783111120198092,
+          "r2_reason": null,
+          "n": 46,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_4",
+          "rmse_vnd": 5808450684.905086,
+          "mae_vnd": 3242500000.0,
+          "r2": -0.08081238911671274,
+          "r2_reason": null,
+          "n": 156,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_5",
+          "rmse_vnd": 10353554332.488407,
+          "mae_vnd": 5322596491.22807,
+          "r2": -0.11760203462764673,
+          "r2_reason": null,
+          "n": 114,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_6",
+          "rmse_vnd": 2629046683.8292212,
+          "mae_vnd": 1901452054.7945206,
+          "r2": -0.07826451158442493,
+          "r2_reason": null,
+          "n": 146,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_7",
+          "rmse_vnd": 7838864926.014917,
+          "mae_vnd": 4813709955.652212,
+          "r2": -0.32505549689972346,
+          "r2_reason": null,
+          "n": 1130,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_8",
+          "rmse_vnd": 2167615439.5813136,
+          "mae_vnd": 1849152016.1290324,
+          "r2": -0.6599163215720603,
+          "r2_reason": null,
+          "n": 248,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_tan_binh",
+          "rmse_vnd": 2499023268.658637,
+          "mae_vnd": 1840054054.054054,
+          "r2": -0.05119840233173689,
+          "r2_reason": null,
+          "n": 185,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_tan_phu",
+          "rmse_vnd": 5591749456.094195,
+          "mae_vnd": 2996324324.324324,
+          "r2": -0.03501928494990603,
+          "r2_reason": null,
+          "n": 296,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_thu_duc",
+          "rmse_vnd": 19376931418.553112,
+          "mae_vnd": 8670196912.079866,
+          "r2": -0.15873008061983795,
+          "r2_reason": null,
+          "n": 1490,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        }
+      ],
+      "area_band": [
+        {
+          "group": "lt_40",
+          "rmse_vnd": 2782430158.7345,
+          "mae_vnd": 2686663865.5462184,
+          "r2": -12.3980764535567,
+          "r2_reason": null,
+          "n": 238,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "40_70",
+          "rmse_vnd": 2882442202.4512773,
+          "mae_vnd": 2117318539.0260587,
+          "r2": -0.188330413636568,
+          "r2_reason": null,
+          "n": 1842,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "70_100",
+          "rmse_vnd": 4879003890.280574,
+          "mae_vnd": 2773746921.1206107,
+          "r2": -0.07748966454311668,
+          "r2_reason": null,
+          "n": 1965,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "ge_100",
+          "rmse_vnd": 22662841615.111443,
+          "mae_vnd": 13010317459.177008,
+          "r2": -0.47441361464301024,
+          "r2_reason": null,
+          "n": 1531,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        }
+      ],
+      "price_band": [
+        {
+          "group": "q1",
+          "rmse_vnd": 2696257467.1353736,
+          "mae_vnd": 2648571856.559322,
+          "r2": -27.523415772627594,
+          "r2_reason": null,
+          "n": 1416,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 360000000.0,
+          "price_max_vnd": 3100000000.0
+        },
+        {
+          "group": "q2",
+          "rmse_vnd": 1179505664.0563462,
+          "mae_vnd": 1055176978.9404503,
+          "r2": -4.007406687854252,
+          "r2_reason": null,
+          "n": 1377,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 3120000000.0,
+          "price_max_vnd": 4950000000.0
+        },
+        {
+          "group": "q3",
+          "rmse_vnd": 1973918067.98553,
+          "mae_vnd": 1635730796.8406317,
+          "r2": -2.1906486923037343,
+          "r2_reason": null,
+          "n": 1393,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 4979000000.0,
+          "price_max_vnd": 8800000000.0
+        },
+        {
+          "group": "q4",
+          "rmse_vnd": 24474533944.51455,
+          "mae_vnd": 16134392827.338129,
+          "r2": -0.7686176307026689,
+          "r2_reason": null,
+          "n": 1390,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 8850000000.0,
+          "price_max_vnd": 180000000000.0
+        }
+      ]
+    },
+    "linear": {
+      "district": [
+        {
+          "group": "hcm_binh_chanh",
+          "rmse_vnd": 2723968385.997303,
+          "mae_vnd": 2040223561.007729,
+          "r2": -2.1441489721646234,
+          "r2_reason": null,
+          "n": 221,
+          "invalid_output_count": 33,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_binh_tan",
+          "rmse_vnd": 3007171914.982747,
+          "mae_vnd": 1922975887.8852208,
+          "r2": -5.210406391743529,
+          "r2_reason": null,
+          "n": 180,
+          "invalid_output_count": 18,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_binh_thanh",
+          "rmse_vnd": 5332696324.132784,
+          "mae_vnd": 3820930428.688116,
+          "r2": 0.7178297240160652,
+          "r2_reason": null,
+          "n": 331,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_can_gio",
+          "rmse_vnd": 2271906991.797113,
+          "mae_vnd": 1929119967.531699,
+          "r2": -1.5835715849189267,
+          "r2_reason": null,
+          "n": 9,
+          "invalid_output_count": 0,
+          "descriptive_only": true
+        },
+        {
+          "group": "hcm_go_vap",
+          "rmse_vnd": 1887073021.0670164,
+          "mae_vnd": 1311916140.5490344,
+          "r2": -0.5220935608041166,
+          "r2_reason": null,
+          "n": 107,
+          "invalid_output_count": 3,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_hoc_mon",
+          "rmse_vnd": 1249252168.6184878,
+          "mae_vnd": 1198948777.6719055,
+          "r2": -155.0630980797995,
+          "r2_reason": null,
+          "n": 2,
+          "invalid_output_count": 1,
+          "descriptive_only": true
+        },
+        {
+          "group": "hcm_nha_be",
+          "rmse_vnd": 6252598183.017096,
+          "mae_vnd": 4500129911.528214,
+          "r2": -12.890944830291934,
+          "r2_reason": null,
+          "n": 226,
+          "invalid_output_count": 60,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_phu_nhuan",
+          "rmse_vnd": 3548475682.3290696,
+          "mae_vnd": 2263673022.2748203,
+          "r2": -0.6702383396734268,
+          "r2_reason": null,
+          "n": 134,
+          "invalid_output_count": 8,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_1",
+          "rmse_vnd": 14501582278.166555,
+          "mae_vnd": 10836849815.580719,
+          "r2": 0.4466307808746157,
+          "r2_reason": null,
+          "n": 223,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_10",
+          "rmse_vnd": 2386907988.812326,
+          "mae_vnd": 1860748396.5630748,
+          "r2": 0.5156700704732943,
+          "r2_reason": null,
+          "n": 102,
+          "invalid_output_count": 3,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_11",
+          "rmse_vnd": 4265396758.614755,
+          "mae_vnd": 2281067677.867962,
+          "r2": -0.21819264704009877,
+          "r2_reason": null,
+          "n": 101,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_12",
+          "rmse_vnd": 2153544204.9835944,
+          "mae_vnd": 1449698044.260517,
+          "r2": -3.095654102947642,
+          "r2_reason": null,
+          "n": 129,
+          "invalid_output_count": 10,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_3",
+          "rmse_vnd": 3453584270.039702,
+          "mae_vnd": 2770642939.186341,
+          "r2": 0.6988732909836971,
+          "r2_reason": null,
+          "n": 46,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_4",
+          "rmse_vnd": 3464575028.276127,
+          "mae_vnd": 2664519774.0653543,
+          "r2": 0.6154705179808048,
+          "r2_reason": null,
+          "n": 156,
+          "invalid_output_count": 9,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_5",
+          "rmse_vnd": 4425458544.683343,
+          "mae_vnd": 3204002724.9197884,
+          "r2": 0.7958145442989822,
+          "r2_reason": null,
+          "n": 114,
+          "invalid_output_count": 5,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_6",
+          "rmse_vnd": 2646829534.279528,
+          "mae_vnd": 1931890844.7355723,
+          "r2": -0.0929005887215586,
+          "r2_reason": null,
+          "n": 146,
+          "invalid_output_count": 16,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_7",
+          "rmse_vnd": 5424611714.469289,
+          "mae_vnd": 3301769768.3600407,
+          "r2": 0.3654512090330244,
+          "r2_reason": null,
+          "n": 1130,
+          "invalid_output_count": 36,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_8",
+          "rmse_vnd": 3991001416.5258093,
+          "mae_vnd": 2595287639.15367,
+          "r2": -4.627111071295113,
+          "r2_reason": null,
+          "n": 248,
+          "invalid_output_count": 42,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_tan_binh",
+          "rmse_vnd": 2878411466.5512786,
+          "mae_vnd": 2195317340.6631894,
+          "r2": -0.39460058966091993,
+          "r2_reason": null,
+          "n": 185,
+          "invalid_output_count": 14,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_tan_phu",
+          "rmse_vnd": 5650179498.1988945,
+          "mae_vnd": 3057800242.2148542,
+          "r2": -0.05676281580898368,
+          "r2_reason": null,
+          "n": 296,
+          "invalid_output_count": 22,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_thu_duc",
+          "rmse_vnd": 12141567132.475262,
+          "mae_vnd": 6441277671.9105625,
+          "r2": 0.5450519917526311,
+          "r2_reason": null,
+          "n": 1490,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        }
+      ],
+      "area_band": [
+        {
+          "group": "lt_40",
+          "rmse_vnd": 3864717978.801971,
+          "mae_vnd": 3140491041.2357388,
+          "r2": -24.848153417933517,
+          "r2_reason": null,
+          "n": 238,
+          "invalid_output_count": 116,
+          "descriptive_only": false
+        },
+        {
+          "group": "40_70",
+          "rmse_vnd": 3135022450.024827,
+          "mae_vnd": 2474593281.3613973,
+          "r2": -0.4057150911568457,
+          "r2_reason": null,
+          "n": 1842,
+          "invalid_output_count": 163,
+          "descriptive_only": false
+        },
+        {
+          "group": "70_100",
+          "rmse_vnd": 4127059520.2567225,
+          "mae_vnd": 2778713407.918219,
+          "r2": 0.22903928485660352,
+          "r2_reason": null,
+          "n": 1965,
+          "invalid_output_count": 1,
+          "descriptive_only": false
+        },
+        {
+          "group": "ge_100",
+          "rmse_vnd": 13808724218.024685,
+          "mae_vnd": 8017019787.980404,
+          "r2": 0.4526089181696258,
+          "r2_reason": null,
+          "n": 1531,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        }
+      ],
+      "price_band": [
+        {
+          "group": "q1",
+          "rmse_vnd": 3214474401.288574,
+          "mae_vnd": 2524175308.7728963,
+          "r2": -39.54140111684417,
+          "r2_reason": null,
+          "n": 1416,
+          "invalid_output_count": 228,
+          "descriptive_only": false,
+          "price_min_vnd": 360000000.0,
+          "price_max_vnd": 3100000000.0
+        },
+        {
+          "group": "q2",
+          "rmse_vnd": 3312160195.3692846,
+          "mae_vnd": 2568701417.7869425,
+          "r2": -38.48530261912648,
+          "r2_reason": null,
+          "n": 1377,
+          "invalid_output_count": 52,
+          "descriptive_only": false,
+          "price_min_vnd": 3120000000.0,
+          "price_max_vnd": 4950000000.0
+        },
+        {
+          "group": "q3",
+          "rmse_vnd": 4337456326.626785,
+          "mae_vnd": 3077222703.97795,
+          "r2": -14.406038326139678,
+          "r2_reason": null,
+          "n": 1393,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 4979000000.0,
+          "price_max_vnd": 8800000000.0
+        },
+        {
+          "group": "q4",
+          "rmse_vnd": 14471886163.219423,
+          "mae_vnd": 8375511883.368899,
+          "r2": 0.38162010051215545,
+          "r2_reason": null,
+          "n": 1390,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 8850000000.0,
+          "price_max_vnd": 180000000000.0
+        }
+      ]
+    },
+    "polynomial": {
+      "district": [
+        {
+          "group": "hcm_binh_chanh",
+          "rmse_vnd": 2558989439.5283723,
+          "mae_vnd": 1939928360.280047,
+          "r2": -1.7748274142744482,
+          "r2_reason": null,
+          "n": 221,
+          "invalid_output_count": 31,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_binh_tan",
+          "rmse_vnd": 2850691148.533166,
+          "mae_vnd": 1807169890.183243,
+          "r2": -4.580894865248955,
+          "r2_reason": null,
+          "n": 180,
+          "invalid_output_count": 14,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_binh_thanh",
+          "rmse_vnd": 5553162880.434108,
+          "mae_vnd": 3925535501.085003,
+          "r2": 0.6940162373115828,
+          "r2_reason": null,
+          "n": 331,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_can_gio",
+          "rmse_vnd": 2123228780.623361,
+          "mae_vnd": 1823490663.2242854,
+          "r2": -1.2564877914058807,
+          "r2_reason": null,
+          "n": 9,
+          "invalid_output_count": 0,
+          "descriptive_only": true
+        },
+        {
+          "group": "hcm_go_vap",
+          "rmse_vnd": 1672943902.3203847,
+          "mae_vnd": 1152406191.4829543,
+          "r2": -0.19626306486132505,
+          "r2_reason": null,
+          "n": 107,
+          "invalid_output_count": 2,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_hoc_mon",
+          "rmse_vnd": 942463526.3081398,
+          "mae_vnd": 942244191.2837234,
+          "r2": -87.82374984211737,
+          "r2_reason": null,
+          "n": 2,
+          "invalid_output_count": 0,
+          "descriptive_only": true
+        },
+        {
+          "group": "hcm_nha_be",
+          "rmse_vnd": 5795235399.188134,
+          "mae_vnd": 4188970956.508533,
+          "r2": -10.933089810630353,
+          "r2_reason": null,
+          "n": 226,
+          "invalid_output_count": 58,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_phu_nhuan",
+          "rmse_vnd": 3249187071.4930654,
+          "mae_vnd": 2038675608.0784836,
+          "r2": -0.4003745674171699,
+          "r2_reason": null,
+          "n": 134,
+          "invalid_output_count": 4,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_1",
+          "rmse_vnd": 14771457226.25422,
+          "mae_vnd": 11053872296.9654,
+          "r2": 0.4258426899986568,
+          "r2_reason": null,
+          "n": 223,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_10",
+          "rmse_vnd": 2372333602.1959333,
+          "mae_vnd": 1836691995.624669,
+          "r2": 0.5215666205142893,
+          "r2_reason": null,
+          "n": 102,
+          "invalid_output_count": 2,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_11",
+          "rmse_vnd": 4262805281.80984,
+          "mae_vnd": 2164402713.752281,
+          "r2": -0.2167128508281133,
+          "r2_reason": null,
+          "n": 101,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_12",
+          "rmse_vnd": 2077732545.2472885,
+          "mae_vnd": 1432223908.8229322,
+          "r2": -2.8123693984551976,
+          "r2_reason": null,
+          "n": 129,
+          "invalid_output_count": 11,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_3",
+          "rmse_vnd": 3575767131.918005,
+          "mae_vnd": 2705008569.911348,
+          "r2": 0.6771895250545406,
+          "r2_reason": null,
+          "n": 46,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_4",
+          "rmse_vnd": 3661854337.73094,
+          "mae_vnd": 2634772097.866017,
+          "r2": 0.57043208980359,
+          "r2_reason": null,
+          "n": 156,
+          "invalid_output_count": 5,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_5",
+          "rmse_vnd": 4913944872.564881,
+          "mae_vnd": 3321212787.9103374,
+          "r2": 0.7482503879443723,
+          "r2_reason": null,
+          "n": 114,
+          "invalid_output_count": 1,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_6",
+          "rmse_vnd": 2349470071.7362156,
+          "mae_vnd": 1767588187.710758,
+          "r2": 0.1388703353031362,
+          "r2_reason": null,
+          "n": 146,
+          "invalid_output_count": 3,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_7",
+          "rmse_vnd": 5597130483.007552,
+          "mae_vnd": 3175918380.2666698,
+          "r2": 0.3244483345335667,
+          "r2_reason": null,
+          "n": 1130,
+          "invalid_output_count": 28,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_8",
+          "rmse_vnd": 3570532578.2824163,
+          "mae_vnd": 2391114038.735934,
+          "r2": -3.5038894683728827,
+          "r2_reason": null,
+          "n": 248,
+          "invalid_output_count": 44,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_tan_binh",
+          "rmse_vnd": 2617054925.2359653,
+          "mae_vnd": 2039627260.6258302,
+          "r2": -0.15284193913994004,
+          "r2_reason": null,
+          "n": 185,
+          "invalid_output_count": 13,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_tan_phu",
+          "rmse_vnd": 6110767811.249687,
+          "mae_vnd": 3061842023.304572,
+          "r2": -0.23607436047504282,
+          "r2_reason": null,
+          "n": 296,
+          "invalid_output_count": 26,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_thu_duc",
+          "rmse_vnd": 11989963230.10542,
+          "mae_vnd": 6438591382.10565,
+          "r2": 0.5563423447931524,
+          "r2_reason": null,
+          "n": 1490,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        }
+      ],
+      "area_band": [
+        {
+          "group": "lt_40",
+          "rmse_vnd": 3672454765.1869698,
+          "mae_vnd": 3084309258.4427133,
+          "r2": -22.340320643726862,
+          "r2_reason": null,
+          "n": 238,
+          "invalid_output_count": 102,
+          "descriptive_only": false
+        },
+        {
+          "group": "40_70",
+          "rmse_vnd": 3112262327.8547115,
+          "mae_vnd": 2425765317.099105,
+          "r2": -0.38537832526732196,
+          "r2_reason": null,
+          "n": 1842,
+          "invalid_output_count": 140,
+          "descriptive_only": false
+        },
+        {
+          "group": "70_100",
+          "rmse_vnd": 4117532675.5677605,
+          "mae_vnd": 2731940041.7245865,
+          "r2": 0.23259452587830698,
+          "r2_reason": null,
+          "n": 1965,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "ge_100",
+          "rmse_vnd": 13787683423.037943,
+          "mae_vnd": 7923613955.0534935,
+          "r2": 0.45427580187645145,
+          "r2_reason": null,
+          "n": 1531,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        }
+      ],
+      "price_band": [
+        {
+          "group": "q1",
+          "rmse_vnd": 3141666633.2029705,
+          "mae_vnd": 2469480276.747294,
+          "r2": -37.72567619803638,
+          "r2_reason": null,
+          "n": 1416,
+          "invalid_output_count": 197,
+          "descriptive_only": false,
+          "price_min_vnd": 360000000.0,
+          "price_max_vnd": 3100000000.0
+        },
+        {
+          "group": "q2",
+          "rmse_vnd": 3303289048.368553,
+          "mae_vnd": 2544550484.703885,
+          "r2": -38.27407440795958,
+          "r2_reason": null,
+          "n": 1377,
+          "invalid_output_count": 45,
+          "descriptive_only": false,
+          "price_min_vnd": 3120000000.0,
+          "price_max_vnd": 4950000000.0
+        },
+        {
+          "group": "q3",
+          "rmse_vnd": 4171095382.521631,
+          "mae_vnd": 2954154803.5912347,
+          "r2": -13.24692002496254,
+          "r2_reason": null,
+          "n": 1393,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 4979000000.0,
+          "price_max_vnd": 8800000000.0
+        },
+        {
+          "group": "q4",
+          "rmse_vnd": 14498153986.563993,
+          "mae_vnd": 8335160240.336415,
+          "r2": 0.3793732288183639,
+          "r2_reason": null,
+          "n": 1390,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 8850000000.0,
+          "price_max_vnd": 180000000000.0
+        }
+      ]
+    },
+    "tree": {
+      "district": [
+        {
+          "group": "hcm_binh_chanh",
+          "rmse_vnd": 1482941923.897662,
+          "mae_vnd": 1225093175.831027,
+          "r2": 0.06814728342955623,
+          "r2_reason": null,
+          "n": 221,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_binh_tan",
+          "rmse_vnd": 1353667652.2813542,
+          "mae_vnd": 1042481691.9016358,
+          "r2": -0.25842578601417343,
+          "r2_reason": null,
+          "n": 180,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_binh_thanh",
+          "rmse_vnd": 5254236873.189764,
+          "mae_vnd": 3477402566.6176715,
+          "r2": 0.7260717313039231,
+          "r2_reason": null,
+          "n": 331,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_can_gio",
+          "rmse_vnd": 1164576080.499194,
+          "mae_vnd": 694243843.9090356,
+          "r2": 0.32114794853119055,
+          "r2_reason": null,
+          "n": 9,
+          "invalid_output_count": 0,
+          "descriptive_only": true
+        },
+        {
+          "group": "hcm_go_vap",
+          "rmse_vnd": 1216902862.7788875,
+          "mae_vnd": 969922120.6887405,
+          "r2": 0.36704073266840054,
+          "r2_reason": null,
+          "n": 107,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_hoc_mon",
+          "rmse_vnd": 1818432878.290446,
+          "mae_vnd": 1815908705.5684445,
+          "r2": -329.6698132847676,
+          "r2_reason": null,
+          "n": 2,
+          "invalid_output_count": 0,
+          "descriptive_only": true
+        },
+        {
+          "group": "hcm_nha_be",
+          "rmse_vnd": 3618065488.9120636,
+          "mae_vnd": 1210498839.587667,
+          "r2": -3.6511847813576885,
+          "r2_reason": null,
+          "n": 226,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_phu_nhuan",
+          "rmse_vnd": 1699600234.7027311,
+          "mae_vnd": 1201882562.3936203,
+          "r2": 0.6168327812927472,
+          "r2_reason": null,
+          "n": 134,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_1",
+          "rmse_vnd": 12009083938.162075,
+          "mae_vnd": 7472910660.989718,
+          "r2": 0.6205068188357574,
+          "r2_reason": null,
+          "n": 223,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_10",
+          "rmse_vnd": 2621117752.164453,
+          "mae_vnd": 1793243253.0433877,
+          "r2": 0.4159594315559163,
+          "r2_reason": null,
+          "n": 102,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_11",
+          "rmse_vnd": 3459132812.9947577,
+          "mae_vnd": 1491269639.1766167,
+          "r2": 0.1988172710366085,
+          "r2_reason": null,
+          "n": 101,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_12",
+          "rmse_vnd": 1177014111.008447,
+          "mae_vnd": 953927633.2691432,
+          "r2": -0.2234297271140444,
+          "r2_reason": null,
+          "n": 129,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_3",
+          "rmse_vnd": 3407750501.0311513,
+          "mae_vnd": 2118567003.0512938,
+          "r2": 0.7068129772869913,
+          "r2_reason": null,
+          "n": 46,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_4",
+          "rmse_vnd": 3212207903.1936584,
+          "mae_vnd": 2112503731.224956,
+          "r2": 0.6694501275306255,
+          "r2_reason": null,
+          "n": 156,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_5",
+          "rmse_vnd": 3934079427.675379,
+          "mae_vnd": 2505961896.509558,
+          "r2": 0.8386405154777381,
+          "r2_reason": null,
+          "n": 114,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_6",
+          "rmse_vnd": 1388031227.7378185,
+          "mae_vnd": 1034348953.0149963,
+          "r2": 0.6994427629330595,
+          "r2_reason": null,
+          "n": 146,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_7",
+          "rmse_vnd": 4156739894.9344244,
+          "mae_vnd": 2494762048.5598245,
+          "r2": 0.627408103356503,
+          "r2_reason": null,
+          "n": 1130,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_quan_8",
+          "rmse_vnd": 1158322611.452623,
+          "mae_vnd": 862825677.5597562,
+          "r2": 0.5259973254229152,
+          "r2_reason": null,
+          "n": 248,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_tan_binh",
+          "rmse_vnd": 1529007826.341036,
+          "mae_vnd": 1159772517.9972434,
+          "r2": 0.6064829905575491,
+          "r2_reason": null,
+          "n": 185,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_tan_phu",
+          "rmse_vnd": 1711414033.8850625,
+          "mae_vnd": 1205443891.564811,
+          "r2": 0.9030465625602327,
+          "r2_reason": null,
+          "n": 296,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "hcm_thu_duc",
+          "rmse_vnd": 10048886387.806583,
+          "mae_vnd": 5156419414.561876,
+          "r2": 0.688363621095418,
+          "r2_reason": null,
+          "n": 1490,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        }
+      ],
+      "area_band": [
+        {
+          "group": "lt_40",
+          "rmse_vnd": 636072869.3810811,
+          "mae_vnd": 460483663.9534813,
+          "r2": 0.2998233049817359,
+          "r2_reason": null,
+          "n": 238,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "40_70",
+          "rmse_vnd": 2088119037.7341287,
+          "mae_vnd": 1222982249.122606,
+          "r2": 0.37637071250568954,
+          "r2_reason": null,
+          "n": 1842,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "70_100",
+          "rmse_vnd": 3624444072.0337977,
+          "mae_vnd": 2249625282.2554545,
+          "r2": 0.40538810958192817,
+          "r2_reason": null,
+          "n": 1965,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        },
+        {
+          "group": "ge_100",
+          "rmse_vnd": 11128097260.07119,
+          "mae_vnd": 6302480277.4611025,
+          "r2": 0.6445058726285479,
+          "r2_reason": null,
+          "n": 1531,
+          "invalid_output_count": 0,
+          "descriptive_only": false
+        }
+      ],
+      "price_band": [
+        {
+          "group": "q1",
+          "rmse_vnd": 1728375049.8507302,
+          "mae_vnd": 1230459449.6309583,
+          "r2": -10.72073339782769,
+          "r2_reason": null,
+          "n": 1416,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 360000000.0,
+          "price_max_vnd": 3100000000.0
+        },
+        {
+          "group": "q2",
+          "rmse_vnd": 1873450223.9947653,
+          "mae_vnd": 1219776915.283173,
+          "r2": -11.632727295230074,
+          "r2_reason": null,
+          "n": 1377,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 3120000000.0,
+          "price_max_vnd": 4950000000.0
+        },
+        {
+          "group": "q3",
+          "rmse_vnd": 3315001896.2426596,
+          "mae_vnd": 2142983390.5501387,
+          "r2": -7.998876805108923,
+          "r2_reason": null,
+          "n": 1393,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 4979000000.0,
+          "price_max_vnd": 8800000000.0
+        },
+        {
+          "group": "q4",
+          "rmse_vnd": 11970014872.381256,
+          "mae_vnd": 7212086434.007895,
+          "r2": 0.5769473020861784,
+          "r2_reason": null,
+          "n": 1390,
+          "invalid_output_count": 0,
+          "descriptive_only": false,
+          "price_min_vnd": 8850000000.0,
+          "price_max_vnd": 180000000000.0
+        }
+      ]
+    }
+  },
+  "bootstrap": {
+    "unit": "property_group",
+    "method": "percentile",
+    "seed": 42,
+    "n_resamples": 1000,
+    "models": {
+      "baseline": {
+        "rmse_vnd_ci95": [
+          11319894168.067299,
+          13510070344.318035
+        ],
+        "mae_vnd_ci95": [
+          5105669254.398149,
+          5688155336.341123
+        ]
+      },
+      "linear": {
+        "rmse_vnd_ci95": [
+          7214185334.229103,
+          8654609491.634289
+        ],
+        "mae_vnd_ci95": [
+          3976233524.6489844,
+          4327960729.688165
+        ]
+      },
+      "polynomial": {
+        "rmse_vnd_ci95": [
+          7229256916.205306,
+          8606948446.58007
+        ],
+        "mae_vnd_ci95": [
+          3914617509.345113,
+          4258396144.4235725
+        ]
+      },
+      "tree": {
+        "rmse_vnd_ci95": [
+          5823976557.975887,
+          6937874932.867168
+        ],
+        "mae_vnd_ci95": [
+          2809880541.5030584,
+          3113312550.4947376
+        ]
+      }
+    }
+  },
+  "data_kind": "real",
+  "snapshot_kind": "historical",
+  "release_status": "candidate",
+  "registry_status": "checked",
+  "registry_run_id": "run-001",
+  "registry_event_id": "e125285816c64fbc8fba8907a8aebd85.json",
+  "registry_event_sha256": "cf43b9d48e84517ce87d44954f870117e1f48d5950f7ec705448f3d31d8afd91",
+  "candidate_sha256": "91d53acaa20662bdc5f674e4abc1992075b76c3c97259f60c8dedaac16e4f705",
+  "splits_sha256": "551d291b34fda6f17c8f63692d8d15f2aa9d9e908dbecd6108942e8faa43dfde",
+  "source_sha256": "50cf45e6319aec633ee0b7389c8b1f7807cfa63778f480aaf9416faa1222f805",
+  "dataset_sha256": "a57468f0449ad311bcc3bfaae4c227a361a9b38d7322ff161498c2bf31baec67",
+  "package_versions": {
+    "scikit-learn": "1.9.1",
+    "pandas": "3.1.0",
+    "numpy": "2.5.4",
+    "joblib": "1.6.0",
+    "pydantic": "2.14.1"
+  },
+  "freeze_sha256": "2477656267b6858a5a127cce69e3043a9763e6e33e2081e5aeef00fc8a85c782",
+  "freeze_reviewer": "TV6",
+  "frozen_at": "2026-11-23T10:17:58.204807+00:00"
+}

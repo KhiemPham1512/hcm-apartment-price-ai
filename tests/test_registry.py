@@ -278,7 +278,7 @@ def test_mixed_reservation_is_atomic_and_exposure_facts_can_be_recorded_after_re
     assert cli("reserve-test", *common).returncode == 0
 
 
-def train_cli(tmp_path, listings, data_kind, *args, source_verified=False):
+def train_cli(tmp_path, listings, data_kind, *args, source_verified=False, snapshot_kind=None):
     """Synthetic rows; data_kind="real" only exercises the real-mode gate."""
     from datetime import datetime, timedelta, timezone
 
@@ -297,6 +297,8 @@ def train_cli(tmp_path, listings, data_kind, *args, source_verified=False):
         "grouping_version": "fixture-v1",
         "district_labels": {f"fixture_{i}": f"Fixture {i}" for i in range(3)},
     }
+    if snapshot_kind:
+        card["snapshot_kind"] = snapshot_kind
     (tmp_path / "card.json").write_text(json.dumps(card), encoding="utf-8")
     command = [sys.executable, "-B", "-m", "ml.train", "--csv", tmp_path / "input.csv"]
     command += ["--dataset-card", tmp_path / "card.json", "--output", tmp_path / "run", *args]
@@ -368,3 +370,12 @@ def test_training_registry_gate_fails_before_fit_without_output_or_history(
         assert not list((registry / "events").iterdir())
     if problem == "busy":
         assert (registry / ".write-lock").read_text(encoding="utf-8") == "another writer"
+
+
+def test_init_creates_missing_parent_folders_but_never_reuses_a_registry(tmp_path):
+    """README tells operators to run init on artifacts/private-registry before artifacts/ exists."""
+    registry = tmp_path / "artifacts" / "private-registry"
+    assert cli("init", "--registry-dir", registry).returncode == 0
+    assert (registry / "registry.json").exists()
+    again = cli("init", "--registry-dir", registry)
+    assert again.returncode != 0

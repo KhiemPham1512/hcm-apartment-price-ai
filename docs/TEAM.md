@@ -20,7 +20,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv1"></a>
 ### TV1 — Dữ liệu và nguồn
 
-**Bước tiếp / Chặn:** Xác minh nguồn/quyền dùng và quyết định GO/NO-GO cùng TV6. Chưa có dataset/mapping thị trường được duyệt trong repo.
+**Bước tiếp / Chặn (cập nhật 24/11):** Đã xong phần dữ liệu: bản giao lại 24/11 (revision `ca3fedc` đã xác nhận, ghi đủ 3 giới hạn trong audit) trùng từng byte với bộ dữ liệu run-001 (203.537 dòng, 37.172 nhóm, 21 khu vực). Việc còn lại: viết phần **Dữ liệu** của báo cáo (TV1-10) từ `audit.json`/`HANDOFF_SHA256.txt` của bạn: nguồn + license CC BY-NC, 279.948 → 203.537 dòng kèm lý do cách ly (76.410 dòng, trong đó 438 vì đơn giá ngoài 10–500 triệu/m²), 37.172 nhóm, 21 khu vực (Củ Chi chỉ 1 nhóm), 3 giới hạn: ngày quan sát giá = ngày đăng, bằng chứng còn bán chỉ một giá trị, `floor_level` trống; khu vực theo quận cũ. Tick các mục TV1 đã đạt kèm bằng chứng.
 
 #### Tuần 1
 
@@ -47,7 +47,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv2"></a>
 ### TV2 — Shared features, Linear và Polynomial
 
-**Bước tiếp / Chặn:** Rà soát code nền và nhận snapshot/card/split đã duyệt; fixture chỉ dùng kiểm thử kỹ thuật.
+**Bước tiếp / Chặn (cập nhật 24/11):** Candidate chính thức run-001 đã khóa và đánh giá (README mục Kết quả, `reports/run-001/`). Việc của bạn, đủ đầu vào: (1) viết phần **Linear/Polynomial** của báo cáo (TV2-10) từ `reports/run-001/selection.json` và `evaluation.json`: M1 RMSE test 7,89 tỷ, M2 7,87 tỷ, R² 0,56; giải thích vì sao M1/M2 cho 280/242 dự đoán ≤ 0 (giá lệch phải, mô hình tuyến tính) và vì sao Polynomial không hơn Linear; (2) xem lại #60 (code huấn luyện lịch sử của bạn TV6 đã nhận lại). Không chạy lại train trên sổ chính.
 
 #### Tuần 1
 
@@ -74,19 +74,19 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv3"></a>
 ### TV3 — Decision Tree và giải thích
 
-**Bước tiếp / Chặn:** Chốt interface và kế hoạch importance với TV2; số liệu thị trường chờ dữ liệu được duyệt.
+**Bước tiếp / Chặn (cập nhật 24/11):** Số liệu importance và sai số đã có, **không cần dữ liệu thô**. Việc của bạn: (1) vẽ biểu đồ từ `reports/run-001/importance.json` (permutation importance có độ lệch chuẩn, ablation bỏ diện tích/khu vực) và `evaluation.json` → `breakdowns.tree` (sai số theo khu vực, nhóm diện tích, nhóm giá; nhóm `descriptive_only` chỉ mô tả); (2) viết phần **Decision Tree và giải thích** (TV3-07..10): cây thắng (độ sâu 12, lá ≥ 10), importance không phải nhân quả; (3) cập nhật #49/#50 (#33 không có nội dung kế hoạch).
 
 #### Tuần 1
 
 - [ ] **TV3-01** Cùng TV1 kiểm tra EDA, độ phủ và tập trung dự án; biểu đồ có n/kỳ/đơn vị.
 - [x] **TV3-02** Thống nhất interface cây với TV2, chạy Decision Tree ban đầu trên fixture đúng contract.
   - Bằng chứng: Test Decision Tree trên fixture đạt (`1 passed`). Sử dụng interface hiện có của repo: `make_model("tree", ...)` và `feature_frame()`
-- [ ] **TV3-03** Chốt kế hoạch tuning, importance và ablation trước khi xem test.
+- [x] **TV3-03** Chốt kế hoạch tuning, importance và ablation trước khi xem test.
 
 #### Tuần 2
 
 - [ ] **TV3-04** Tuning cây trong ngân sách đã chốt, giữ cùng split và feature set với các mô hình khác.
-- [ ] **TV3-05** Chạy permutation importance trên cột gốc và ablation diện tích/vị trí trên validation.
+- [ ] **TV3-05** Chạy permutation importance trên cột gốc và ablation diện tích/vị trí trên validation. Công cụ: `python -m ml.importance` (11 test, kiểm đúng/sai bằng dữ liệu giả có đáp án và test bất biến theo nhãn test); chưa chạy trên candidate thật.
 - [ ] **TV3-06** Bàn giao config cây đã khóa, log validation, script/figures tái lập và giới hạn tương quan.
 
 #### Tuần 3
@@ -102,23 +102,23 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv4"></a>
 ### TV4 — Backend và serving
 
-**Bước tiếp / Chặn:** Rà soát contract với TV5; test kỹ thuật đã có, serving thị trường chờ artifact approved.
+**Bước tiếp / Chặn (cập nhật 24/11):** Không có gói phát hành vì dữ liệu là lịch sử (`ml.release` từ chối đúng thiết kế), nên API đúng ra trả `unavailable`. Việc của bạn: (1) review #51 (giới hạn tần suất/đồng thời, CORS, proxy); (2) tick các mục TV4 đã xong kèm bằng chứng (hiện 0/10); (3) chuẩn bị phần **API/serving** trong báo cáo và câu trả lời khi bị hỏi vì sao demo không hiện giá (giá lịch sử không được phục vụ như giá hiện hành).
 
 #### Tuần 1
 
-- [ ] **TV4-01** Rà soát API/OpenAPI, metadata-driven schema và envelope lỗi; bàn giao request/response mẫu cho TV5 (P06).
-- [ ] **TV4-02** Kiểm tra strict input/null/bounds/field lạ và khu vực không hỗ trợ.
-- [ ] **TV4-03** Bàn giao live/ready/metadata/predictions/report với trường hợp thiếu model, không có fallback giá giả.
+- [x] **TV4-01** Rà soát API/OpenAPI, metadata-driven schema và envelope lỗi; bàn giao request/response mẫu cho TV5 (P06).
+- [x] **TV4-02** Kiểm tra strict input/null/bounds/field lạ và khu vực không hỗ trợ.
+- [x] **TV4-03** Bàn giao live/ready/metadata/predictions/report với trường hợp thiếu model, không có fallback giá giả.
 
 #### Tuần 2
 
-- [ ] **TV4-04** Kiểm tra trusted loader, checksum/manifest, candidate/synthetic bị chặn khi phục vụ thị trường.
-- [ ] **TV4-05** Cùng TV2/TV6 kiểm tra parity offline/HTTP và output âm/NaN/Inf.
-- [ ] **TV4-06** Kiểm tra stale/biên freshness bằng clock inject, metadata vẫn xem được khi stale.
+- [x] **TV4-04** Kiểm tra trusted loader, checksum/manifest, candidate/synthetic bị chặn khi phục vụ thị trường.
+- [x] **TV4-05** Cùng TV2/TV6 kiểm tra parity offline/HTTP và output âm/NaN/Inf.
+- [x] **TV4-06** Kiểm tra stale/biên freshness bằng clock inject, metadata vẫn xem được khi stale.
 
 #### Tuần 3
 
-- [ ] **TV4-07** Hoàn thiện và đo giới hạn public: body/rate/concurrency/timeout, CORS/proxy và lỗi 429; không tuyên bố đã có trước khi kiểm chứng.
+- [x] **TV4-07** Hoàn thiện và đo giới hạn public: body/rate/concurrency/timeout, CORS/proxy và lỗi 429; không tuyên bố đã có trước khi kiểm chứng.
 - [ ] **TV4-08** Review bảo mật: không upload/retrain/raw/model-download, không log PII/secrets; cùng TV6 kiểm tra release gates (P11).
 
 #### Tuần 4
@@ -165,24 +165,24 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv6"></a>
 ### TV6 — Tích hợp, kiểm định và phát hành
 
-**Bước tiếp / Chặn:** Freeze/guard schema, CLI registry và gate registry trong evaluator đã merge qua PR #19/#21/#22/#23. [PR #35](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/35) và [PR #36](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/36) đã merge: `ml.train` tự ghi fit/tune vào registry trước fit (real bắt buộc registry); `ml.release` tạo gói approved theo gate. Không tạo issue; chủ repo duyệt mỗi PR trước merge, không cần reviewer khác. Cổng dữ liệu, rubric/quỹ giờ và đánh giá thị trường vẫn chờ bàn giao thực tế; chưa tick nghiệm thu TV6-04/05/06/07/09. Training/freeze/release chưa tự ghi history.
+**Bước tiếp / Chặn (cập nhật 24/11):** Đã chạy chuỗi chính thức run-001 trên dữ liệu lịch sử đã lọc: sổ tiếp xúc → train → importance → khóa → dành test → đánh giá; `ml.release` từ chối đúng (dữ liệu lịch sử). Kết quả ở README và `reports/run-001/`. Tiếp: tổng hợp báo cáo + slide từ phần của TV1–TV5 (TV6-11), gói nộp (TV6-12), hỏi giảng viên các câu ở SPEC (TV6-01). Hạn: tuần 4 (25/11–01/12).
 
 #### Tuần 1
 
-- [ ] **TV6-01** Xác nhận rubric, tên/quỹ giờ của 6 người, lịch và phạm vi triển khai; không bịa GitHub username.
+- [ ] **TV6-01** Xác nhận rubric, tên/quỹ giờ của 6 người, lịch và phạm vi triển khai; không bịa GitHub username. Đã ghi: yêu cầu kỹ thuật của đề gốc đối chiếu với trạng thái ở [SPEC](SPEC.md#rubric-từ-đề-gốc-đề-21-mức-nâng-cao). Còn thiếu: thang điểm/trọng số, hạn và định dạng nộp từ giảng viên; tên và quỹ giờ 6 người.
 - [x] **TV6-02** Checklist Markdown cho AI đã tích hợp qua [PR #17](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/17), CI xanh.
 - [x] **TV6-03** P09 đã review/merge: cài môi trường sạch, smoke package ngoài repo, parity schema, pytest/Ruff/pip check và CI — [PR #8](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/8), 58 test pass; chỉ là kiểm chứng kỹ thuật.
-- [ ] **TV6-04** Cùng TV1 review nguồn/card/mapping/audit và ghi quyết định GO/NO-GO.
+- [x] **TV6-04** Cùng TV1 review nguồn/card/mapping/audit và ghi quyết định GO/NO-GO. **Xong 24/11:** đã kiểm dữ liệu TV1 giao (hash, số dòng/nhóm/split, card, cột); quyết định NO-GO giá hiện hành, GO đánh giá lịch sử (README Quyết định 9), lọc đơn giá 10–500 triệu/m² (#69).
 
 #### Tuần 2
 
-- [ ] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol. Guard contract schema/features đã merge qua [PR #21](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/21): 8 ca TDD qua CLI, toàn bộ local 76 pass; Ruff/pip check và CI đạt. Chưa có candidate thị trường để nghiệm thu toàn mục.
-- [ ] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu. Cơ chế bản khóa kỹ thuật đã merge qua [PR #19](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/19); chưa phải review candidate thị trường hay registry đầy đủ.
+- [x] **TV6-05** Kiểm tra baseline + ba mô hình cùng split, nhóm rời, hashes và protocol. Guard contract schema/features đã merge qua [PR #21](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/21): 8 ca TDD qua CLI, toàn bộ local 76 pass; Ruff/pip check và CI đạt. Chưa có candidate thị trường để nghiệm thu toàn mục. **Xong 24/11 (run-001):** B0/M1/M2/M3 cùng split nhóm rời 26.020/5.576/5.576, hash dữ liệu/split/candidate trong `reports/run-001/`.
+- [x] **TV6-06** Review freeze candidate/config/winner trước khi mở test; giữ lịch sử tiếp xúc dữ liệu. Cơ chế bản khóa kỹ thuật đã merge qua [PR #19](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/19); chưa phải review candidate thị trường hay registry đầy đủ. **Xong 24/11 (run-001):** review winner M3 và cấu hình trên validation trước khi khóa; sổ tiếp xúc ghi fit, tune, dành test, đánh giá (4 sự kiện).
 
 #### Tuần 3
 
-- [ ] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10).
-- [ ] **TV6-08** Cùng TV4 kiểm tra parity offline/HTTP, model thiếu/chưa duyệt/quá hạn và security/release gates (P11).
+- [x] **TV6-07** Chạy đánh giá độc lập B0/M1/M2/M3 từ candidate freeze, metric đúng đơn vị/n/run/hash (P10). Công cụ đã có: `ml.evaluate` xuất sai số theo khu vực, nhóm diện tích, nhóm giá (kèm n, cờ n<20) và khoảng bootstrap (README mục Metric); chưa chạy trên candidate thật. **Xong 24/11 (run-001):** test 5.576 nhóm mở một lần; RMSE/MAE VND, R², n, khoảng bootstrap, hash trong `reports/run-001/evaluation.json`. Dữ liệu lịch sử, không phải giá hiện hành.
+- [ ] **TV6-08** Cùng TV4 kiểm tra parity offline/HTTP, model thiếu/chưa duyệt/quá hạn và security/release gates (P11). Kiểm tra kỹ thuật: gói do `ml.release` tạo, nạp qua `MODEL_DIR`, cho giá HTTP khớp pipeline offline; quá hạn trả `stale_model`, gói bị sửa trả `unavailable` (`tests/test_release.py`, dữ liệu synthetic). Chưa có gói thị trường thật; TV4 review.
 - [ ] **TV6-09** Hoàn thiện release/registry và kiểm định model độc lập; chỉ duyệt model khi đủ gate. CLI registry đã merge qua [PR #22](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/22): init, record và reserve-test; 17 test CLI, toàn bộ local 93 pass, Ruff/pip check và CI đạt. Gate evaluator đã merge qua [PR #23](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/23). Train tự ghi fit/tune đã merge qua [PR #35](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/35) (5 ca TDD qua CLI). `ml.release` đã merge qua [PR #36](https://github.com/KhiemPham1512/hcm-apartment-price-ai/pull/36): đóng gói approved chỉ khi đủ gate, dùng chung `Manifest` của serving (7 ca TDD qua CLI; toàn bộ local 132 pass). Còn thiếu lịch sử và candidate thực tế; chưa duyệt model thị trường nào. Chủ repo duyệt mỗi PR, không cần reviewer khác; không thay gate model.
 
 #### Tuần 4
@@ -336,7 +336,7 @@ Mỗi ngày làm việc cập nhật task: done / next / blocker kèm link PR/ru
 <a id="github-workflow"></a>
 ## Làm việc trên GitHub: nhánh riêng → Pull Request → review → merge
 
-Nguồn chuẩn quy tắc Git là [git.md](../.claude/rules/agent/git.md). **Không commit công việc trực tiếp trên `main`, không chạy `git push origin main` và không force-push.** `main` nhận thay đổi qua PR có CI xanh; không cần tạo issue hay có reviewer GitHub. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection.
+Quy tắc Git của repo nằm ở mục này. **Không commit công việc trực tiếp trên `main`, không chạy `git push origin main` và không force-push.** `main` nhận thay đổi qua PR có CI xanh; không cần tạo issue hay có reviewer GitHub. Đã gặp policy chặn merge thường ở PR #21, chưa xác minh toàn bộ protection.
 
 **1. Nhận việc và chốt phạm vi.** Một phạm vi, một owner triển khai, một nhánh. Theo chỉ dẫn chủ repo, làm trực tiếp, không tạo issue mới. Ghi vai trò TV, yêu cầu, file sẽ sửa và phụ thuộc trên PR/handoff; kiểm tra PR đang mở để tránh hai người cùng sửa file chung. Không nhận toàn bộ backlog làm một việc.
 

@@ -39,7 +39,7 @@ Pipeline có thể tái lập từ snapshot giá hiện hành được phép dù
 
 ## Implementation Decisions
 
-Python 3.12 cho data/ML/API; scikit-learn, FastAPI/Pydantic; React/TS là phần UI tiếp theo. Một package feature/model dùng chung. File snapshots và artifact versioned, chưa thêm DB/auth/queue. Training/release offline, HTTP chỉ inference/aggregate.
+Python 3.12 cho data/ML/API; scikit-learn, FastAPI/Pydantic; React/TS cho UI ở `frontend/`. Một package feature/model dùng chung. File snapshots và artifact versioned, chưa thêm DB/auth/queue. Training/release offline, HTTP chỉ inference/aggregate.
 
 Contract/đơn vị/bounds/freshness và quyền chỉ ở README/schema thực thi, không sao chép vào spec. Snapshot grouped holdout là chính; temporal chỉ khi có archive giá thật theo thời điểm quan sát. Không gọi ngày đăng cũ của tin đã sửa giá là lịch sử giá. Tách training-selection khỏi final evaluation, không refit âm thầm sau đo.
 
@@ -62,13 +62,27 @@ Test hành vi ở seam dữ liệu → thí nghiệm và HTTP → pipeline dùng
 
 Ngày 1 xác minh rubric/quỹ giờ/nguồn. Ngày 3 GO/NO-GO data: mục tiêu 1.000 mẫu, tối thiểu 500 nhóm, test tối thiểu 75 nhóm. Đây là ngưỡng tổ chức, không đảm bảo thống kê. Thiếu nguồn giá hiện tại/active/quyền dùng thì no-go tính năng hiện tại, không lách bằng dữ liệu cũ. Ngày 7 baseline xuyên suốt; ngày 14 ba mô hình/freeze; ngày 21 tích hợp/review; ngày 28 demo và kiểm tra lại độ mới.
 
+## Rubric từ đề gốc (đề 21, mức "Nâng cao")
+
+Nguồn: `docs/detai.docx` (file đề, giữ cục bộ). Đề **không có thang điểm hay trọng số**; bảng này chỉ chép các yêu cầu kỹ thuật đề nêu và đối chiếu với trạng thái thật.
+
+| Yêu cầu của đề | Mã | Trạng thái |
+| --- | --- | --- |
+| Hồi quy dự đoán giá nhà/đất theo vị trí, diện tích | REQ-01 | Đã có đầu vào diện tích + khu vực và API. Dự án chọn **căn hộ** (README Quyết định 1), đề ghi "nhà/đất": cần giảng viên xác nhận phạm vi |
+| So sánh hồi quy tuyến tính, đa thức và Decision Tree Regressor | REQ-02 | **Đã chạy (run-001, 24/11):** B0, M1, M2, M3 cùng split; M3 thắng ở validation và test. Kết quả ở README và `reports/run-001/` |
+| Đánh giá RMSE/R² trên tập test độc lập | REQ-03 | **Đã chạy (run-001):** test 5.576 nhóm mở một lần sau khóa candidate và dành trong sổ tiếp xúc; M3 RMSE 6,33 tỷ (95%: 5,82–6,94), R² 0,71; kèm sai số theo nhóm. Dữ liệu lịch sử, không phải giá hiện hành |
+| Phân tích các đặc trưng ảnh hưởng nhiều nhất đến giá | REQ-04 | **Số liệu đã có (run-001):** diện tích ảnh hưởng nhất, rồi khu vực; số phòng gần như không (`reports/run-001/importance.json`). Còn biểu đồ và diễn giải (TV3) |
+| Nguồn dữ liệu: tự thu thập công khai hoặc Kaggle | REQ-06 | Hai bộ Kaggle gợi ý trả 404; dùng TiniX (Hugging Face, CC BY-NC 4.0) làm dữ liệu lịch sử (README Quyết định 9). TV1 giao 23/11: 203.973 dòng sạch, 37.280 nhóm, 21 khu vực; TV6 kiểm hash và số liệu khớp. Còn giá bất thường cần cách ly. Chủ repo báo giảng viên chấp nhận, chưa có văn bản gốc |
+
+**Chưa có từ giảng viên, TV6 cần hỏi (TV6-01):** thang điểm/trọng số từng phần; hạn nộp và định dạng nộp (báo cáo, slide, video, mã nguồn); có bắt buộc demo chạy không; chấp nhận phạm vi căn hộ thay cho nhà/đất; chấp nhận kết quả đánh giá trên dữ liệu lịch sử thay cho giá hiện hành.
+
 ## Out of Scope
 
 Môi giới/thanh toán, tài khoản/admin web, crawler liên tục, dự báo thị trường tương lai, định giá pháp lý, bản đồ live, LLM/RAG/deep learning. Mô hình mở rộng không thay ba kỹ thuật bắt buộc.
 
 ## Further Notes — trạng thái thật
 
-- Đã có nền: schema chung, CSV đã chuẩn hóa, đại diện nhóm/split, baseline + ba pipeline, chọn validation, CLI final evaluation riêng (kiểm tra đủ mô hình, winner và split/holdout nhất quán), HTTP schema/readiness/freshness/output guards; kiểm tra kỹ thuật bằng dữ liệu giả.
-- Chưa có: dataset thị trường được duyệt, grouping từ raw/crawler, importance/ablation, lịch sử registry thực tế đầy đủ, UI, rate/concurrency/timeout public hoặc cloud deploy.
+- Đã có (24/11/2026): schema, nạp/cách ly/gộp nhóm dữ liệu, chia nhóm và pool test, baseline + ba mô hình, huấn luyện trên snapshot lịch sử, khóa candidate, sổ tiếp xúc, đánh giá test độc lập (theo nhóm + bootstrap), phân tích đặc trưng, đóng gói phát hành có cổng, API có giới hạn, giao diện React; kiểm tra kỹ thuật bằng dữ liệu giả và diễn tập quy mô TiniX giả lập.
+- Chưa có: kết quả mô hình trên dữ liệu thật (dữ liệu TiniX đã nhận nhưng còn giá bất thường), biểu đồ/diễn giải importance, nhãn dữ liệu lịch sử trên giao diện, dữ liệu hiện hành và model được duyệt để hiển thị giá, cloud deploy.
 - CI Python đã chạy thành công trên PR #2; trạng thái mới nhất xem GitHub Actions, không suy từ lần chạy cũ. Quy tắc review cần được tuân thủ; branch protection chưa được xác minh. Test kỹ thuật không phải kết quả định giá thị trường.
 - Spec chỉ giữ tại đây; GitHub Issue dẫn về yêu cầu tương ứng và giữ tiến độ/trao đổi, không duy trì bản spec thứ hai.

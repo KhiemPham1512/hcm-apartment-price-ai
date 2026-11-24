@@ -4,13 +4,18 @@ import json
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
+import joblib
+import pandas as pd
 import pytest
 from conftest import synthetic_listings
+from fastapi.testclient import TestClient
 from test_registry import cli, train_cli
 
+from backend.app import configured_app, create_app
 from backend.service import load_approved
+from ml.schema import FEATURES
 
 REGISTRY = ["--run-id", "r1", "--actor", "TV6"]
 
@@ -21,14 +26,19 @@ def run_module(*args):
     )
 
 
-@pytest.fixture(scope="module")
-def evaluated(tmp_path_factory):
-    base = tmp_path_factory.mktemp("release")
+def build_evaluated(base, snapshot_kind=None):
     registry = base / "registry"
     assert cli("init", "--registry-dir", registry).returncode == 0
     listings = synthetic_listings(datetime.now(timezone.utc))
     trained = train_cli(
-        base, listings, "real", "--registry-dir", registry, *REGISTRY, source_verified=True
+        base,
+        listings,
+        "real",
+        "--registry-dir",
+        registry,
+        *REGISTRY,
+        source_verified=True,
+        snapshot_kind=snapshot_kind,
     )
     assert trained.returncode == 0, trained.stderr
     run = base / "run"
@@ -47,6 +57,16 @@ def evaluated(tmp_path_factory):
         result = run_module(*step, *(REGISTRY if step[1] == "reserve-test" else []))
         assert result.returncode == 0, result.stderr
     return base
+
+
+@pytest.fixture(scope="module")
+def evaluated(tmp_path_factory):
+    return build_evaluated(tmp_path_factory.mktemp("release"))
+
+
+@pytest.fixture(scope="module")
+def evaluated_historical(tmp_path_factory):
+    return build_evaluated(tmp_path_factory.mktemp("historical"), "historical")
 
 
 @pytest.fixture
@@ -121,3 +141,57 @@ def test_release_gate_failure_writes_no_package(workspace, problem, message):
     assert result.returncode != 0 and message in result.stderr, result.stderr
     approved = workspace / "approved"
     assert not approved.exists() or not any(approved.iterdir())
+
+
+def test_released_package_serves_offline_prices_over_http(workspace, monkeypatch):
+    """TV6-08: the package written by ml.release is what MODEL_DIR serves, price for price."""
+    assert release(workspace, "TV6", "TV4").returncode == 0
+    approved = workspace / "approved"
+    monkeypatch.setenv("MODEL_DIR", str(approved))
+    configured = configured_app()
+    client = TestClient(configured)
+    assert client.get("/health/ready").status_code == 200
+    metadata = client.get("/api/v1/metadata").json()
+    manifest = json.loads((approved / "manifest.json").read_text(encoding="utf-8"))
+    assert metadata["serving_status"] == "ready"
+    assert metadata["model_id"] == manifest["model_id"]
+    codes = sorted(manifest["supported_districts"])
+    assert [d["code"] for d in metadata["supported_districts"]] == codes
+    rows = [
+        {"area_m2": area, "district_code": code, "bedrooms": 2, "bathrooms": 1, "floor_level": None}
+        for code in codes
+        for area in (35.5, 80.0, 140.0)
+    ]
+    offline = joblib.load(approved / "pipeline.joblib").predict(
+        pd.DataFrame(rows, columns=FEATURES)
+    )
+    # Same MODEL_DIR model with a high limit: the default 5-request burst would throttle a batch.
+    batch = TestClient(create_app(configured.state.model, rate_limit_capacity=1000))
+    for row, expected in zip(rows, offline, strict=True):
+        response = batch.post("/api/v1/predictions", json=row)
+        assert response.status_code == 200, response.text
+        assert response.json()["predicted_price_vnd"] == pytest.approx(float(expected), rel=1e-12)
+    assert client.get("/api/v1/report").json() == json.loads(
+        (approved / "report.json").read_text(encoding="utf-8")
+    )
+    served = load_approved(approved)
+    expired = served.manifest.data_as_of + timedelta(days=14, seconds=1)
+    stale = TestClient(create_app(served, lambda: expired))
+    assert stale.get("/api/v1/metadata").json()["serving_status"] == "stale"
+    assert stale.post("/api/v1/predictions", json=rows[0]).json()["error"]["code"] == "stale_model"
+    with (approved / "pipeline.joblib").open("ab") as handle:
+        handle.write(b"tampered")
+    unavailable = TestClient(configured_app())
+    assert unavailable.get("/api/v1/metadata").json()["serving_status"] == "unavailable"
+    assert unavailable.post("/api/v1/predictions", json=rows[0]).status_code == 503
+
+
+def test_historical_snapshot_is_never_released_for_serving(evaluated_historical, tmp_path):
+    for name in ("run", "input.csv"):
+        source = evaluated_historical / name
+        (shutil.copytree if source.is_dir() else shutil.copy)(source, tmp_path / name)
+    report = json.loads((tmp_path / "run" / "evaluation.json").read_text(encoding="utf-8"))
+    assert report["snapshot_kind"] == "historical"
+    result = release(tmp_path, "TV6", "TV4")
+    assert result.returncode != 0 and "Historical snapshot" in result.stderr, result.stderr
+    assert not (tmp_path / "approved").exists()
