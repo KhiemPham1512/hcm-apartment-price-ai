@@ -61,7 +61,8 @@ function App() {
   const [reportLoading, setReportLoading] = useState(false);
 
   const status = metadata?.serving_status ?? "unavailable";
-  const canPredict = status === "ready"
+  const demo = status === "historical_demo";
+  const canPredict = (status === "ready" || demo)
     && (metadata?.supported_districts?.length ?? 0) > 0
     && Boolean(metadata?.feature_schema?.properties?.area_m2)
     && Boolean(metadata?.feature_schema?.properties?.district_code);
@@ -151,6 +152,7 @@ function App() {
 
   const statusText = {
     ready: "Mô hình sẵn sàng",
+    historical_demo: "Demo trên dữ liệu lịch sử",
     stale: "Dữ liệu mô hình đã quá hạn",
     unavailable: "Mô hình chưa sẵn sàng",
   }[status];
@@ -197,7 +199,14 @@ function App() {
           </div>
         )}
 
-        {!loadingMetadata && !metadataError && status !== "ready" && (
+        {!loadingMetadata && !metadataError && demo && (
+          <div className="notice warning" role="status">
+            <strong>Chế độ demo: mô hình học từ tin rao {dateLabel(metadata?.data_as_of)} – {dateLabel(metadata?.data_latest_at)}</strong>
+            <p>Giá hiển thị là giá rao ước tính theo dữ liệu lịch sử, không phải giá hiện tại và không dùng cho quyết định mua bán.</p>
+          </div>
+        )}
+
+        {!loadingMetadata && !metadataError && status !== "ready" && !demo && (
           <div className={`notice ${status === "stale" ? "warning" : "info"}`} role="status">
             <strong>{status === "stale" ? "Dữ liệu mô hình đã quá hạn" : "Chưa có mô hình được duyệt"}</strong>
             <p>
@@ -269,7 +278,7 @@ function App() {
                 <span className="result-label">TỔNG GIÁ ƯỚC TÍNH</span>
                 <strong className="price">{money.format(prediction.predicted_price_vnd)}</strong>
                 <div className="per-meter"><span>Đơn giá / m²</span><strong>{money.format(prediction.predicted_price_per_m2_vnd)}</strong></div>
-                {prediction.warnings?.length > 0 && <div className="notice warning compact"><strong>Lưu ý từ mô hình</strong><ul>{prediction.warnings.map((warning) => <li key={warning}>{warning === "outside_training_range" ? "Một số thông tin nằm ngoài khoảng dữ liệu huấn luyện." : warning === "optional_features_missing" ? "Có trường thông tin tùy chọn chưa được cung cấp." : warning}</li>)}</ul></div>}
+                {prediction.warnings?.length > 0 && <div className="notice warning compact"><strong>Lưu ý từ mô hình</strong><ul>{prediction.warnings.map((warning) => <li key={warning}>{warning === "historical_snapshot" ? "Giá rao ước tính theo dữ liệu lịch sử, không phải giá hiện tại." : warning === "outside_training_range" ? "Một số thông tin nằm ngoài khoảng dữ liệu huấn luyện." : warning === "optional_features_missing" ? "Có trường thông tin tùy chọn chưa được cung cấp." : warning}</li>)}</ul></div>}
                 <dl className="metadata-list">
                   <div><dt>Ngày dữ liệu</dt><dd>{dateLabel(prediction.data_as_of)}</dd></div>
                   <div><dt>Quan sát mới nhất</dt><dd>{dateLabel(prediction.data_latest_at)}</dd></div>

@@ -195,3 +195,42 @@ def test_historical_snapshot_is_never_released_for_serving(evaluated_historical,
     result = release(tmp_path, "TV6", "TV4")
     assert result.returncode != 0 and "Historical snapshot" in result.stderr, result.stderr
     assert not (tmp_path / "approved").exists()
+
+
+def test_historical_demo_flag_packages_a_labelled_demo_never_ready_for_current_prices(
+    evaluated_historical, tmp_path
+):
+    for name in ("run", "input.csv"):
+        source = evaluated_historical / name
+        (shutil.copytree if source.is_dir() else shutil.copy)(source, tmp_path / name)
+    result = run_module(
+        "ml.release",
+        "--run-dir",
+        tmp_path / "run",
+        "--csv",
+        tmp_path / "input.csv",
+        "--output",
+        tmp_path / "approved",
+        "--reviewer",
+        "TV6",
+        "--reviewer",
+        "TV4",
+        "--historical-demo",
+    )
+    assert result.returncode == 0, result.stderr
+    served = load_approved(tmp_path / "approved")
+    assert served.manifest.snapshot_kind == "historical"
+    # A year later the data is far past the freshness window; demo still answers, labelled.
+    later = datetime.now(timezone.utc) + timedelta(days=400)
+    client = TestClient(create_app(served, lambda: later))
+    meta = client.get("/api/v1/metadata").json()
+    assert meta["serving_status"] == "historical_demo"
+    assert meta["snapshot_kind"] == "historical"
+    assert client.get("/health/ready").status_code == 503
+    district = meta["supported_districts"][0]["code"]
+    answer = client.post("/api/v1/predictions", json={"area_m2": 70, "district_code": district})
+    assert answer.status_code == 200, answer.text
+    body = answer.json()
+    assert body["predicted_price_vnd"] > 0
+    assert body["snapshot_kind"] == "historical"
+    assert "historical_snapshot" in body["warnings"]
