@@ -6,13 +6,15 @@ export class ApiError extends Error {
   status: number;
   code: string;
   requestId?: string;
+  retryAfterSeconds?: number;
 
-  constructor(message: string, status: number, code = "request_failed", requestId?: string) {
+  constructor(message: string, status: number, code = "request_failed", requestId?: string, retryAfterSeconds?: number) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
     this.requestId = requestId;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
 }
 
@@ -30,8 +32,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const body = (await response.json().catch(() => ({}))) as T & ApiErrorBody;
   if (!response.ok) {
     const apiError = body.error;
-    const message = apiError?.message ?? friendlyError(response.status, apiError?.code);
-    throw new ApiError(message, response.status, apiError?.code, apiError?.request_id);
+    // Header chỉ đọc được khi cùng origin (proxy Vite) hoặc backend expose Retry-After qua CORS.
+    const retry = Number(response.headers.get("Retry-After"));
+    const retryAfter = response.status === 429 && retry > 0 ? Math.ceil(retry) : undefined;
+    const message = response.status === 429
+      ? `Bạn gửi yêu cầu quá nhanh hoặc máy chủ đang bận. Vui lòng thử lại${retryAfter ? ` sau ${retryAfter} giây` : " sau ít phút"}.`
+      : apiError?.message ?? friendlyError(response.status, apiError?.code);
+    throw new ApiError(message, response.status, apiError?.code, apiError?.request_id, retryAfter);
   }
   return body as T;
 }
