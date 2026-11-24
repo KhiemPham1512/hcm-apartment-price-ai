@@ -55,6 +55,7 @@ function App() {
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [predictionError, setPredictionError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [coolingDown, setCoolingDown] = useState(false);
   const [report, setReport] = useState<Record<string, unknown> | null>(null);
   const [reportMessage, setReportMessage] = useState("");
   const [reportLoading, setReportLoading] = useState(false);
@@ -113,6 +114,10 @@ function App() {
       setPrediction(result);
     } catch (error) {
       if (error instanceof ApiError) {
+        if (error.retryAfterSeconds) {
+          setCoolingDown(true);
+          window.setTimeout(() => setCoolingDown(false), error.retryAfterSeconds * 1000);
+        }
         setPredictionError(`${error.message}${error.requestId ? ` (Mã yêu cầu: ${error.requestId})` : ""}`);
       } else {
         setPredictionError("Đã xảy ra lỗi không xác định.");
@@ -251,7 +256,7 @@ function App() {
               )}
             </div>
             {predictionError && <div className="inline-error" role="alert">{predictionError}</div>}
-            <button className="primary-button" type="submit" disabled={!canPredict || submitting || loadingMetadata}>
+            <button className="primary-button" type="submit" disabled={!canPredict || submitting || loadingMetadata || coolingDown}>
               {submitting ? <><span className="spinner" />Đang tính toán...</> : <>Ước tính giá căn hộ <span aria-hidden="true">↗</span></>}
             </button>
             <p className="form-footnote">Thông tin chỉ được gửi đến API dự đoán; không nhập địa chỉ chi tiết hoặc dữ liệu cá nhân.</p>
