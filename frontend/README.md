@@ -71,7 +71,7 @@ Bộ E2E thông thường sử dụng dữ liệu fixture tổng hợp để ki�
 Giữ backend hoạt động ở Terminal 1, sau đó chạy:
 
 ```powershell
-npx playwright test e2e/integration.spec.ts
+E2E_BACKEND=1 npx playwright test e2e/integration.spec.ts   # PowerShell: $env:E2E_BACKEND=1; npx playwright test e2e/integration.spec.ts
 ```
 
 Smoke test kiểm tra phản hồi metadata từ backend thật thông qua Vite Proxy và xác minh trạng thái nút dự đoán theo trạng thái phục vụ của mô hình.

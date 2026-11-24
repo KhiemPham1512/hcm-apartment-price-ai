@@ -1,5 +1,7 @@
 ﻿import { expect, test } from "@playwright/test";
 
+// Cần backend thật ở 127.0.0.1:8000; chạy bằng: E2E_BACKEND=1 npx playwright test e2e/integration.spec.ts
+test.skip(!process.env.E2E_BACKEND, "cần backend thật (đặt E2E_BACKEND=1)");
 test("real backend metadata controls prediction availability", async ({ page }) => {
   let predictionRequested = false;
 

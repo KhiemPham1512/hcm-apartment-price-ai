@@ -115,8 +115,8 @@ test("report metrics are rendered with VND units and sample counts", async ({ pa
   );
   await page.goto("/");
   await page.getByRole("button", { name: "Xem báo cáo mô hình" }).click();
-  await expect(page.getByRole("table")).toBeVisible();
-  await expect(page.getByRole("row", { name: /Baseline/ })).toContainText("80");
+  await expect(page.locator(".report-panel", { hasText: "Báo cáo đánh giá từ API" }).getByRole("table")).toBeVisible();
+  await expect(page.locator(".report-panel", { hasText: "Báo cáo đánh giá từ API" }).getByRole("row", { name: /Baseline/ })).toContainText("80");
   await expect(page.getByText(/RMSE\/MAE có đơn vị VND/)).toBeVisible();
 });
 
@@ -171,10 +171,10 @@ test("report API failure does not leave previously loaded report metrics visible
 
   await page.goto("/");
   await page.getByRole("button", { name: "Xem báo cáo mô hình" }).click();
-  await expect(page.getByRole("table")).toBeVisible();
+  await expect(page.locator(".report-panel", { hasText: "Báo cáo đánh giá từ API" }).getByRole("table")).toBeVisible();
   await page.getByRole("button", { name: "Xem báo cáo mô hình" }).click();
   await expect(page.getByRole("status")).toContainText("Báo cáo hiện chưa khả dụng");
-  await expect(page.getByRole("table")).toHaveCount(0);
+  await expect(page.locator(".report-panel", { hasText: "Báo cáo đánh giá từ API" }).getByRole("table")).toHaveCount(0);
 });
 
 
@@ -198,5 +198,6 @@ test("form labels, required fields and numeric bounds follow API feature metadat
   await expect(bedrooms).toHaveAttribute("max", "4");
   await expect(bedrooms).not.toHaveAttribute("required", "");
   await expect(page.getByText("Mô tả trường từ API")).toBeVisible();
-  await expect(page.getByText("Số phòng ngủ theo metadata")).toBeVisible();
+  // Pydantic tự sinh title tiếng Anh ("Bedrooms"), nên nhãn hiển thị luôn là tiếng Việt.
+  await expect(page.getByText("Số phòng ngủ theo metadata")).toHaveCount(0);
 });
