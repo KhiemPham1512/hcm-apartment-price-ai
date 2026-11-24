@@ -129,7 +129,7 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 <a id="checklist-tv5"></a>
 ### TV5 — Frontend và demo
 
-**Bước tiếp / Chặn:** Frontend TV5 đã có form metadata-driven, xử lý lỗi, responsive và bộ E2E 11/11 đạt trên nhánh `feat/web-tv5-demo` (commit `d09d622`). Còn chờ xác minh request API thật/model được TV6 phê duyệt, báo cáo chính thức và demo cuối. Không xem fixture E2E là bằng chứng dự đoán giá thị trường.
+**Bước tiếp / Chặn (cập nhật 24/11):** API chỉ trả `/api/v1/report` khi có gói approved, nên kết quả run-001 không đi qua API. Việc của bạn, đủ đầu vào: (1) thêm trang **Kết quả đánh giá** đọc file tĩnh `reports/run-001/evaluation.json` (chép vào `frontend/public/` hoặc import lúc build), hiện rõ nhãn "Đánh giá trên dữ liệu lịch sử, không phải giá hiện hành" khi `snapshot_kind=historical`, bảng B0–M3 (RMSE/MAE/R², khoảng 95% từ `bootstrap`), sai số theo `breakdowns` (nhóm `descriptive_only` không xếp hạng); (2) xử lý 429 theo `Retry-After`; (3) test Playwright cho trang này; (4) phần **Giao diện** trong báo cáo.
 
 #### Tuần 1
 
