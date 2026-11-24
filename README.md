@@ -611,6 +611,77 @@ Các nguồn dưới đây là ứng viên từ khảo sát trước, **không p
 | [Kaggle: HCM Real Estate 2025](https://www.kaggle.com/datasets/cnglmph/ho-chi-minh-city-real-estate-data-2025) | License, đơn vị, địa giới và độ mới |
 | [TiniX: vietnam-real-estates](https://huggingface.co/datasets/tinixai/vietnam-real-estates) | Khảo sát cũ ghi CC BY-NC 4.0; phải khóa revision, kiểm tra quyền gốc, tách bán/thuê, ID, thời gian giá/active và tự đếm mẫu |
 
+
+<a id="tv3-01-khao-sat-kaggle"></a>
+
+**TV3-01 — khảo sát nguồn Kaggle cnglmph.** Đây là khảo sát nguồn phụ theo snapshot lịch sử ngày 30/09/2025. Nguồn đánh giá chung theo Quyết định 9 là TiniX. TV1 báo link Kaggle trả 404 trong lần kiểm tra của mình. Ngày 23/11/2026, TV3 nhận được ZIP và metadata phiên bản 1 qua API Kaggle trực tiếp bằng các lệnh sau (PowerShell). ZIP chứa `data_public.csv` và có SHA-256 `72f1ae0e5719fef533d8cfa66249148bd06053e4ac0e2601292990aba90932a2`.
+
+```powershell
+$slug = "cnglmph/ho-chi-minh-city-real-estate-data-2025"
+Invoke-RestMethod "https://www.kaggle.com/api/v1/datasets/view/$slug" |
+    Select-Object title, licenseName, currentVersionNumber
+curl.exe -fL "https://www.kaggle.com/api/v1/datasets/download/$slug" -o kaggle-hcm.zip
+Get-FileHash .\kaggle-hcm.zip -Algorithm SHA256
+```
+
+Metadata Kaggle khai **CC BY-NC 4.0**. Quyền sử dụng nguồn gốc vẫn chờ TV1 xác minh. Nếu API trả 404 hoặc checksum khác, ghi báo cáo chặn hoặc phiên bản đã tải để TV1 đối chiếu.
+
+Từ ZIP trên, chạy khối dưới trong thư mục chứa ZIP. Script chỉ in số tổng hợp và dùng thư viện chuẩn Python.
+
+```powershell
+@'
+import csv
+import io
+import re
+from collections import Counter
+from zipfile import ZipFile
+
+with ZipFile("kaggle-hcm.zip") as archive:
+    with archive.open("data_public.csv") as raw:
+        rows = list(csv.DictReader(io.TextIOWrapper(raw, encoding="utf-8-sig", newline="")))
+
+hcm = [r for r in rows if r["Province"].strip() == "tp-ho-chi-minh"]
+apartments = [r for r in hcm if r["Property Type Slug"].strip() == "can-ho-chung-cu"]
+sold = [
+    r for r in apartments
+    if re.search(r"\b(bán|sang nhượng|chuyển nhượng)\b", r["Title"], re.I)
+    and not re.search(r"\b(thuê|theo tháng)\b|/tháng", r["Title"], re.I)
+]
+flagged = {
+    r["Listing ID"].strip() for r in sold
+    if re.search(r"\b(văn phòng|office|officetel|office\s+tel)\b", r["Title"], re.I)
+}
+excluded = {"1434344.0", "1432175.0"}
+kept = {"1529327.0", "1432117.0", "1429432.0"}
+assert not excluded & kept and (excluded | kept) <= flagged
+quarantine = flagged - excluded - kept
+candidates = [r for r in sold if r["Listing ID"].strip() not in excluded | quarantine]
+
+def suspect_counts(records):
+    keys = Counter()
+    for row in records:
+        key = tuple(
+            " ".join(row[column].casefold().split())
+            for column in ("Title", "Location", "Area", "Bedrooms", "Bathrooms")
+        )
+        if all(key[:3]):
+            keys[key] += 1
+    return sum(n > 1 for n in keys.values()), sum(n for n in keys.values() if n > 1)
+
+print("raw/hcm/apartment/sale:", len(rows), len(hcm), len(apartments), len(sold))
+print("flagged/kept/excluded/quarantined:", len(flagged), len(kept), len(excluded), len(quarantine))
+print("candidates after quarantine:", len(candidates))
+print("suspect clusters/listings before:", suspect_counts(sold))
+print("suspect clusters/listings after:", suspect_counts(candidates))
+'@ | py -3.12 -
+```
+
+Lượt lọc theo tiêu đề cho 7.954 mã tin, trong đó 69 tin được gắn cờ office/officetel. Rà nội dung xác nhận 2 tin rao văn phòng và 3 tin chào bán căn hộ. Tạm cách ly 64 tin chưa rõ, còn 7.888 ứng viên EDA trước khi gộp. Nhãn địa lý trên CSV là nhãn gốc. Biểu đồ cũ dùng 7.954 tin và phép dò 5 tên dự án đã chọn.
+
+Phép dò nghi trùng cho 193 cụm với 430 tin trước cách ly và 192 cụm với 426 tin trên 7.888 ứng viên còn lại. Hai tin cùng tiêu đề và thuộc tính có thể thuộc hai căn khác nhau. Giữ mã riêng cho đến khi TV1 xác nhận quy tắc gộp dựa trên dự án chuẩn hóa và bằng chứng nhận diện căn. TV3-01 tiếp tục mở để TV1 rà 64 tin, kiểm tra cụm trùng và đối chiếu độ phủ, tập trung dự án trên snapshot chung của nhóm.
+
+**Đối chiếu với run-001 (24/11/2026).** TV1 đã xác nhận snapshot đánh giá chính thức là TiniX revision `ca3fedc` (37.172 nhóm sau xử lý). Các số đếm Kaggle ở trên thuộc khảo sát nguồn phụ. Báo cáo [test run-001](reports/run-001/evaluation.json) cung cấp số mẫu và sai số theo khu vực trên tập test TiniX. Số mẫu test và sai số theo khu vực không đo độ phủ dự án của toàn snapshot. Việc xác nhận 64 tin và các cụm nghi trùng của nguồn Kaggle vẫn chưa có bằng chứng mới trong PR này.
+
 Ưu tiên CSV hiện hành được chủ dữ liệu có quyền cung cấp. License notebook không áp cho dataset; license trên card chưa chứng minh toàn bộ quyền nguồn. Nguồn lịch sử chỉ dùng baseline lịch sử có nhãn rõ, không đổi thành hiện tại. Không ghép nhiều nguồn để cứu cỡ mẫu trước khi kiểm tra quyền, trùng và đơn vị.
 
 Không đưa crawler vào đường găng: [quy chế Chợ Tốt](https://trogiup.chotot.com/nguoi-ban/hoat-dong/) và [điều khoản Batdongsan](https://trogiup.batdongsan.com.vn/docs/dieu-khoan-thoa-thuan) phải được kiểm tra cùng quyền thu thập; robots.txt không phải giấy phép tái sử dụng. Không vượt chặn truy cập. Không lấy riêng ngưỡng giá để tách thuê/bán; không suy `floor_count` thành tầng căn hộ. TV1 đối chiếu địa chỉ với danh mục hiện hành có nguồn; tham khảo [Nghị quyết 1685 về đơn vị hành chính TP.HCM](https://vanban.chinhphu.vn/?docid=214007&pageid=27160) và [thông tin cập nhật tháng 9/2026](https://tphcm.baochinhphu.vn/thanh-pho-chua-co-chu-truong-sap-xep-168-xa-phuong-dac-khu-10126091114293727.htm), rồi kiểm tra hiệu lực tại thời điểm tiếp nhận dữ liệu.
