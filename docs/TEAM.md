@@ -106,19 +106,19 @@ Phạm vi chung: căn hộ tại TP.HCM theo địa giới hiện hành và giá
 
 #### Tuần 1
 
-- [ ] **TV4-01** Rà soát API/OpenAPI, metadata-driven schema và envelope lỗi; bàn giao request/response mẫu cho TV5 (P06).
-- [ ] **TV4-02** Kiểm tra strict input/null/bounds/field lạ và khu vực không hỗ trợ.
-- [ ] **TV4-03** Bàn giao live/ready/metadata/predictions/report với trường hợp thiếu model, không có fallback giá giả.
+- [x] **TV4-01** Rà soát API/OpenAPI, metadata-driven schema và envelope lỗi; bàn giao request/response mẫu cho TV5 (P06).
+- [x] **TV4-02** Kiểm tra strict input/null/bounds/field lạ và khu vực không hỗ trợ.
+- [x] **TV4-03** Bàn giao live/ready/metadata/predictions/report với trường hợp thiếu model, không có fallback giá giả.
 
 #### Tuần 2
 
-- [ ] **TV4-04** Kiểm tra trusted loader, checksum/manifest, candidate/synthetic bị chặn khi phục vụ thị trường.
-- [ ] **TV4-05** Cùng TV2/TV6 kiểm tra parity offline/HTTP và output âm/NaN/Inf.
-- [ ] **TV4-06** Kiểm tra stale/biên freshness bằng clock inject, metadata vẫn xem được khi stale.
+- [x] **TV4-04** Kiểm tra trusted loader, checksum/manifest, candidate/synthetic bị chặn khi phục vụ thị trường.
+- [x] **TV4-05** Cùng TV2/TV6 kiểm tra parity offline/HTTP và output âm/NaN/Inf.
+- [x] **TV4-06** Kiểm tra stale/biên freshness bằng clock inject, metadata vẫn xem được khi stale.
 
 #### Tuần 3
 
-- [ ] **TV4-07** Hoàn thiện và đo giới hạn public: body/rate/concurrency/timeout, CORS/proxy và lỗi 429; không tuyên bố đã có trước khi kiểm chứng.
+- [x] **TV4-07** Hoàn thiện và đo giới hạn public: body/rate/concurrency/timeout, CORS/proxy và lỗi 429; không tuyên bố đã có trước khi kiểm chứng.
 - [ ] **TV4-08** Review bảo mật: không upload/retrain/raw/model-download, không log PII/secrets; cùng TV6 kiểm tra release gates (P11).
 
 #### Tuần 4
