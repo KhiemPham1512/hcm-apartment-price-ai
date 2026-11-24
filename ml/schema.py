@@ -79,6 +79,4 @@ class DatasetCard(BaseModel):
     grouping_version: str = Field(min_length=1)
     district_labels: dict[str, str]
     mapping_version: str | None = Field(default=None, min_length=1)
-    mapping_sha256: Annotated[
-        str, Field(pattern=r"^[a-f0-9]{64}$")
-    ] | None = None
+    mapping_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")] | None = None
